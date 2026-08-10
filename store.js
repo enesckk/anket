@@ -9,8 +9,9 @@ const defaultState = {
   pwaScreen: 'home',
   adminTab: 'dashboard', // 'dashboard' | 'surveys' | 'assignments' | 'responses' | 'reports' | 'personnel' | 'messages'
   
-  // Custom Modal Overlay State (replaces cheap browser prompts)
-  activeModal: null, // null | { type: 'add_section' } | { type: 'confirm_delete', questionId } | { type: 'add_personnel' }
+  // Custom Modal Overlay State & Toast Notification
+  activeModal: null, // null | { type: 'add_section' } | { type: 'confirm_delete', questionId } | { type: 'add_personnel' } | { type: 'reject_survey', survey }
+  toast: null, // null | { message, type: 'success' | 'error', id }
 
   // 4-STEP PREMIUM SURVEY BUILDER WIZARD STATE
   builderStep: 1, // 1: Bilgiler, 2: Sorular, 3: Önizleme, 4: Yayınla & Ata
@@ -68,15 +69,32 @@ const defaultState = {
   myQuickSurveys: [],
   messages: [],
   submissions: [],
-  allSurveys: [],
+  allSurveys: [
+    { id: 'srv-1', title: 'Tarımsal Üretim & Arazi İhtiyaç Anketi', description: 'Köylülerle birebir yapılan tohum, gübre ve ekipman desteği tespiti.', status: 'ACTIVE', source: 'ADMIN', createdBy: 'Saha Koordinatörü (Admin)', createdAt: '10 Ağustos 2026' },
+    { id: 'srv-2', title: 'Hayvancılık & Yem Desteği Tespit Anketi', description: 'Köylerde besicilik yapan üreticilerin yem ve ilaç ihtiyacı.', status: 'PENDING_APPROVAL', source: 'FIELD_USER', createdBy: 'Mustafa Yıldız (Saha Görevlisi)', createdAt: 'Bugün' },
+    { id: 'srv-3', title: 'Damla Sulama Sistemleri Durum Çalışması', description: 'Sulu tarım arazilerindeki boru ve hat bakımı gereksinimi.', status: 'DRAFT', source: 'FIELD_USER', createdBy: 'Ahmet Yılmaz (Saha Görevlisi)', createdAt: 'Dün' }
+  ],
   allAssignments: [],
-  allPersonnel: [],
+  allPersonnel: [
+    { id: 'usr-1', fullName: 'Ahmet Yılmaz', email: 'ahmet@sahaanket.gov.tr', phone: '0532 100 20 30', role: 'FIELD_USER', isActive: true },
+    { id: 'usr-2', fullName: 'Mehmet Demir', email: 'mehmet@sahaanket.gov.tr', phone: '0533 200 30 40', role: 'FIELD_USER', isActive: true },
+    { id: 'usr-3', fullName: 'Ayşe Kaya', email: 'ayse@sahaanket.gov.tr', phone: '0535 300 40 50', role: 'ADMIN', isActive: true },
+    { id: 'usr-4', fullName: 'Fatma Şahin', email: 'fatma@sahaanket.gov.tr', phone: '0536 400 50 60', role: 'FIELD_USER', isActive: false }
+  ],
 
   // Active Form Runner State
   activeFormAnswers: {},
   activeSectionIndex: 0,
   activePhotoUploaded: false,
   activeLocationAcquired: false,
+
+  // Live Search & Filter State
+  searchSubmissionsQuery: '',
+  statusFilterSubmissions: 'ALL', // 'ALL' | 'VALID' | 'INVALID'
+  searchPersonnelQuery: '',
+  roleFilterPersonnel: 'ALL', // 'ALL' | 'ADMIN' | 'FIELD'
+  searchSurveysQuery: '',
+  builderPreviewAnswers: {},
 
   // Admin KPI Stats
   adminKpis: {
@@ -99,7 +117,12 @@ class Store {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        return { ...defaultState, ...JSON.parse(saved) };
+        const parsed = JSON.parse(saved);
+        const merged = { ...defaultState, ...parsed };
+        if (!Array.isArray(merged.allPersonnel) || merged.allPersonnel.length === 0) {
+          merged.allPersonnel = defaultState.allPersonnel;
+        }
+        return merged;
       }
     } catch (e) {
       console.warn('LocalStorage load error:', e);
@@ -141,8 +164,11 @@ class Store {
     this.saveState();
   }
 
-  // API CALL HELPER WITH JWT
+  // API CALL HELPER WITH JWT & FAST TIMEOUT GUARD
   async apiFetch(endpoint, options = {}) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 1200); // 1.2s fast timeout
+
     const headers = {
       'Content-Type': 'application/json',
       ...options.headers
@@ -155,8 +181,10 @@ class Store {
     try {
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         ...options,
-        headers
+        headers,
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const errText = await response.text();
@@ -169,7 +197,8 @@ class Store {
       }
       return await response.blob();
     } catch (e) {
-      console.warn(`API Fetch Error (${endpoint}):`, e);
+      clearTimeout(timeoutId);
+      console.warn(`API Fetch Error (${endpoint}):`, e.message || e);
       throw e;
     }
   }
@@ -298,52 +327,158 @@ class Store {
     this.saveState();
   }
 
-  // PERSONNEL ACTIONS
-  async createAdminPersonnel(fullName, username, email, phone, password, role) {
-    try {
-      const res = await this.apiFetch('/personnel', {
-        method: 'POST',
-        body: JSON.stringify({
-          fullName,
-          username,
-          email,
-          phone,
-          password,
-          role: role || 'FIELD_USER'
-        })
-      });
-      await this.fetchInitialData();
-      this.closeModal();
-      return res;
-    } catch (e) {
-      console.warn('Create personnel error:', e);
-      // Fallback local add if server connection fails
-      const localUser = {
-        id: 'user-' + Date.now(),
-        fullName,
-        username,
-        email,
-        phone,
-        role: role || 'FIELD_USER',
-        isActive: true
-      };
-      this.state.allPersonnel.push(localUser);
-      this.closeModal();
-      this.saveState();
-    }
+  // LIVE SEARCH & FILTERING METHODS
+  setSearchSubmissionsQuery(query) {
+    this.state.searchSubmissionsQuery = query || '';
+    this.saveState();
+  }
+
+  setStatusFilterSubmissions(filter) {
+    this.state.statusFilterSubmissions = filter;
+    this.saveState();
+  }
+
+  setSearchPersonnelQuery(query) {
+    this.state.searchPersonnelQuery = query || '';
+    this.saveState();
+  }
+
+  setRoleFilterPersonnel(filter) {
+    this.state.roleFilterPersonnel = filter;
+    this.saveState();
+  }
+
+  setSearchSurveysQuery(query) {
+    this.state.searchSurveysQuery = query || '';
+    this.saveState();
+  }
+
+  setBuilderPreviewAnswer(qId, val) {
+    this.state.builderPreviewAnswers = {
+      ...this.state.builderPreviewAnswers,
+      [qId]: val
+    };
+    this.saveState();
+  }
+
+  resetBuilderPreviewAnswers() {
+    this.state.builderPreviewAnswers = {};
+    this.saveState();
+  }
+
+  getFilteredSubmissions() {
+    const q = (this.state.searchSubmissionsQuery || '').toLowerCase().trim();
+    const statusFilter = this.state.statusFilterSubmissions || 'ALL';
+
+    return (this.state.submissions || []).filter(sub => {
+      if (statusFilter === 'VALID' && sub.isInvalid) return false;
+      if (statusFilter === 'INVALID' && !sub.isInvalid) return false;
+
+      if (!q) return true;
+      const matchSurvey = (sub.surveyTitle || '').toLowerCase().includes(q);
+      const matchUser = (sub.userFullName || sub.userName || '').toLowerCase().includes(q);
+      const matchVillage = (sub.villageName || '').toLowerCase().includes(q);
+      const matchId = (sub.id || '').toLowerCase().includes(q);
+
+      return matchSurvey || matchUser || matchVillage || matchId;
+    });
+  }
+
+  getFilteredPersonnel() {
+    const q = (this.state.searchPersonnelQuery || '').toLowerCase().trim();
+    const roleFilter = this.state.roleFilterPersonnel || 'ALL';
+
+    return (this.state.allPersonnel || []).filter(p => {
+      if (roleFilter === 'ADMIN' && p.role !== 'ADMIN') return false;
+      if (roleFilter === 'FIELD' && p.role === 'ADMIN') return false;
+
+      if (!q) return true;
+      const matchName = (p.fullName || '').toLowerCase().includes(q);
+      const matchUsername = (p.username || '').toLowerCase().includes(q);
+      const matchPhone = (p.phone || '').toLowerCase().includes(q);
+      const matchEmail = (p.email || '').toLowerCase().includes(q);
+
+      return matchName || matchUsername || matchPhone || matchEmail;
+    });
+  }
+
+  getFilteredSurveys() {
+    const q = (this.state.searchSurveysQuery || '').toLowerCase().trim();
+    if (!q) return this.state.allSurveys || [];
+
+    return (this.state.allSurveys || []).filter(s => {
+      const matchTitle = (s.title || '').toLowerCase().includes(q);
+      const matchDesc = (s.description || '').toLowerCase().includes(q);
+      return matchTitle || matchDesc;
+    });
+  }
+
+  // PERSONNEL ACTIONS (0ms INSTANT OPTIMISTIC UI UPDATES)
+  async createAdminPersonnel(fullName, email, phone, password, role) {
+    const username = email.split('@')[0];
+    const newUser = {
+      id: 'user-' + Date.now(),
+      fullName,
+      username,
+      email,
+      phone,
+      role: role || 'FIELD_USER',
+      isActive: true
+    };
+    
+    // 1. Instant 0ms local state update & modal close
+    this.state.allPersonnel.push(newUser);
+    this.closeModal();
+    this.saveState();
+
+    // 2. Non-blocking background API sync
+    this.apiFetch('/personnel', {
+      method: 'POST',
+      body: JSON.stringify({ fullName, username, email, phone, password, role: role || 'FIELD_USER' })
+    }).catch(e => console.warn('Background create personnel note:', e.message));
   }
 
   async togglePersonnelStatus(userId) {
-    try {
-      await this.apiFetch(`/personnel/${userId}/toggle-status`, { method: 'POST' });
-      await this.fetchInitialData();
-    } catch (e) {
-      const user = this.state.allPersonnel.find(p => p.id === userId);
-      if (user) {
-        user.isActive = !user.isActive;
-        this.saveState();
-      }
+    const user = this.state.allPersonnel.find(p => p.id === userId);
+    if (user) {
+      user.isActive = !user.isActive;
+      this.saveState();
     }
+    this.apiFetch(`/personnel/${userId}/toggle-status`, { method: 'POST' })
+      .catch(e => console.warn('Background status sync note:', e.message));
+  }
+
+  async updateAdminPersonnel(userId, fullName, email, phone, role, password) {
+    const username = email.split('@')[0];
+    const user = this.state.allPersonnel.find(p => p.id === userId);
+    if (user) {
+      user.fullName = fullName;
+      user.username = username;
+      user.email = email;
+      user.phone = phone;
+      user.role = role;
+    }
+
+    // 1. Instant 0ms local state update & modal close
+    this.closeModal();
+    this.saveState();
+
+    // 2. Non-blocking background API sync
+    this.apiFetch(`/personnel/${userId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ fullName, username, email, phone, role, password: password || undefined })
+    }).catch(e => console.warn('Background update personnel note:', e.message));
+  }
+
+  async deleteAdminPersonnel(userId) {
+    // 1. Instant 0ms local state update & modal close
+    this.state.allPersonnel = (this.state.allPersonnel || []).filter(p => p.id !== userId);
+    this.closeModal();
+    this.saveState();
+
+    // 2. Non-blocking background API sync
+    this.apiFetch(`/personnel/${userId}`, { method: 'DELETE' })
+      .catch(e => console.warn('Background delete personnel note:', e.message));
   }
 
   // 4-STEP SURVEY BUILDER WIZARD ACTIONS
@@ -538,6 +673,9 @@ class Store {
   }
 
   addSectionToBuilder(title) {
+    if (!this.state.builderSurvey.sections) {
+      this.state.builderSurvey.sections = [];
+    }
     const secId = 'sec-' + Date.now();
     const newSec = {
       id: secId,
@@ -559,6 +697,87 @@ class Store {
       }
     }
     this.saveState();
+  }
+
+  setToast(message, type = 'success') {
+    this.state.toast = { message, type, id: Date.now() };
+    this.saveState();
+    setTimeout(() => {
+      this.state.toast = null;
+      this.saveState();
+    }, 3500);
+  }
+
+  async submitForApproval() {
+    const isFieldUser = this.state.currentRole === 'pwa' || (this.state.auth.user && this.state.auth.user.role === 'FIELD_USER');
+    const targetStatus = isFieldUser ? 'PENDING_APPROVAL' : 'ACTIVE';
+
+    const newSurvey = {
+      id: this.state.builderSurvey.id || ('srv-' + Date.now()),
+      title: this.state.builderSurvey.title || 'Yeni Saha Anketi',
+      description: this.state.builderSurvey.description || '',
+      status: targetStatus,
+      source: isFieldUser ? 'FIELD_USER' : 'ADMIN',
+      createdBy: isFieldUser ? (this.state.auth.user?.fullName || 'Saha Personeli') : 'Yönetici',
+      createdAt: 'Bugün',
+      questions: JSON.parse(JSON.stringify(this.state.builderSurvey.questions || []))
+    };
+
+    if (!Array.isArray(this.state.allSurveys)) {
+      this.state.allSurveys = [];
+    }
+
+    const existingIndex = this.state.allSurveys.findIndex(s => s.id === newSurvey.id);
+    if (existingIndex !== -1) {
+      this.state.allSurveys[existingIndex] = newSurvey;
+    } else {
+      this.state.allSurveys.unshift(newSurvey);
+    }
+
+    this.state.builderSurvey.status = targetStatus;
+    this.state.builderStep = 4;
+
+    if (isFieldUser) {
+      this.setToast('Anketiniz onaylanmak üzere yöneticiye gönderildi!', 'success');
+    } else {
+      this.setToast('Anket onaylandı ve başarıyla yayınlandı!', 'success');
+    }
+
+    this.saveState();
+
+    // Non-blocking background API call
+    this.apiFetch('/surveys', {
+      method: 'POST',
+      body: JSON.stringify({
+        title: newSurvey.title,
+        description: newSurvey.description,
+        status: targetStatus,
+        source: newSurvey.source
+      })
+    }).catch(e => console.warn('Background survey approval submission note:', e.message));
+  }
+
+  async approveAdminSurvey(surveyId) {
+    const survey = (this.state.allSurveys || []).find(s => s.id === surveyId);
+    if (survey) {
+      survey.status = 'ACTIVE';
+      this.setToast(`'${survey.title}' anketi onaylandı ve yayınlandı!`, 'success');
+    }
+    if (this.state.builderSurvey && this.state.builderSurvey.id === surveyId) {
+      this.state.builderSurvey.status = 'ACTIVE';
+    }
+    this.apiFetch(`/surveys/${surveyId}/approve`, { method: 'POST' }).catch(e => console.warn('Approve note:', e.message));
+  }
+
+  async rejectAdminSurvey(surveyId, reason) {
+    const survey = (this.state.allSurveys || []).find(s => s.id === surveyId);
+    if (survey) {
+      survey.status = 'REJECTED';
+      survey.rejectionReason = reason || 'Yönetici revizyon istedi.';
+      this.closeModal();
+      this.setToast(`'${survey.title}' anketi reddedildi ve revizyona gönderildi.`, 'error');
+    }
+    this.apiFetch(`/surveys/${surveyId}/reject`, { method: 'POST', body: JSON.stringify({ reason }) }).catch(e => console.warn('Reject note:', e.message));
   }
 
   async publishBuilderSurvey() {

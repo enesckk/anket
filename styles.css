@@ -6,9 +6,9 @@
 :root {
   --color-primary: #64B352;
   --color-primary-dark: #4e953f;
-  --color-background: #f5f7f4;
+  --color-background: #edf2eb;
   --color-surface: #ffffff;
-  --color-border: #e2e8e0;
+  --color-border: #e0e7de;
   --color-separator: #edf2eb;
   --color-success: #64B352;
   --color-warning: #b25000;
@@ -17,10 +17,12 @@
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background-color: var(--color-background);
+  background: linear-gradient(180deg, #edf2eb 0%, #e6ece4 100%);
+  background-attachment: fixed;
   color: #1a1c1d;
   -webkit-tap-highlight-color: transparent;
   overflow-x: hidden;
+  min-h-screen: 100vh;
 }
 
 .material-symbols-outlined {

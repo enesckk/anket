@@ -13,7 +13,8 @@ import {
   renderMessages,
   renderMessageDetail,
   renderProfile,
-  renderAdminView
+  renderAdminView,
+  renderToastNotification
 } from './components.js';
 
 function renderApp() {
@@ -36,6 +37,7 @@ function renderApp() {
   if (state.currentRole === 'admin') {
     root.innerHTML = `
       ${renderSystemBar()}
+      ${renderToastNotification(state)}
       ${renderAdminView()}
     `;
     attachAdminListeners();
@@ -116,15 +118,59 @@ function attachGlobalSystemListeners() {
   }
 }
 
+// GLOBAL DELEGATED DOCUMENT LISTENERS (GUARANTEES DYNAMIC MODALS WORK 100%)
+if (!window.__globalListenersAttached) {
+  window.__globalListenersAttached = true;
+
+  document.addEventListener('click', (e) => {
+    const addSecBtn = e.target.closest('#btn-open-add-section-modal');
+    if (addSecBtn) {
+      store.openModal('add_section');
+      return;
+    }
+
+    const closeBtn = e.target.closest('#btn-close-custom-modal');
+    if (closeBtn) {
+      store.closeModal();
+      return;
+    }
+  });
+
+  document.addEventListener('submit', async (e) => {
+    const target = e.target;
+    if (!target) return;
+
+    if (target.id === 'form-custom-add-section') {
+      e.preventDefault();
+      const titleInput = document.getElementById('custom-sec-title');
+      const title = titleInput ? titleInput.value.trim() : '';
+      if (title) {
+        store.addSectionToBuilder(title);
+      }
+      return;
+    }
+
+    if (target.id === 'form-custom-reject-survey') {
+      e.preventDefault();
+      const surveyId = target.getAttribute('data-survey-id');
+      const reason = document.getElementById('reject-survey-reason')?.value;
+      if (surveyId && reason) {
+        await store.rejectAdminSurvey(surveyId, reason.trim());
+      }
+      return;
+    }
+  });
+}
+
 function attachLoginListeners() {
   attachGlobalSystemListeners();
   const formLogin = document.getElementById('form-login');
   if (formLogin) {
     formLogin.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const phone = document.getElementById('login-phone')?.value;
+      const email = document.getElementById('login-email')?.value;
       const pwd = document.getElementById('login-password')?.value;
-      await store.login(phone, pwd);
+      await store.login(email, pwd);
     });
   }
 }
@@ -173,6 +219,46 @@ function attachAdminListeners() {
     });
   }
 
+function showPersonnelModalError(msg) {
+  const alertBox = document.getElementById('personnel-modal-error-alert');
+  const alertText = document.getElementById('personnel-modal-error-text');
+  if (alertBox && alertText) {
+    alertText.textContent = msg;
+    alertBox.classList.remove('hidden');
+  }
+}
+
+function validatePersonnelInput(email, phone, password, isPasswordOptional = false, userIdToExclude = null) {
+  const allPersonnel = store.getState().allPersonnel || [];
+
+  // 1. BENZERSİZ E-POSTA KONTROLÜ
+  const emailExists = allPersonnel.some(p => p.email && p.email.trim().toLowerCase() === email.trim().toLowerCase() && p.id !== userIdToExclude);
+  if (emailExists) {
+    return `⚠️ '${email.trim()}' e-posta adresi sistemde zaten kayıtlı! Başka bir e-posta adresi giriniz.`;
+  }
+
+  // 2. TÜRKİYE TELEFON FORMATI KONTROLÜ (0 olmadan 5xx xxx xx xx, 10 hane)
+  const trimmedPhone = phone.trim();
+  if (trimmedPhone.startsWith('0')) {
+    return '⚠️ Telefon numarası başında 0 OLMADAN 5xx xxx xx xx formatında girilmelidir! (Örn: 5359998877)';
+  }
+  const cleanPhone = trimmedPhone.replace(/\D/g, '');
+  if (!/^5\d{9}$/.test(cleanPhone)) {
+    return '⚠️ Geçerli bir cep telefonu giriniz! 0 olmadan 5xx xxx xx xx (10 haneli) olmalıdır.';
+  }
+
+  // 3. GÜÇLÜ ŞİFRE KONTROLÜ (Min 8 karakter, büyük harf, küçük harf, rakam, özel karakter)
+  if (!isPasswordOptional || (password && password.trim().length > 0)) {
+    const pwd = password ? password.trim() : '';
+    const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+    if (!strongPasswordRegex.test(pwd)) {
+      return '⚠️ Güçlü şifre gereklidir: En az 8 karakter, 1 büyük harf (A-Z), 1 küçük harf (a-z), 1 rakam (0-9) ve 1 özel karakter (!@#$%^&*) içermelidir.';
+    }
+  }
+
+  return null;
+}
+
   // PERSONNEL CREATION MODAL & SUBMIT
   document.getElementById('btn-open-add-personnel-modal')?.addEventListener('click', () => {
     store.openModal('add_personnel');
@@ -183,24 +269,73 @@ function attachAdminListeners() {
     formAddPersonnel.addEventListener('submit', async (e) => {
       e.preventDefault();
       const fullName = document.getElementById('personnel-fullname')?.value;
-      const username = document.getElementById('personnel-username')?.value;
       const email = document.getElementById('personnel-email')?.value;
       const phone = document.getElementById('personnel-phone')?.value;
       const password = document.getElementById('personnel-password')?.value;
       const role = document.getElementById('personnel-role')?.value;
 
-      if (fullName && username && email && phone && password) {
-        await store.createAdminPersonnel(fullName, username, email, phone, password, role);
+      if (!fullName || !email || !phone || !password) return;
+
+      const validationError = validatePersonnelInput(email, phone, password, false, null);
+      if (validationError) {
+        showPersonnelModalError(validationError);
+        return;
       }
+
+      await store.createAdminPersonnel(fullName.trim(), email.trim(), phone.trim(), password.trim(), role);
     });
   }
 
-  // TOGGLE PERSONNEL ACTIVE STATUS BUTTONS
-  document.querySelectorAll('.btn-toggle-personnel-status').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
+  // EDIT PERSONNEL MODAL & SUBMIT
+  document.querySelectorAll('.btn-open-edit-personnel-modal').forEach(btn => {
+    btn.addEventListener('click', (e) => {
       const userId = e.currentTarget.getAttribute('data-user-id');
-      await store.togglePersonnelStatus(userId);
+      const user = store.getState().allPersonnel.find(p => p.id === userId);
+      if (user) {
+        store.openModal('edit_personnel', { user });
+      }
     });
+  });
+
+  const formEditPersonnel = document.getElementById('form-custom-edit-personnel');
+  if (formEditPersonnel) {
+    formEditPersonnel.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const userId = e.target.getAttribute('data-user-id');
+      const fullName = document.getElementById('edit-personnel-fullname')?.value;
+      const email = document.getElementById('edit-personnel-email')?.value;
+      const phone = document.getElementById('edit-personnel-phone')?.value;
+      const role = document.getElementById('edit-personnel-role')?.value;
+      const password = document.getElementById('edit-personnel-password')?.value;
+
+      if (!userId || !fullName || !email || !phone) return;
+
+      const validationError = validatePersonnelInput(email, phone, password, true, userId);
+      if (validationError) {
+        showPersonnelModalError(validationError);
+        return;
+      }
+
+      await store.updateAdminPersonnel(userId, fullName.trim(), email.trim(), phone.trim(), role, password ? password.trim() : undefined);
+    });
+  }
+
+  // DELETE PERSONNEL MODAL & CONFIRM
+  document.querySelectorAll('.btn-open-delete-personnel-modal').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const userId = e.currentTarget.getAttribute('data-user-id');
+      const user = store.getState().allPersonnel.find(p => p.id === userId);
+      if (user) {
+        store.openModal('confirm_delete_personnel', { user });
+      }
+    });
+  });
+
+  document.getElementById('btn-confirm-delete-personnel')?.addEventListener('click', async (e) => {
+    const userId = e.currentTarget.getAttribute('data-user-id');
+    if (userId) {
+      await store.deleteAdminPersonnel(userId);
+    }
   });
 
   document.getElementById('btn-confirm-delete-q')?.addEventListener('click', (e) => {
@@ -342,7 +477,23 @@ function attachAdminListeners() {
   document.getElementById('btn-builder-step2-next')?.addEventListener('click', () => store.setBuilderStep(3));
   document.getElementById('btn-builder-goto-step3')?.addEventListener('click', () => store.setBuilderStep(3));
   document.getElementById('btn-builder-step3-next')?.addEventListener('click', async () => {
-    await store.publishBuilderSurvey();
+    await store.submitForApproval();
+  });
+
+  // Approve & Reject Survey Listeners for Admin
+  document.querySelectorAll('.btn-approve-admin-survey').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const id = e.currentTarget.getAttribute('data-survey-id');
+      if (id) await store.approveAdminSurvey(id);
+    });
+  });
+
+  document.querySelectorAll('.btn-reject-admin-survey').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = e.currentTarget.getAttribute('data-survey-id');
+      const survey = store.getState().allSurveys.find(s => s.id === id);
+      if (survey) store.openModal('reject_survey', { survey });
+    });
   });
 
   // Step 4 Finish CTAs
@@ -396,6 +547,42 @@ function attachAdminListeners() {
     });
   });
 
+  // TOGGLE DOWNWARD DROPDOWN MENU
+  document.getElementById('btn-toggle-msg-personnel-dropdown')?.addEventListener('click', () => {
+    const menu = document.getElementById('dropdown-msg-personnel-menu');
+    if (menu) {
+      menu.classList.toggle('hidden');
+    }
+  });
+
+  // UPDATE SELECTED COUNT LABEL ON CHECKBOX CHANGE
+  const updateSelectedPersonnelCountLabel = () => {
+    const checked = document.querySelectorAll('.cb-msg-personnel:checked');
+    const label = document.getElementById('label-selected-personnel-count');
+    if (label) {
+      label.textContent = checked.length > 0 ? `Personeller Seçildi (${checked.length} kişi seçildi)` : `Personelleri Seçin (0 kişi seçildi)`;
+    }
+  };
+
+  document.querySelectorAll('.cb-msg-personnel').forEach(cb => {
+    cb.addEventListener('change', updateSelectedPersonnelCountLabel);
+  });
+
+  // SELECT ALL & CLEAR ALL BUTTONS
+  document.getElementById('btn-msg-select-all-personnel')?.addEventListener('click', () => {
+    document.querySelectorAll('.msg-personnel-item:not(.hidden) .cb-msg-personnel').forEach(cb => {
+      cb.checked = true;
+    });
+    updateSelectedPersonnelCountLabel();
+  });
+
+  document.getElementById('btn-msg-clear-all-personnel')?.addEventListener('click', () => {
+    document.querySelectorAll('.cb-msg-personnel').forEach(cb => {
+      cb.checked = false;
+    });
+    updateSelectedPersonnelCountLabel();
+  });
+
   // Send Message Form
   const formMsg = document.getElementById('form-admin-send-message');
   if (formMsg) {
@@ -418,6 +605,66 @@ function attachAdminListeners() {
       }
     });
   }
+
+  // LIVE SEARCH & FILTER EVENT LISTENERS
+  const inputSearchSub = document.getElementById('input-search-submissions');
+  if (inputSearchSub) {
+    inputSearchSub.addEventListener('input', (e) => {
+      store.setSearchSubmissionsQuery(e.target.value);
+    });
+  }
+
+  document.querySelectorAll('.btn-filter-status-sub').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const filter = e.currentTarget.getAttribute('data-filter');
+      store.setStatusFilterSubmissions(filter);
+    });
+  });
+
+  const inputSearchPers = document.getElementById('input-search-personnel');
+  if (inputSearchPers) {
+    inputSearchPers.addEventListener('input', (e) => {
+      store.setSearchPersonnelQuery(e.target.value);
+    });
+  }
+
+  document.querySelectorAll('.btn-filter-role-personnel').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const filter = e.currentTarget.getAttribute('data-filter');
+      store.setRoleFilterPersonnel(filter);
+    });
+  });
+
+  const inputSearchSurveys = document.getElementById('input-search-surveys');
+  if (inputSearchSurveys) {
+    inputSearchSurveys.addEventListener('input', (e) => {
+      store.setSearchSurveysQuery(e.target.value);
+    });
+  }
+
+  // BUILDER STEP 3 LIVE PREVIEW INTERACTION LISTENERS
+  document.querySelectorAll('.btn-preview-yesno').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const qId = e.currentTarget.getAttribute('data-q-id');
+      const val = e.currentTarget.getAttribute('data-val');
+      store.setBuilderPreviewAnswer(qId, val);
+    });
+  });
+
+  document.querySelectorAll('.btn-preview-option').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const qId = e.currentTarget.getAttribute('data-q-id');
+      const val = e.currentTarget.getAttribute('data-val');
+      store.setBuilderPreviewAnswer(qId, val);
+    });
+  });
+
+  document.querySelectorAll('.input-preview-answer').forEach(input => {
+    input.addEventListener('input', (e) => {
+      const qId = e.target.getAttribute('data-q-id');
+      store.setBuilderPreviewAnswer(qId, e.target.value);
+    });
+  });
 }
 
 function attachPwaListeners() {
@@ -562,8 +809,24 @@ function attachPwaListeners() {
   document.getElementById('btn-logout')?.addEventListener('click', () => store.logout());
 }
 
-// Initial Boot
-document.addEventListener('DOMContentLoaded', () => {
-  renderApp();
-  store.subscribe(() => renderApp());
-});
+// Initial Boot (Safe for ES Modules & instant rendering)
+function boot() {
+  try {
+    renderApp();
+  } catch (err) {
+    console.error('App initial render error:', err);
+  }
+  store.subscribe(() => {
+    try {
+      renderApp();
+    } catch (err) {
+      console.error('App re-render error:', err);
+    }
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
+}
