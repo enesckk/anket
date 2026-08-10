@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="tr" class="light">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>SurveyAdmin Intelligence - Saha Anket & Executive Admin Platformu</title>
+  <meta name="description" content="Saha anket yönetimi, PWA anket doldurma, çevrimdışı senkronizasyon ve executive admin data intelligence platformu."/>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  
+  <!-- Google Fonts & Material Symbols -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="./styles.css"/>
+
+  <!-- Tailwind Theme Configuration -->
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#64B352",
+            "primary-dark": "#4e953f",
+            "primary-container": "#64B352",
+            "on-primary": "#ffffff",
+            "surface": "#ffffff",
+            "surface-dim": "#d9e0d6",
+            "surface-bright": "#f8faf7",
+            "surface-container": "#eef2eb",
+            "surface-container-low": "#f3f7f1",
+            "surface-container-lowest": "#ffffff",
+            "surface-container-high": "#e4ebe0",
+            "background": "#f5f7f4",
+            "on-surface": "#192117",
+            "text-secondary": "#5a6857",
+            "text-muted": "#7a8a76",
+            "border": "#e2e8e0",
+            "separator": "#edf2eb",
+            "success": "#64B352",
+            "warning": "#b25000",
+            "error": "#d70015",
+            "outline": "#6d7d6a",
+            "outline-variant": "#bdc9b9"
+          },
+          fontFamily: {
+            sans: ["Inter", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+            display: ["Inter", "sans-serif"]
+          },
+          borderRadius: {
+            "2xl": "1rem",
+            "3xl": "1.5rem"
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-background text-on-surface antialiased min-h-screen">
+  <div id="app"></div>
+
+  <!-- Main Application Script -->
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

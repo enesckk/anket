@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SurveyAdmin - Data Intelligence Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "on-surface-variant": "#414753",
+                "background": "#F5F5F7",
+                "surface-bright": "#f9f9fb",
+                "on-primary": "#ffffff",
+                "text-secondary": "#6E6E73",
+                "primary": "#0059b5",
+                "inverse-on-surface": "#f0f0f2",
+                "surface-tint": "#005cbb",
+                "border": "#E5E5EA",
+                "error-container": "#ffdad6",
+                "on-tertiary-fixed": "#341000",
+                "on-surface": "#1a1c1d",
+                "primary-fixed": "#d7e2ff",
+                "on-tertiary-container": "#fffaf9",
+                "primary-container": "#0071e3",
+                "success": "#248A3D",
+                "on-error-container": "#93000a",
+                "separator": "#F0F0F2",
+                "surface": "#FFFFFF",
+                "text-muted": "#86868B",
+                "on-secondary-fixed-variant": "#474649",
+                "inverse-surface": "#2f3132",
+                "tertiary-container": "#c25100",
+                "secondary": "#5f5e60",
+                "error": "#D70015",
+                "on-error": "#ffffff",
+                "surface-variant": "#e2e2e4",
+                "tertiary": "#9b3f00",
+                "warning": "#B25000",
+                "surface-dim": "#d9dadc",
+                "on-tertiary": "#ffffff",
+                "on-primary-fixed-variant": "#00458f",
+                "on-primary-container": "#fcfbff",
+                "primary-fixed-dim": "#abc7ff",
+                "secondary-fixed-dim": "#c8c6c8",
+                "outline-variant": "#c1c6d6",
+                "tertiary-fixed-dim": "#ffb693",
+                "surface-container-highest": "#e2e2e4",
+                "inverse-primary": "#abc7ff",
+                "on-secondary-fixed": "#1b1b1d",
+                "on-tertiary-fixed-variant": "#7a3000",
+                "secondary-fixed": "#e4e2e4",
+                "secondary-container": "#e2dfe1",
+                "on-secondary-container": "#636264",
+                "on-secondary": "#ffffff",
+                "outline": "#717785",
+                "surface-container": "#eeeef0",
+                "surface-container-lowest": "#ffffff",
+                "surface-container-high": "#e8e8ea",
+                "on-primary-fixed": "#001b3f",
+                "on-background": "#1a1c1d",
+                "surface-container-low": "#f3f3f5",
+                "tertiary-fixed": "#ffdbcb"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "2xl": "1rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "margin-mobile": "16px",
+                "sm": "8px",
+                "base": "8px",
+                "xs": "4px",
+                "xl": "32px",
+                "md": "16px",
+                "gutter": "24px",
+                "lg": "24px",
+                "xxl": "48px",
+                "margin-desktop": "40px"
+        },
+        "fontFamily": {
+                "headline-lg-mobile": [
+                        "Inter"
+                ],
+                "body-lg": [
+                        "Inter"
+                ],
+                "headline-md": [
+                        "Inter"
+                ],
+                "label-md": [
+                        "Inter"
+                ],
+                "headline-lg": [
+                        "Inter"
+                ],
+                "label-sm": [
+                        "Inter"
+                ],
+                "title-md": [
+                        "Inter"
+                ],
+                "body-md": [
+                        "Inter"
+                ],
+                "title-lg": [
+                        "Inter"
+                ],
+                "display": [
+                        "Inter"
+                ]
+        },
+        "fontSize": {
+                "headline-lg-mobile": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-lg": [
+                        "17px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-md": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "label-md": [
+                        "13px",
+                        {
+                                "lineHeight": "16px",
+                                "fontWeight": "500"
+                        }
+                ],
+                "headline-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "label-sm": [
+                        "11px",
+                        {
+                                "lineHeight": "14px",
+                                "letterSpacing": "0.02em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "title-md": [
+                        "17px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-md": [
+                        "15px",
+                        {
+                                "lineHeight": "22px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "title-lg": [
+                        "20px",
+                        {
+                                "lineHeight": "28px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "display": [
+                        "48px",
+                        {
+                                "lineHeight": "52px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "600"
+                        }
+                ]
+        },
+        "boxShadow": {
+                "premium": "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
+                "premium-sm": "0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03)"
+        }
+},
+    },
+  }
+</script>
+<style type="text/tailwindcss">
+        @layer utilities {
+            .glass {
+                @apply bg-surface/80 backdrop-blur-xl border-b border-separator/50;
+            }
+            .material-symbols-outlined {
+                font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            }
+            .premium-card {
+                @apply bg-surface border border-border shadow-premium rounded-2xl;
+            }
+        }
+    </style>
+</head>
+<body class="bg-background font-body-md text-on-surface antialiased min-h-screen selection:bg-primary-container/20 selection:text-primary">
+<!-- SideNavBar (Hidden on Mobile, Visible on md+) -->
+<aside class="hidden md:flex flex-col h-full fixed left-0 top-0 py-lg docked full-height left-0 w-64 border-r border-separator bg-surface z-50">
+<!-- Brand Area -->
+<div class="px-lg pb-xl flex items-center gap-md">
+<div class="w-10 h-10 rounded bg-primary-container/10 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary text-[24px]">explore</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-semibold text-on-surface">SurveyAdmin</h1>
+<p class="font-label-sm text-label-sm text-text-secondary uppercase tracking-widest mt-xs font-medium">Data Intelligence</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<nav class="flex-1 px-sm space-y-xs overflow-y-auto mt-4">
+<!-- Active Tab: ANA SAYFA -->
+<a class="flex items-center gap-md px-md py-3 rounded-lg text-primary font-medium bg-primary-container/5 relative before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-8 before:w-1 before:bg-primary before:rounded-r-full transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-body-md text-body-md">ANA SAYFA</span>
+</a>
+<a class="flex items-center gap-md px-md py-3 rounded-lg text-text-secondary hover:text-on-surface hover:bg-surface-container-low transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="poll">poll</span>
+<span class="font-body-md text-body-md">ANKETLER</span>
+</a>
+<a class="flex items-center gap-md px-md py-3 rounded-lg text-text-secondary hover:text-on-surface hover:bg-surface-container-low transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="assignment">assignment</span>
+<span class="font-body-md text-body-md">ATAMALAR</span>
+</a>
+<a class="flex items-center gap-md px-md py-3 rounded-lg text-text-secondary hover:text-on-surface hover:bg-surface-container-low transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+<span class="font-body-md text-body-md">CEVAPLAR</span>
+</a>
+<a class="flex items-center gap-md px-md py-3 rounded-lg text-text-secondary hover:text-on-surface hover:bg-surface-container-low transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="assessment">assessment</span>
+<span class="font-body-md text-body-md">RAPORLAR</span>
+</a>
+<a class="flex items-center gap-md px-md py-3 rounded-lg text-text-secondary hover:text-on-surface hover:bg-surface-container-low transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-body-md text-body-md">PERSONELLER</span>
+</a>
+<a class="flex items-center gap-md px-md py-3 rounded-lg text-text-secondary hover:text-on-surface hover:bg-surface-container-low transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="mail">mail</span>
+<span class="font-body-md text-body-md">MESAJLAR</span>
+</a>
+</nav>
+<!-- Footer Tab -->
+<div class="px-sm mt-auto pt-lg border-t border-separator/50">
+<a class="flex items-center gap-md px-md py-3 rounded-lg text-text-secondary hover:text-on-surface hover:bg-surface-container-low transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+<span class="font-body-md text-body-md">Admin Profile</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Wrapper -->
+<div class="md:ml-64 flex flex-col min-h-screen">
+<!-- TopAppBar -->
+<header class="flex justify-between items-center w-full px-gutter h-16 glass docked full-width top-0 sticky z-40">
+<div class="flex items-center gap-md">
+<!-- Mobile Menu Button (Visible only on md-) -->
+<button class="md:hidden text-text-secondary hover:text-on-surface">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<span class="font-title-md text-title-md text-on-surface font-medium hidden sm:block">Field Survey Platform</span>
+</div>
+<div class="flex items-center gap-lg">
+<div class="flex items-center gap-md text-text-secondary">
+<button class="hover:text-on-surface transition-colors duration-200">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="hover:text-on-surface transition-colors duration-200">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</button>
+<button class="hover:text-on-surface transition-colors duration-200">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+</div>
+<!-- Search Bar -->
+<div class="relative hidden lg:block w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant text-[20px]">search</span>
+<input class="w-full h-9 pl-10 pr-4 bg-background border border-border/50 rounded-full focus:outline-none focus:border-primary/30 focus:ring-1 focus:ring-primary/30 focus:bg-surface font-body-md text-body-md transition-all placeholder:text-text-muted" placeholder="Search..." type="text"/>
+</div>
+<!-- Profile Image -->
+<div class="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-border/50">
+<img alt="Administrator Avatar" class="w-full h-full object-cover" data-alt="A professional corporate headshot of a business administrator in a modern office environment, high resolution, soft natural lighting, elegant corporate attire, confident expression, shallow depth of field, high-key minimalist aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAuoulxJnfMHaL4v1eCjaiCO-3ahqGamCI9IDAGfnEY2VQS9MjMI0npqFW2aY9oG9pdBECd0UuN-zlZ4-zIYkD4HH7o_4qixRf1bkq5QKLpjORHt1hS3goiYixVhkR1UBpcKY1avhplkZtof4TgEaekIH9EQcQLM66-_9ZSBSXHDhsQuOrwIR9MkfoeEHZuvmbG3lTC30YPY0o212KeY9N7rIgkkKdAN6goNc5g7lm-JSDtU-uILh95Ag"/>
+</div>
+</div>
+</header>
+<!-- Dashboard Main Canvas -->
+<main class="flex-1 p-margin-mobile md:p-gutter max-w-[1400px] w-full mx-auto space-y-xl md:space-y-xxl pb-xxl mt-6">
+<!-- Dashboard Header -->
+<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-md mb-4">
+<div>
+<div class="flex items-center gap-3 mb-2">
+<h2 class="font-display text-headline-lg-mobile md:text-headline-lg text-on-surface font-semibold tracking-tight">Overview</h2>
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success/10 text-success border border-success/20">
+<span class="w-2 h-2 rounded-full bg-success animate-pulse"></span>
+<span class="font-label-sm text-[10px] font-semibold tracking-wide uppercase">Live Sync</span>
+</div>
+</div>
+<p class="font-body-lg text-body-lg text-text-secondary">Real-time insights and field operations summary.</p>
+</div>
+<button class="h-10 px-lg bg-primary text-on-primary rounded-full font-label-md text-label-md hover:bg-surface-tint transition-colors shadow-premium-sm flex items-center justify-center gap-sm font-medium">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                    Yeni Anket
+                </button>
+</div>
+<!-- KPI Section (6 Grid Cards) -->
+<section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-md md:gap-lg">
+<!-- KPI 1 -->
+<div class="premium-card p-lg flex flex-col justify-between hover:shadow-md transition-all h-36">
+<div class="font-label-sm text-[10px] text-text-secondary uppercase tracking-widest font-semibold">Toplam Tamamlanan</div>
+<div class="font-headline-lg text-[32px] text-on-surface font-semibold tracking-tight mt-auto">12.480</div>
+</div>
+<!-- KPI 2 -->
+<div class="premium-card p-lg flex flex-col justify-between hover:shadow-md transition-all h-36">
+<div class="font-label-sm text-[10px] text-text-secondary uppercase tracking-widest font-semibold">Bugün Tamamlanan</div>
+<div class="font-headline-lg text-[32px] text-on-surface font-semibold tracking-tight mt-auto">142</div>
+</div>
+<!-- KPI 3 -->
+<div class="premium-card p-lg flex flex-col justify-between hover:shadow-md transition-all h-36 relative overflow-hidden bg-primary-container/5 border-primary/10">
+<div class="font-label-sm text-[10px] text-primary uppercase tracking-widest font-semibold">Aktif Anket</div>
+<div class="font-headline-lg text-[32px] text-primary font-semibold tracking-tight mt-auto">8</div>
+</div>
+<!-- KPI 4 -->
+<div class="premium-card p-lg flex flex-col justify-between hover:shadow-md transition-all h-36">
+<div class="font-label-sm text-[10px] text-text-secondary uppercase tracking-widest font-semibold">Aktif Atama</div>
+<div class="font-headline-lg text-[32px] text-on-surface font-semibold tracking-tight mt-auto">24</div>
+</div>
+<!-- KPI 5 -->
+<div class="premium-card p-lg flex flex-col justify-between hover:shadow-md transition-all h-36">
+<div class="font-label-sm text-[10px] text-text-secondary uppercase tracking-widest font-semibold">Sahada Personel</div>
+<div class="font-headline-lg text-[32px] text-on-surface font-semibold tracking-tight mt-auto">12</div>
+</div>
+<!-- KPI 6 -->
+<div class="premium-card p-lg flex flex-col justify-between hover:shadow-md transition-all h-36 bg-warning/5 border-warning/10">
+<div class="font-label-sm text-[10px] text-warning uppercase tracking-widest font-semibold">Offline Kayıtlar</div>
+<div class="font-headline-lg text-[32px] text-warning font-semibold tracking-tight mt-auto">3</div>
+</div>
+</section>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-lg md:gap-xl">
+<!-- AKTİF ANKETLER List -->
+<section class="lg:col-span-2 premium-card overflow-hidden flex flex-col">
+<div class="p-lg border-b border-border/50 flex justify-between items-center bg-surface">
+<h3 class="font-title-md text-title-md text-on-surface font-semibold">Aktif Anketler</h3>
+<button class="text-primary font-label-md text-label-md hover:text-surface-tint font-medium transition-colors">Tümünü Gör</button>
+</div>
+<div class="p-0 overflow-x-auto bg-surface">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr>
+<th class="p-lg pb-sm font-label-sm text-[11px] text-text-secondary uppercase tracking-widest font-semibold border-b border-border/50">Survey Name</th>
+<th class="p-lg pb-sm font-label-sm text-[11px] text-text-secondary uppercase tracking-widest font-semibold border-b border-border/50">Village</th>
+<th class="p-lg pb-sm font-label-sm text-[11px] text-text-secondary uppercase tracking-widest font-semibold border-b border-border/50">Progress</th>
+<th class="p-lg pb-sm font-label-sm text-[11px] text-text-secondary uppercase tracking-widest font-semibold text-right border-b border-border/50">End Date</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md">
+<tr class="border-b border-border/30 hover:bg-surface-container-lowest transition-colors group">
+<td class="p-lg font-medium text-on-surface">Tarımsal İhtiyaç Analizi</td>
+<td class="p-lg text-text-secondary">Sinan Köyü</td>
+<td class="p-lg">
+<div class="flex items-center gap-md">
+<div class="flex-1">
+<div class="flex justify-between items-end mb-1.5">
+<span class="font-label-sm text-[11px] text-text-secondary font-medium">320 / 500</span>
+<span class="font-label-sm text-[11px] text-primary font-semibold">64%</span>
+</div>
+<div class="w-full h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[64%] rounded-full"></div>
+</div>
+</div>
+</div>
+</td>
+<td class="p-lg text-right text-text-secondary font-medium">30.11.2024</td>
+</tr>
+<tr class="border-b border-border/30 hover:bg-surface-container-lowest transition-colors group">
+<td class="p-lg font-medium text-on-surface">Altyapı Durum Tespiti</td>
+<td class="p-lg text-text-secondary">Merkez Mahalle</td>
+<td class="p-lg">
+<div class="flex items-center gap-md">
+<div class="flex-1">
+<div class="flex justify-between items-end mb-1.5">
+<span class="font-label-sm text-[11px] text-text-secondary font-medium">150 / 200</span>
+<span class="font-label-sm text-[11px] text-success font-semibold">75%</span>
+</div>
+<div class="w-full h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-success w-[75%] rounded-full"></div>
+</div>
+</div>
+</div>
+</td>
+<td class="p-lg text-right text-text-secondary font-medium">15.11.2024</td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors group">
+<td class="p-lg font-medium text-on-surface">Eğitim Memnuniyet Anketi</td>
+<td class="p-lg text-text-secondary">Yeşilyurt</td>
+<td class="p-lg">
+<div class="flex items-center gap-md">
+<div class="flex-1">
+<div class="flex justify-between items-end mb-1.5">
+<span class="font-label-sm text-[11px] text-text-secondary font-medium">45 / 300</span>
+<span class="font-label-sm text-[11px] text-warning font-semibold">15%</span>
+</div>
+<div class="w-full h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-warning w-[15%] rounded-full"></div>
+</div>
+</div>
+</div>
+</td>
+<td class="p-lg text-right text-text-secondary font-medium">10.12.2024</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- SON SAHA HAREKETLERİ Activity Feed -->
+<section class="premium-card p-lg flex flex-col h-full bg-surface">
+<div class="flex justify-between items-center mb-xl">
+<h3 class="font-title-md text-title-md text-on-surface font-semibold">Son Saha Hareketleri</h3>
+<span class="font-label-sm text-[11px] text-text-muted">Güncellendi: 19:43</span>
+</div>
+<div class="space-y-8 relative before:absolute before:inset-0 before:ml-[11px] before:-translate-x-px before:h-[calc(100%-24px)] before:w-px before:bg-border/60">
+<!-- Activity Item 1 -->
+<div class="relative flex items-start group">
+<div class="flex items-center justify-center w-6 h-6 rounded-full bg-primary-container/10 text-primary shrink-0 shadow-sm z-10 ring-4 ring-surface mt-1">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+</div>
+<div class="ml-md w-full">
+<div class="flex justify-between items-baseline mb-1">
+<span class="font-body-md text-body-md font-semibold text-on-surface">Ahmet Yılmaz</span>
+<span class="font-label-sm text-[11px] text-text-muted font-medium">19:42</span>
+</div>
+<div class="font-body-md text-[14px] text-text-secondary mb-2">12 yeni kayıt gönderdi</div>
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-container-low text-text-secondary font-label-sm text-[11px] font-medium border border-border/40">
+<span class="material-symbols-outlined text-[14px]">location_on</span>
+                                    Sinan Köyü
+                                </div>
+</div>
+</div>
+<!-- Activity Item 2 -->
+<div class="relative flex items-start group">
+<div class="flex items-center justify-center w-6 h-6 rounded-full bg-surface-container-high text-secondary shrink-0 shadow-sm z-10 ring-4 ring-surface mt-1">
+<span class="w-1.5 h-1.5 rounded-full bg-text-secondary"></span>
+</div>
+<div class="ml-md w-full">
+<div class="flex justify-between items-baseline mb-1">
+<span class="font-body-md text-body-md font-semibold text-on-surface">Elif Demir</span>
+<span class="font-label-sm text-[11px] text-text-muted font-medium">19:15</span>
+</div>
+<div class="font-body-md text-[14px] text-text-secondary mb-2">5 yeni kayıt gönderdi</div>
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-container-low text-text-secondary font-label-sm text-[11px] font-medium border border-border/40">
+<span class="material-symbols-outlined text-[14px]">location_on</span>
+                                    Merkez Mahalle
+                                </div>
+</div>
+</div>
+<!-- Activity Item 3 -->
+<div class="relative flex items-start group">
+<div class="flex items-center justify-center w-6 h-6 rounded-full bg-success/10 text-success shrink-0 shadow-sm z-10 ring-4 ring-surface mt-1">
+<span class="w-1.5 h-1.5 rounded-full bg-success"></span>
+</div>
+<div class="ml-md w-full">
+<div class="flex justify-between items-baseline mb-1">
+<span class="font-body-md text-body-md font-semibold text-on-surface">Mehmet Can</span>
+<span class="font-label-sm text-[11px] text-text-muted font-medium">18:50</span>
+</div>
+<div class="font-body-md text-[14px] text-text-secondary mb-2">Göreve başladı</div>
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-container-low text-text-secondary font-label-sm text-[11px] font-medium border border-border/40">
+<span class="material-symbols-outlined text-[14px]">location_on</span>
+                                    Yeşilyurt
+                                </div>
+</div>
+</div>
+</div>
+<button class="mt-xl w-full py-2.5 border border-border/60 rounded-xl text-text-secondary font-label-md text-label-md font-medium hover:bg-surface-container-low transition-colors hover:text-on-surface">Daha Fazla Göster</button>
+</section>
+</div>
+</main>
+</div>
+</body></html>

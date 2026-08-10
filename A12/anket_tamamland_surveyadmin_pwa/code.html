@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+
+<html class="light" lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Anket Tamamlama - SurveyAdmin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-container": "#e2dfe1",
+                        "on-error": "#ffffff",
+                        "on-secondary-container": "#636264",
+                        "on-error-container": "#93000a",
+                        "surface": "#ffffff",
+                        "error": "#d70015",
+                        "tertiary": "#762e00",
+                        "outline-variant": "#c2c6d4",
+                        "surface-container-lowest": "#ffffff",
+                        "warning": "#b25000",
+                        "on-secondary": "#ffffff",
+                        "inverse-on-surface": "#f0f0f2",
+                        "secondary-fixed": "#e4e2e4",
+                        "tertiary-fixed": "#ffdbcc",
+                        "outline": "#727783",
+                        "text-muted": "#86868b",
+                        "on-primary-fixed": "#001b3f",
+                        "on-surface-variant": "#424752",
+                        "on-tertiary": "#ffffff",
+                        "text-secondary": "#6e6e73",
+                        "on-background": "#1a1c1d",
+                        "success": "#248a3d",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-fixed-variant": "#7a3000",
+                        "on-tertiary-fixed": "#351000",
+                        "surface-container": "#eeeef0",
+                        "tertiary-container": "#9b3f01",
+                        "primary-fixed": "#d7e3ff",
+                        "border": "#e5e5ea",
+                        "primary-fixed-dim": "#abc7ff",
+                        "on-surface": "#1a1c1d",
+                        "inverse-surface": "#2f3132",
+                        "primary-container": "#0059b5",
+                        "inverse-primary": "#abc7ff",
+                        "primary": "#004289",
+                        "separator": "#f0f0f2",
+                        "secondary": "#5f5e60",
+                        "on-secondary-fixed-variant": "#474649",
+                        "background": "#f9f9fb",
+                        "surface-container-high": "#e8e8ea",
+                        "on-tertiary-container": "#ffc8af",
+                        "secondary-fixed-dim": "#c8c6c8",
+                        "tertiary-fixed-dim": "#ffb693",
+                        "surface-container-highest": "#e2e2e4",
+                        "on-primary": "#ffffff",
+                        "on-primary-fixed-variant": "#00458f",
+                        "surface-variant": "#e2e2e4",
+                        "surface-dim": "#d9dadc",
+                        "surface-tint": "#0b5cb8",
+                        "on-secondary-fixed": "#1b1b1d",
+                        "on-primary-container": "#c0d4ff",
+                        "surface-container-low": "#f3f3f5",
+                        "surface-bright": "#f9f9fb"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-mobile": "16px",
+                        "margin-desktop": "40px",
+                        "gutter": "24px",
+                        "sm": "8px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "xs": "4px",
+                        "xxl": "48px",
+                        "xl": "32px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "title-lg": ["Inter"],
+                        "title-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "display": ["Inter"],
+                        "label-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["17px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "title-lg": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "title-md": ["17px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "label-md": ["13px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "body-md": ["15px", { "lineHeight": "22px", "fontWeight": "400" }],
+                        "display": ["48px", { "lineHeight": "52px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+        .pulse-ring {
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(36, 138, 61, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(36, 138, 61, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(36, 138, 61, 0); }
+        }
+        .success-icon-bg {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-body-lg">
+<!-- Note: TopAppBar and BottomNavBar are suppressed as this is a linear/transactional success screen (dead end relative to global nav) -->
+<main class="flex-grow flex flex-col items-center justify-center p-margin-mobile md:p-margin-desktop w-full max-w-[1400px] mx-auto relative z-10 overflow-hidden">
+<!-- Background decorative elements -->
+<div class="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10 mix-blend-multiply"></div>
+<div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-success/5 rounded-full blur-3xl -z-10 mix-blend-multiply"></div>
+<div class="glass-panel w-full max-w-lg rounded-xl p-lg flex flex-col items-center text-center animate-fade-in-up">
+<!-- Icon Container -->
+<div class="relative mb-xl mt-md">
+<div class="w-24 h-24 rounded-full success-icon-bg flex items-center justify-center pulse-ring shadow-sm border border-success/20">
+<span class="material-symbols-outlined text-[48px] text-success" data-icon="check_circle" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<!-- Offline Badge -->
+<div class="absolute -bottom-2 -right-2 bg-surface border border-border rounded-full px-3 py-1 flex items-center gap-1 shadow-sm">
+<span class="w-2 h-2 rounded-full bg-warning"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Çevrimdışı</span>
+</div>
+</div>
+<!-- Typography -->
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-sm">
+                Anket güvenli şekilde kaydedildi
+            </h1>
+<p class="font-body-lg text-body-lg text-text-secondary mb-xl max-w-sm mx-auto">
+                Cihazınızda saklanıyor. İnternet bağlantısı geldiğinde otomatik olarak merkeze gönderilecek.
+            </p>
+<!-- Actions -->
+<div class="w-full flex flex-col gap-md mt-md">
+<button class="w-full bg-primary-container text-on-primary font-title-md text-title-md py-3 px-lg rounded-full hover:opacity-90 transition-opacity active:scale-[0.98] flex items-center justify-center gap-2 shadow-sm">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+                    Ana Sayfaya Dön
+                </button>
+<button class="w-full bg-transparent border border-border text-text-secondary font-title-md text-title-md py-3 px-lg rounded-full hover:bg-surface-container hover:text-on-surface transition-colors active:scale-[0.98] flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+                    Yeni Anket Başlat
+                </button>
+</div>
+</div>
+<!-- Sync Status Info (Bottom) -->
+<div class="mt-xl flex items-center gap-3 text-text-muted font-body-md text-body-md bg-surface-container-lowest/50 px-4 py-2 rounded-full border border-border/50">
+<span class="material-symbols-outlined text-xl" data-icon="sync_saved_locally">sync_saved_locally</span>
+<span>Bekleyen 1 anket yerel depolamada koruma altında.</span>
+</div>
+</main>
+</body></html>

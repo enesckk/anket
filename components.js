@@ -1,0 +1,1832 @@
+// SurveyAdmin Intelligence - Production Quality Modular UI Components
+
+import { store } from './store.js';
+
+// SVG Icon Helpers (Lucide Icons & Material Symbols Style)
+export function iconSvg(name, extraClass = 'w-5 h-5') {
+  const icons = {
+    home: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+    dashboard: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>`,
+    poll: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>`,
+    assignment: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>`,
+    chatBubble: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z"/><path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1"/></svg>`,
+    assessment: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>`,
+    group: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+    mail: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>`,
+    accountCircle: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/></svg>`,
+    clipboard: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>`,
+    message: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
+    user: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+    arrowLeft: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>`,
+    arrowRight: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>`,
+    checkCircle: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+    mapPin: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>`,
+    calendar: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>`,
+    camera: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>`,
+    cameraPlus: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/><line x1="12" x2="12" y1="10" y2="16"/><line x1="9" x2="15" y1="13" y2="13"/></svg>`,
+    plus: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>`,
+    play: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
+    chevronRight: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>`,
+    logOut: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>`,
+    send: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`,
+    download: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>`,
+    fileText: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>`,
+    cloudCheck: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/><path d="m9 13 2 2 4-4"/></svg>`,
+    land: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 6 4 5 4-5 5 10H3L8 6Z"/><path d="m3 20 18 0"/></svg>`,
+    block: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" x2="19.07" y1="4.93" y2="19.07"/></svg>`,
+    wifi: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" x2="12.01" y1="20" y2="20"/></svg>`,
+    note: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3z"/><path d="M14 3v5h5"/></svg>`,
+    copy: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`,
+    trash: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>`,
+    moveUp: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>`,
+    moveDown: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`,
+    grip: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg>`
+  };
+  return icons[name] || '';
+}
+
+// Custom Glassmorphism UI Modals Renderer (Replaces all native browser prompts/alerts)
+export function renderCustomModals(state) {
+  if (!state.activeModal) return '';
+
+  if (state.activeModal.type === 'add_section') {
+    return `
+      <div class="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-surface border border-border rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5 animate-in zoom-in-95 duration-150">
+          <div class="text-center space-y-1">
+            <div class="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-3 font-bold text-xl">
+              +
+            </div>
+            <h3 class="text-lg font-bold text-on-surface">Yeni Bölüm Ekle</h3>
+            <p class="text-xs text-text-secondary">Ankete eklemek istediğiniz bölüm adını yazınız.</p>
+          </div>
+
+          <form id="form-custom-add-section" class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold text-on-surface mb-1.5">Bölüm Adı *</label>
+              <input type="text" id="custom-sec-title" required autofocus placeholder="Örn: Arazi & Üretim Bilgileri" class="w-full h-12 px-4 bg-surface-container-low border border-border rounded-xl text-sm focus:outline-none focus:border-primary font-medium"/>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+              <button type="button" id="btn-close-custom-modal" class="flex-1 h-11 border border-border text-on-surface font-bold text-xs rounded-xl hover:bg-surface-container transition-all">
+                İptal
+              </button>
+              <button type="submit" class="flex-1 h-11 bg-primary text-white font-bold text-xs rounded-xl hover:bg-primary-dark transition-all shadow-sm">
+                Bölüm Ekle
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+  }
+
+  if (state.activeModal.type === 'confirm_delete') {
+    return `
+      <div class="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-surface border border-border rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5 text-center animate-in zoom-in-95 duration-150">
+          <div class="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-1">
+            ${iconSvg('trash', 'w-6 h-6')}
+          </div>
+          <div class="space-y-1">
+            <h3 class="text-lg font-bold text-on-surface">Soruyu Sil</h3>
+            <p class="text-xs text-text-secondary">Bu soruyu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.</p>
+          </div>
+
+          <div class="flex gap-3 pt-2">
+            <button type="button" id="btn-close-custom-modal" class="flex-1 h-11 border border-border text-on-surface font-bold text-xs rounded-xl hover:bg-surface-container transition-all">
+              İptal
+            </button>
+            <button type="button" id="btn-confirm-delete-q" data-q-id="${state.activeModal.questionId}" class="flex-1 h-11 bg-red-600 text-white font-bold text-xs rounded-xl hover:bg-red-700 transition-all shadow-sm">
+              Evet, Sil
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  if (state.activeModal.type === 'add_personnel') {
+    return `
+      <div class="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-surface border border-border rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-5 animate-in zoom-in-95 duration-150">
+          <div class="text-center space-y-1">
+            <div class="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-2">
+              ${iconSvg('group', 'w-6 h-6')}
+            </div>
+            <h3 class="text-lg font-bold text-on-surface">Yeni Personel Ekle</h3>
+            <p class="text-xs text-text-secondary">Hesap doğrudan aktif edilecek ve belirlenen şifre ile giriş yapabilecektir.</p>
+          </div>
+
+          <form id="form-custom-add-personnel" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-on-surface mb-1">Ad Soyad *</label>
+                <input type="text" id="personnel-fullname" required placeholder="Örn: Mustafa Yıldız" class="w-full h-11 px-3 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary font-medium"/>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-on-surface mb-1">Kullanıcı Adı *</label>
+                <input type="text" id="personnel-username" required placeholder="Örn: mustafa.yildiz" class="w-full h-11 px-3 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary font-medium"/>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-on-surface mb-1">E-Posta Adresi *</label>
+                <input type="email" id="personnel-email" required placeholder="Örn: mustafa@sahaanket.gov.tr" class="w-full h-11 px-3 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary font-medium"/>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-on-surface mb-1">Telefon Numarası *</label>
+                <input type="tel" id="personnel-phone" required placeholder="Örn: 0535 999 88 77" class="w-full h-11 px-3 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary font-medium"/>
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-bold text-on-surface mb-1">Giriş Şifresi *</label>
+                <input type="password" id="personnel-password" required value="Saha123!" placeholder="Şifre giriniz" class="w-full h-11 px-3 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary font-medium"/>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-on-surface mb-1">Kullanıcı Rolü *</label>
+              <select id="personnel-role" required class="w-full h-11 px-3 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary font-medium">
+                <option value="FIELD_USER" selected>SAHA PERSONELİ (PWA Erişimi)</option>
+                <option value="ADMIN">YÖNETİCİ (Tam Paneli Erişimi)</option>
+              </select>
+            </div>
+
+            <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-center gap-2">
+              ${iconSvg('checkCircle', 'w-4 h-4 text-emerald-600')}
+              <span>Hesap <strong>AKTİF</strong> olarak kaydedilecek ve hemen giriş yapabilecektir.</span>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+              <button type="button" id="btn-close-custom-modal" class="flex-1 h-11 border border-border text-on-surface font-bold text-xs rounded-xl hover:bg-surface-container transition-all">
+                İptal
+              </button>
+              <button type="submit" class="flex-1 h-11 bg-primary text-white font-bold text-xs rounded-xl hover:bg-primary-dark transition-all shadow-sm">
+                Personel Ekle & Aktif Et
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+  }
+
+  return '';
+}
+
+// System Top Bar (Role Switcher & Network Status)
+export function renderSystemBar() {
+  const state = store.getState();
+  return `
+    <div class="bg-slate-900 text-white text-xs px-4 py-2 flex flex-wrap justify-between items-center shadow-md border-b border-slate-800 sticky top-0 z-50">
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-1.5 font-bold tracking-wider uppercase text-indigo-400">
+          <span class="w-2 h-2 rounded-full bg-primary"></span>
+          <span>Saha Anket Yönetim Sistemi</span>
+        </div>
+        <span class="text-slate-700">|</span>
+        <div class="inline-flex bg-slate-800 p-0.5 rounded-lg border border-slate-700">
+          <button id="btn-role-pwa" class="px-3 py-1 rounded-md text-xs font-semibold transition-all ${state.currentRole === 'pwa' ? 'bg-primary text-white' : 'text-slate-400 hover:text-white'}">
+            Saha Personeli PWA
+          </button>
+          <button id="btn-role-admin" class="px-3 py-1 rounded-md text-xs font-semibold transition-all ${state.currentRole === 'admin' ? 'bg-primary text-white' : 'text-slate-400 hover:text-white'}">
+            Yönetici Web Paneli
+          </button>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 mt-1 sm:mt-0">
+        <button id="btn-toggle-network" class="flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium border transition-all ${state.isOnline ? 'bg-emerald-950/60 text-emerald-400 border-emerald-700/50' : 'bg-amber-950/60 text-amber-400 border-amber-700/50'}" title="Ağ Durumu">
+          <span class="w-2.5 h-2.5 rounded-full ${state.isOnline ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}"></span>
+          ${state.offlineQueueCount > 0 ? `<span class="bg-amber-500 text-slate-950 text-[10px] font-bold px-1.5 py-0.2 rounded-full">${state.offlineQueueCount} Bekliyor</span>` : ''}
+        </button>
+
+        <button id="btn-reset-demo" class="text-slate-400 hover:text-white transition-colors text-xs flex items-center gap-1">
+          <span>Sıfırla</span>
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+// 1. LOGIN EKRANI
+export function renderLoginScreen() {
+  return `
+    <div class="min-h-[calc(100vh-41px)] bg-background flex flex-col justify-center items-center px-6 py-12">
+      <div class="w-full max-w-sm space-y-6">
+        <div class="text-center space-y-2">
+          <div class="w-14 h-14 bg-primary text-white rounded-2xl mx-auto flex items-center justify-center shadow-md">
+            ${iconSvg('clipboard', 'w-8 h-8')}
+          </div>
+          <h1 class="text-xl font-bold text-on-surface tracking-tight">Saha Anket Sistemi</h1>
+          <p class="text-xs text-text-secondary">Güvenli Veri Toplama Platformu</p>
+        </div>
+
+        <form id="form-login" class="bg-surface p-6 rounded-2xl border border-border shadow-sm space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-on-surface mb-1.5">Kullanıcı Adı veya Telefon</label>
+            <input type="text" id="login-phone" value="ahmet" required class="w-full h-12 px-4 bg-surface-container-low border border-border rounded-xl text-sm focus:outline-none focus:border-primary transition-all"/>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-on-surface mb-1.5">Şifre</label>
+            <input type="password" id="login-password" value="Saha123!" required class="w-full h-12 px-4 bg-surface-container-low border border-border rounded-xl text-sm focus:outline-none focus:border-primary transition-all"/>
+          </div>
+
+          <button type="submit" class="w-full h-12 bg-primary text-white font-semibold rounded-xl text-sm hover:bg-primary-dark transition-all active:scale-[0.98] shadow-sm">
+            Giriş Yap
+          </button>
+        </form>
+      </div>
+    </div>
+  `;
+}
+
+// BOTTOM NAVIGATION
+export function renderBottomNav() {
+  const state = store.getState();
+  const screen = state.pwaScreen;
+  const unreadCount = state.messages.filter(m => m.isUnread).length;
+
+  return `
+    <nav class="fixed bottom-0 left-0 w-full z-40 bg-surface border-t border-border pb-safe">
+      <div class="flex justify-around items-center h-16 max-w-md mx-auto px-2">
+        <button id="nav-home" class="flex flex-col items-center justify-center flex-1 h-full gap-1 ${['home', 'task_detail', 'survey_success'].includes(screen) ? 'text-primary font-bold' : 'text-text-secondary hover:text-on-surface'} transition-all active:scale-90">
+          ${iconSvg('home', 'w-5 h-5')}
+          <span class="text-[11px] font-medium">Ana Sayfa</span>
+        </button>
+
+        <button id="nav-surveys" class="flex flex-col items-center justify-center flex-1 h-full gap-1 ${screen === 'my_surveys' || screen === 'quick_builder' ? 'text-primary font-bold' : 'text-text-secondary hover:text-on-surface'} transition-all active:scale-90">
+          ${iconSvg('clipboard', 'w-5 h-5')}
+          <span class="text-[11px] font-medium">Anketlerim</span>
+        </button>
+
+        <button id="nav-messages" class="flex flex-col items-center justify-center flex-1 h-full gap-1 ${screen === 'messages' || screen === 'message_detail' ? 'text-primary font-bold' : 'text-text-secondary hover:text-on-surface'} transition-all active:scale-90 relative">
+          <div class="relative">
+            ${iconSvg('message', 'w-5 h-5')}
+            ${unreadCount > 0 ? `<span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full ring-2 ring-surface"></span>` : ''}
+          </div>
+          <span class="text-[11px] font-medium">Mesajlar</span>
+        </button>
+
+        <button id="nav-profile" class="flex flex-col items-center justify-center flex-1 h-full gap-1 ${screen === 'profile' ? 'text-primary font-bold' : 'text-text-secondary hover:text-on-surface'} transition-all active:scale-90">
+          ${iconSvg('user', 'w-5 h-5')}
+          <span class="text-[11px] font-medium">Profil</span>
+        </button>
+      </div>
+    </nav>
+  `;
+}
+
+// 2. SAHA PERSONELİ PWA ANA SAYFA
+export function renderPwaHome() {
+  const state = store.getState();
+  const unreadMsg = state.messages.find(m => m.isUnread) || state.messages[0];
+  const mainTask = state.assignedSurveys[0] || {
+    id: '77777777-7777-7777-7777-777777777771',
+    title: 'Üretici İhtiyaç Anketi',
+    village: 'Sinan Köyü',
+    completed: 18,
+    target: 50,
+    priority: 'Yüksek Öncelik'
+  };
+
+  const progressPct = Math.round((mainTask.completed / (mainTask.target || 1)) * 100);
+
+  return `
+    <div class="min-h-[calc(100vh-41px)] bg-background text-on-surface flex flex-col pb-24">
+      <main class="flex-1 px-4 py-6 max-w-md mx-auto w-full space-y-6">
+        
+        <div class="flex justify-between items-center">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-[#64B352] text-white flex items-center justify-center font-bold text-base shadow-sm">
+              ${state.auth.user?.fullName?.charAt(0) || 'A'}
+            </div>
+            <div>
+              <h1 class="text-lg font-bold text-on-surface leading-tight">Saha Anket Portalı</h1>
+              <span class="text-xs text-text-secondary">Saha Personeli Uygulaması</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-1 text-primary">
+            ${iconSvg('wifi', 'w-5 h-5')}
+          </div>
+        </div>
+
+        <section class="space-y-1">
+          <h2 class="text-2xl font-bold text-on-surface">Merhaba, ${state.auth.user?.fullName || 'Ahmet'}</h2>
+          <p class="text-xs text-text-secondary">${new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' })}</p>
+
+          <div class="inline-flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-full mt-2 border border-emerald-200">
+            <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+            <span class="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">Tüm kayıtlar güncel</span>
+          </div>
+        </section>
+
+        <section class="space-y-3">
+          <h3 class="text-lg font-bold text-on-surface">Görevlerim</h3>
+
+          <div class="bg-surface rounded-2xl p-5 border border-border shadow-sm space-y-4 hover:border-primary/40 transition-all">
+            <div class="flex justify-between items-start">
+              <div>
+                <div class="flex items-center gap-1 text-text-secondary text-xs mb-1">
+                  ${iconSvg('mapPin', 'w-3.5 h-3.5 text-primary')}
+                  <span class="font-medium">${mainTask.village}</span>
+                </div>
+                <h4 class="font-bold text-on-surface text-base">${mainTask.title}</h4>
+              </div>
+              <span class="bg-primary/10 text-primary text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap">
+                ${mainTask.priority}
+              </span>
+            </div>
+
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs font-semibold">
+                <span class="text-text-secondary">İlerleme</span>
+                <span class="text-on-surface font-bold">%${progressPct}</span>
+              </div>
+              <div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+                <div class="bg-[#64B352] h-full rounded-full transition-all duration-500" style="width: ${progressPct}%"></div>
+              </div>
+            </div>
+
+            <button data-task-id="${mainTask.id}" class="btn-start-survey-direct w-full bg-[#64B352] text-white font-bold text-sm py-3.5 rounded-full flex items-center justify-center gap-2 active:scale-95 transition-all shadow-sm hover:bg-[#4e953f]">
+              ${iconSvg('play', 'w-4 h-4')}
+              Ankete Başla
+            </button>
+          </div>
+
+          <button id="btn-home-quick-builder" class="w-full bg-transparent border border-slate-300 text-slate-700 hover:bg-surface-container-low font-bold py-3.5 rounded-full flex items-center justify-center gap-2 text-sm transition-all active:scale-95">
+            ${iconSvg('plus', 'w-4 h-4')}
+            Hızlı Anket Oluştur
+          </button>
+        </section>
+
+        ${unreadMsg ? `
+          <section class="space-y-3 pt-2">
+            <h3 class="text-lg font-bold text-on-surface">Son Mesajlar</h3>
+            <div id="btn-home-msg-preview" class="bg-surface rounded-2xl p-4 border border-border shadow-sm flex items-center justify-between cursor-pointer hover:border-primary/40 transition-all">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-2.5 h-2.5 rounded-full bg-primary shrink-0"></div>
+                <div class="min-w-0">
+                  <div class="text-xs font-bold text-on-surface truncate">${unreadMsg.title}</div>
+                  <p class="text-[11px] text-text-secondary truncate mt-0.5">${unreadMsg.content}</p>
+                </div>
+              </div>
+              <span class="text-xs font-bold text-primary shrink-0 flex items-center gap-0.5 ml-2">
+                Gör ${iconSvg('chevronRight', 'w-4 h-4')}
+              </span>
+            </div>
+          </section>
+        ` : ''}
+
+      </main>
+
+      ${renderBottomNav()}
+    </div>
+  `;
+}
+
+// GÖREV DETAYI
+export function renderTaskDetail() {
+  const state = store.getState();
+  const task = state.assignedSurveys.find(t => t.id === state.selectedTaskId) || state.assignedSurveys[0];
+
+  return `
+    <div class="min-h-[calc(100vh-41px)] bg-background text-on-surface flex flex-col pb-24">
+      <header class="h-14 bg-surface border-b border-border px-4 flex items-center justify-between sticky top-10 z-30">
+        <button id="btn-back-to-home" class="p-2 -ml-2 text-on-surface hover:bg-surface-container rounded-full flex items-center gap-1 text-xs font-semibold">
+          ${iconSvg('arrowLeft', 'w-5 h-5')}
+          <span>Geri</span>
+        </button>
+        <span class="text-xs font-bold text-on-surface">Görev Detayı</span>
+        <div class="w-8"></div>
+      </header>
+
+      <main class="flex-1 px-4 py-6 max-w-md mx-auto w-full space-y-6">
+        <div class="bg-surface rounded-2xl p-6 border border-border shadow-sm space-y-6">
+          <div class="space-y-2">
+            <span class="bg-primary/10 text-primary text-[10px] font-bold px-2.5 py-1 rounded-full">
+              ${task?.priority || 'Yüksek'}
+            </span>
+            <h1 class="text-xl font-bold text-on-surface leading-tight">${task?.title}</h1>
+            <div class="flex items-center gap-1 text-text-secondary text-xs">
+              ${iconSvg('mapPin', 'w-4 h-4')}
+              <span>${task?.village}</span>
+            </div>
+          </div>
+
+          <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-1.5">
+            <div class="flex items-center gap-2 text-amber-900 font-bold text-xs">
+              ${iconSvg('note', 'w-4 h-4 text-amber-700')}
+              <span>Yönetici Notu</span>
+            </div>
+            <p class="text-xs text-amber-800 leading-relaxed font-medium">
+              ${task?.note || 'Sinan Köyü üreticileriyle görüşürken gübre ve ekipman ihtiyaçlarını detaylı olarak not alınız.'}
+            </p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4 p-4 bg-surface-container-low rounded-xl text-xs">
+            <div>
+              <span class="text-text-secondary block mb-0.5">Hedef Anket</span>
+              <span class="font-bold text-on-surface text-sm">${task?.target}</span>
+            </div>
+            <div>
+              <span class="text-text-secondary block mb-0.5">Tamamlanan</span>
+              <span class="font-bold text-primary text-sm">${task?.completed}</span>
+            </div>
+            <div>
+              <span class="text-text-secondary block mb-0.5">Son Tarih</span>
+              <span class="font-bold text-on-surface">${task?.endDate}</span>
+            </div>
+            <div>
+              <span class="text-text-secondary block mb-0.5">Saha Takibi</span>
+              <span class="font-bold text-success flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-success"></span> Görüldü
+              </span>
+            </div>
+          </div>
+
+          <button id="btn-detail-start-survey" class="w-full h-12 bg-primary text-white font-bold rounded-xl text-sm hover:bg-primary-dark transition-all flex items-center justify-center gap-2 active:scale-[0.98] shadow-sm">
+            ${iconSvg('plus', 'w-5 h-5')}
+            Yeni Anket Başlat
+          </button>
+        </div>
+      </main>
+
+      ${renderBottomNav()}
+    </div>
+  `;
+}
+
+// 3. ANKET DOLDURMA SİHİRBAZI
+export function renderSurveyRunner() {
+  const state = store.getState();
+  const task = state.assignedSurveys.find(t => t.id === state.selectedTaskId) || state.assignedSurveys[0];
+  const secIndex = state.activeSectionIndex || 0;
+  const answers = state.activeFormAnswers;
+  const yesNoVal = answers['q4'] || 'yes';
+  const tractorVal = answers['q6'] || 'yes';
+  const fertVal = answers['q7'] || 'yes';
+
+  const stepTitles = [
+    'Kişisel Bilgiler',
+    'Arazi & Üretim Bilgileri',
+    'Ekipman & İhtiyaçlar',
+    'Saha Kanıtı & Konum'
+  ];
+
+  return `
+    <div class="min-h-screen bg-[#f8f9fa] text-slate-900 flex flex-col pb-28 font-sans">
+      <header class="h-14 bg-white border-b border-[#dadce0] px-4 flex items-center justify-between sticky top-0 z-30 shadow-2xs">
+        <button id="btn-cancel-runner" class="p-2 -ml-2 text-slate-700 hover:bg-slate-100 rounded-full transition-all">
+          ${iconSvg('arrowLeft', 'w-5 h-5 text-slate-800')}
+        </button>
+        <h2 class="text-base font-bold text-slate-900 tracking-tight">${task?.title || 'Üretici İhtiyaç Anketi'}</h2>
+        <div class="bg-[#e6f4ea] text-[#137333] px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 border border-[#ceead6]">
+          ${iconSvg('cloudCheck', 'w-4 h-4 text-[#137333]')}
+          <span>Kaydedildi</span>
+        </div>
+      </header>
+
+      <main class="flex-1 px-4 py-6 max-w-md mx-auto w-full space-y-6">
+        <div class="space-y-2">
+          <div class="flex justify-between items-baseline">
+            <h3 class="text-xl font-bold text-[#64B352] tracking-tight">${stepTitles[secIndex] || 'Kişisel Bilgiler'}</h3>
+            <span class="text-xs text-slate-500 font-semibold">Adım ${secIndex + 1} / 4</span>
+          </div>
+          <div class="w-full bg-[#e8eaed] h-1.5 rounded-full overflow-hidden">
+            <div class="bg-[#64B352] h-full rounded-full transition-all duration-300" style="width: ${((secIndex + 1) / 4) * 100}%"></div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-3xl border border-[#dadce0] p-6 shadow-xs space-y-8">
+          ${secIndex === 0 ? `
+            <div class="space-y-2.5 pb-6 border-b border-[#f1f3f4]">
+              <label class="block text-base font-bold text-slate-900">1. Ad Soyad</label>
+              <input type="text" data-q-id="q1" value="${answers['q1'] || ''}" placeholder="Adınızı yazın" class="runner-input w-full h-13 px-4 bg-[#f1f3f4] border border-[#dadce0] rounded-xl text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:border-[#64B352] focus:bg-white transition-all"/>
+            </div>
+
+            <div class="space-y-3 pb-6 border-b border-[#f1f3f4]">
+              <label class="block text-base font-bold text-slate-900">2. Araziniz var mı?</label>
+              <div class="grid grid-cols-2 gap-4">
+                <button type="button" data-q-id="q4" data-val="yes" class="btn-runner-yesno h-36 border-2 ${yesNoVal === 'yes' ? 'border-[#64B352] bg-[#f0f7ee] text-[#64B352]' : 'border-[#dadce0] bg-white text-slate-700'} rounded-2xl flex flex-col items-center justify-center gap-3 font-bold text-base transition-all active:scale-95 shadow-2xs">
+                  ${iconSvg('land', `w-8 h-8 ${yesNoVal === 'yes' ? 'text-[#64B352]' : 'text-slate-600'}`)}
+                  <span>Evet</span>
+                </button>
+
+                <button type="button" data-q-id="q4" data-val="no" class="btn-runner-yesno h-36 border-2 ${yesNoVal === 'no' ? 'border-[#64B352] bg-[#f0f7ee] text-[#64B352]' : 'border-[#dadce0] bg-white text-slate-700'} rounded-2xl flex flex-col items-center justify-center gap-3 font-bold text-base transition-all active:scale-95 shadow-2xs">
+                  ${iconSvg('block', `w-8 h-8 ${yesNoVal === 'no' ? 'text-[#64B352]' : 'text-slate-600'}`)}
+                  <span>Hayır</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-base font-bold text-slate-900">3. Fotoğraf Ekle</label>
+              <p class="text-xs text-slate-500 leading-relaxed">Arazi veya üretim alanınızı gösteren bir fotoğraf ekleyebilirsiniz.</p>
+              
+              <div id="btn-runner-photo" class="border-2 border-dashed ${state.activePhotoUploaded ? 'border-emerald-600 bg-emerald-50/50' : 'border-[#dadce0] hover:border-[#64B352]'} rounded-2xl p-6 text-center cursor-pointer hover:bg-slate-50/60 transition-all space-y-2">
+                <div class="w-14 h-14 rounded-full ${state.activePhotoUploaded ? 'bg-emerald-100 text-emerald-700' : 'bg-[#f1f3f4] text-slate-700'} mx-auto flex items-center justify-center">
+                  ${iconSvg(state.activePhotoUploaded ? 'checkCircle' : 'cameraPlus', `w-7 h-7 ${state.activePhotoUploaded ? 'text-emerald-700' : 'text-slate-700'}`)}
+                </div>
+                <div class="text-sm font-bold text-[#64B352]">${state.activePhotoUploaded ? 'Fotoğraf Yüklendi (1 Adet)' : 'Kamera ile Çek'}</div>
+                <div class="text-xs text-slate-500">${state.activePhotoUploaded ? 'Fotoğrafı değiştirmek için tıklayın' : 'veya galeriden seç'}</div>
+              </div>
+            </div>
+          ` : ''}
+
+          ${secIndex === 1 ? `
+            <div class="space-y-2.5 pb-6 border-b border-[#f1f3f4]">
+              <label class="block text-base font-bold text-slate-900">4. Kaç Dönüm Araziniz Var?</label>
+              <input type="number" inputmode="numeric" data-q-id="q5" value="${answers['q5'] || ''}" placeholder="Örn: 35" class="runner-input w-full h-13 px-4 bg-[#f1f3f4] border border-[#dadce0] rounded-xl text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:border-[#64B352] focus:bg-white transition-all"/>
+            </div>
+
+            <div class="space-y-3">
+              <label class="block text-base font-bold text-slate-900">5. Ana Ürün Türü</label>
+              <div class="space-y-2.5">
+                ${['Buğday / Arpa', 'Antep Fıstığı', 'Zeytin', 'Mısır / Pamuk'].map(opt => `
+                  <label data-q-id="q6" data-opt="${opt}" class="runner-radio-row flex items-center justify-between p-4 border ${answers['q6'] === opt ? 'border-[#64B352] bg-[#f0f7ee]' : 'border-[#dadce0] bg-white'} rounded-xl cursor-pointer transition-all">
+                    <span class="text-sm font-medium text-slate-900">${opt}</span>
+                    <span class="w-5 h-5 rounded-full border-2 ${answers['q6'] === opt ? 'border-[#64B352] bg-[#64B352]' : 'border-[#dadce0]'} flex items-center justify-center">
+                      ${answers['q6'] === opt ? '<span class="w-2 h-2 bg-white rounded-full"></span>' : ''}
+                    </span>
+                  </label>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          ${secIndex === 2 ? `
+            <div class="space-y-3 pb-6 border-b border-[#f1f3f4]">
+              <label class="block text-base font-bold text-slate-900">6. Traktör veya Ekipmanınız Var Mı?</label>
+              <div class="grid grid-cols-2 gap-4">
+                <button type="button" data-q-id="q6" data-val="yes" class="btn-runner-yesno h-32 border-2 ${tractorVal === 'yes' ? 'border-[#64B352] bg-[#f0f7ee] text-[#64B352]' : 'border-[#dadce0] bg-white text-slate-700'} rounded-2xl flex flex-col items-center justify-center gap-2 font-bold text-base transition-all">
+                  <span>Evet var</span>
+                </button>
+                <button type="button" data-q-id="q6" data-val="no" class="btn-runner-yesno h-32 border-2 ${tractorVal === 'no' ? 'border-[#64B352] bg-[#f0f7ee] text-[#64B352]' : 'border-[#dadce0] bg-white text-slate-700'} rounded-2xl flex flex-col items-center justify-center gap-2 font-bold text-base transition-all">
+                  <span>Hayır yok</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              <label class="block text-base font-bold text-slate-900">7. Gübre & Tohum Desteği İhtiyacınız Var Mı?</label>
+              <div class="grid grid-cols-2 gap-4">
+                <button type="button" data-q-id="q7" data-val="yes" class="btn-runner-yesno h-32 border-2 ${fertVal === 'yes' ? 'border-[#64B352] bg-[#f0f7ee] text-[#64B352]' : 'border-[#dadce0] bg-white text-slate-700'} rounded-2xl flex flex-col items-center justify-center gap-2 font-bold text-base transition-all">
+                  <span>Evet var</span>
+                </button>
+                <button type="button" data-q-id="q7" data-val="no" class="btn-runner-yesno h-32 border-2 ${fertVal === 'no' ? 'border-[#64B352] bg-[#f0f7ee] text-[#64B352]' : 'border-[#dadce0] bg-white text-slate-700'} rounded-2xl flex flex-col items-center justify-center gap-2 font-bold text-base transition-all">
+                  <span>İhtiyaç yok</span>
+                </button>
+              </div>
+            </div>
+          ` : ''}
+
+          ${secIndex === 3 ? `
+            <div class="space-y-3 pb-6 border-b border-[#f1f3f4]">
+              <label class="block text-base font-bold text-slate-900">8. GPS Konumu Al</label>
+              <button type="button" id="btn-runner-location" class="w-full h-14 border ${state.activeLocationAcquired ? 'border-emerald-600 bg-emerald-50 text-emerald-800' : 'border-[#dadce0] bg-[#f1f3f4] text-slate-900'} rounded-xl flex items-center justify-between px-4 text-sm font-bold transition-all">
+                <span class="flex items-center gap-2">
+                  ${iconSvg('mapPin', 'w-5 h-5 text-[#64B352]')}
+                  ${state.activeLocationAcquired ? 'Konum Alındı (Hassasiyet: 8m)' : 'GPS Konumunu Al'}
+                </span>
+                ${state.activeLocationAcquired ? iconSvg('checkCircle', 'w-5 h-5 text-emerald-700') : ''}
+              </button>
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-base font-bold text-slate-900">9. Saha Notları</label>
+              <textarea data-q-id="q9" rows="3" placeholder="Üretici talepleri veya ek açıklamalar..." class="runner-input w-full p-4 bg-[#f1f3f4] border border-[#dadce0] rounded-xl text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:border-[#64B352] focus:bg-white transition-all">${answers['q9'] || ''}</textarea>
+            </div>
+          ` : ''}
+        </div>
+
+        <div class="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-md border-t border-[#dadce0] p-4 z-40">
+          <div class="max-w-md mx-auto flex items-center gap-4">
+            <button id="btn-runner-prev" class="w-1/2 h-13 border border-[#dadce0] bg-white rounded-full font-bold text-slate-800 text-sm hover:bg-slate-50 active:scale-95 transition-all shadow-2xs">
+              Geri
+            </button>
+
+            ${secIndex < 3 ? `
+              <button id="btn-runner-next" class="w-1/2 h-13 bg-[#64B352] text-white font-bold rounded-full text-sm hover:bg-[#4e953f] active:scale-95 transition-all flex items-center justify-center gap-2 shadow-sm">
+                Devam Et ${iconSvg('arrowRight', 'w-4 h-4')}
+              </button>
+            ` : `
+              <button id="btn-runner-submit" class="w-1/2 h-13 bg-[#64B352] text-white font-bold rounded-full text-sm hover:bg-[#4e953f] active:scale-95 transition-all flex items-center justify-center gap-2 shadow-sm">
+                ${iconSvg('send', 'w-4 h-4')}
+                Anketi Tamamla
+              </button>
+            `}
+          </div>
+        </div>
+      </main>
+    </div>
+  `;
+}
+
+// ANKET TAMAMLAMA
+export function renderSurveySuccess() {
+  const state = store.getState();
+  const isOnline = state.isOnline;
+
+  return `
+    <div class="min-h-[calc(100vh-41px)] bg-background flex flex-col items-center justify-center p-6 text-center">
+      <div class="w-full max-w-sm bg-surface p-8 rounded-2xl border border-border shadow-sm space-y-6">
+        <div class="w-16 h-16 rounded-full ${isOnline ? 'bg-success/10 text-success' : 'bg-amber-500/10 text-amber-700'} mx-auto flex items-center justify-center">
+          ${iconSvg('checkCircle', 'w-10 h-10')}
+        </div>
+
+        <div class="space-y-2">
+          <h1 class="text-xl font-bold text-on-surface">
+            ${isOnline ? 'Anket Sunucuya İletildi' : 'Anket Cihazda Güvenle Kaydedildi'}
+          </h1>
+          <p class="text-xs text-text-secondary leading-relaxed">
+            ${isOnline 
+              ? 'Anket verileri başarıyla merkeze ulaştırıldı.' 
+              : 'İnternet bağlantısı geldiğinde otomatik olarak merkeze gönderilecek.'}
+          </p>
+        </div>
+
+        <div class="space-y-2.5 pt-2">
+          <button id="btn-success-new-survey" class="w-full h-12 bg-primary text-white font-bold rounded-xl text-xs hover:bg-primary-dark transition-all shadow-sm">
+            Yeni Anket Başlat
+          </button>
+          <button id="btn-success-back-home" class="w-full h-12 bg-surface-container-low border border-border text-on-surface font-semibold rounded-xl text-xs hover:bg-surface-container transition-all">
+            Ana Sayfaya Dön
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ANKETLERİM
+export function renderMySurveys() {
+  const state = store.getState();
+  const currentTab = state.surveysTab || 'assigned';
+
+  return `
+    <div class="min-h-[calc(100vh-41px)] bg-background text-on-surface flex flex-col pb-24">
+      <header class="h-14 bg-surface border-b border-border px-4 flex items-center justify-between sticky top-10 z-30">
+        <h1 class="text-base font-bold text-on-surface">Anketlerim</h1>
+        <button id="btn-surveys-quick-builder" class="text-xs font-bold text-primary flex items-center gap-1">
+          ${iconSvg('plus', 'w-4 h-4')}
+          <span>Hızlı Anket</span>
+        </button>
+      </header>
+
+      <main class="flex-1 px-4 py-6 max-w-md mx-auto w-full space-y-4">
+        <div class="bg-surface-container p-1 rounded-xl flex text-xs font-semibold">
+          <button id="tab-assigned" class="flex-1 py-2 rounded-lg transition-all ${currentTab === 'assigned' ? 'bg-surface text-primary shadow-sm' : 'text-text-secondary'}">
+            Görev Anketleri
+          </button>
+          <button id="tab-my-quick" class="flex-1 py-2 rounded-lg transition-all ${currentTab === 'my_quick' ? 'bg-surface text-primary shadow-sm' : 'text-text-secondary'}">
+            Benim Anketlerim
+          </button>
+        </div>
+
+        ${currentTab === 'assigned' ? `
+          <div class="space-y-3">
+            ${state.assignedSurveys.map(task => `
+              <div class="bg-surface p-4 rounded-xl border border-border shadow-sm flex items-center justify-between">
+                <div>
+                  <h3 class="text-xs font-bold text-on-surface">${task.title}</h3>
+                  <span class="text-[11px] text-text-secondary flex items-center gap-1 mt-0.5">
+                    ${iconSvg('mapPin', 'w-3 h-3')} ${task.village} • ${task.completed}/${task.target}
+                  </span>
+                </div>
+                <button data-task-id="${task.id}" class="btn-start-survey-direct px-3 py-2 bg-primary text-white font-semibold text-xs rounded-lg active:scale-95">
+                  Başlat
+                </button>
+              </div>
+            `).join('')}
+          </div>
+        ` : `
+          <div class="space-y-3">
+            ${state.myQuickSurveys.map(qs => `
+              <div class="bg-surface p-4 rounded-xl border border-border shadow-sm flex items-center justify-between">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h3 class="text-xs font-bold text-on-surface">${qs.title}</h3>
+                    <span class="bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-md">Benim Anketim</span>
+                  </div>
+                  <span class="text-[11px] text-text-secondary block mt-1">${qs.responseCount} cevap • ${qs.createdAt}</span>
+                </div>
+                <button class="px-3 py-2 bg-surface-container-low border border-border text-on-surface font-semibold text-xs rounded-lg hover:bg-surface-container">
+                  Ankete Başla →
+                </button>
+              </div>
+            `).join('')}
+          </div>
+        `}
+      </main>
+
+      ${renderBottomNav()}
+    </div>
+  `;
+}
+
+// HIZLI ANKET OLUŞTURUCU
+export function renderQuickBuilder() {
+  return `
+    <div class="min-h-[calc(100vh-41px)] bg-background text-on-surface flex flex-col pb-24">
+      <header class="h-14 bg-surface border-b border-border px-4 flex items-center justify-between sticky top-10 z-30">
+        <button id="btn-cancel-builder" class="p-2 -ml-2 text-on-surface hover:bg-surface-container rounded-full flex items-center gap-1 text-xs">
+          ${iconSvg('arrowLeft', 'w-5 h-5')}
+        </button>
+        <h1 class="text-xs font-bold text-on-surface">Hızlı Anket Oluştur</h1>
+        <div class="w-8"></div>
+      </header>
+
+      <main class="flex-1 px-4 py-6 max-w-md mx-auto w-full space-y-4">
+        <form id="form-quick-builder" class="bg-surface p-5 rounded-2xl border border-border shadow-sm space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-on-surface mb-1">Anket Adı *</label>
+            <input type="text" id="qb-title" required placeholder="Örn: Yol Problemleri Tespiti" class="w-full h-11 px-4 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary"/>
+          </div>
+
+          <button type="submit" class="w-full h-12 bg-primary text-white font-bold rounded-xl text-xs hover:bg-primary-dark transition-all flex items-center justify-center gap-2 active:scale-[0.98] shadow-sm">
+            Anketi Oluştur & Başlat
+          </button>
+        </form>
+      </main>
+
+      ${renderBottomNav()}
+    </div>
+  `;
+}
+
+// MESAJLAR EKRANI
+export function renderMessages() {
+  const state = store.getState();
+
+  return `
+    <div class="min-h-[calc(100vh-41px)] bg-background text-on-surface flex flex-col pb-24">
+      <header class="h-14 bg-surface border-b border-border px-4 flex items-center justify-between sticky top-10 z-30">
+        <h1 class="text-base font-bold text-on-surface">Mesajlar</h1>
+      </header>
+
+      <main class="flex-1 px-4 py-6 max-w-md mx-auto w-full space-y-3">
+        ${state.messages.map(msg => `
+          <div data-msg-id="${msg.id}" class="btn-open-msg-detail bg-surface p-4 rounded-xl border border-border shadow-sm flex items-start gap-3 cursor-pointer hover:border-primary/40 transition-all">
+            ${msg.isUnread ? `<div class="w-2.5 h-2.5 rounded-full bg-primary shrink-0 mt-1"></div>` : `<div class="w-2.5 h-2.5"></div>`}
+            <div class="flex-1 min-w-0">
+              <div class="flex justify-between items-baseline">
+                <h3 class="text-xs font-bold text-on-surface truncate">${msg.title}</h3>
+                <span class="text-[10px] text-text-secondary shrink-0 ml-2">${msg.date}</span>
+              </div>
+              <span class="text-[11px] text-text-secondary block font-medium mt-0.5">${msg.sender}</span>
+              <p class="text-xs text-text-secondary line-clamp-2 mt-1">${msg.content}</p>
+            </div>
+          </div>
+        `).join('')}
+      </main>
+
+      ${renderBottomNav()}
+    </div>
+  `;
+}
+
+// MESAJ DETAYI EKRANI
+export function renderMessageDetail() {
+  const state = store.getState();
+  const msg = state.messages.find(m => m.id === state.selectedMessageId) || state.messages[0];
+
+  return `
+    <div class="min-h-[calc(100vh-41px)] bg-background text-on-surface flex flex-col pb-24">
+      <header class="h-14 bg-surface border-b border-border px-4 flex items-center justify-between sticky top-10 z-30">
+        <button id="btn-back-to-messages" class="p-2 -ml-2 text-on-surface hover:bg-surface-container rounded-full flex items-center gap-1 text-xs font-semibold">
+          ${iconSvg('arrowLeft', 'w-5 h-5')}
+          <span>Mesajlar</span>
+        </button>
+        <span class="text-xs font-bold text-on-surface">Mesaj Detayı</span>
+        <div class="w-8"></div>
+      </header>
+
+      <main class="flex-1 px-4 py-6 max-w-md mx-auto w-full space-y-4">
+        <div class="bg-surface rounded-2xl p-6 border border-border shadow-sm space-y-4">
+          <div class="border-b border-border pb-3">
+            <h1 class="text-base font-bold text-on-surface">${msg?.title}</h1>
+            <div class="flex justify-between items-center text-xs text-text-secondary mt-1">
+              <span>Gönderen: <strong>${msg?.sender}</strong></span>
+              <span>${msg?.date}</span>
+            </div>
+          </div>
+
+          <p class="text-xs text-on-surface leading-relaxed whitespace-pre-line">
+            ${msg?.content}
+          </p>
+
+          <div class="pt-2 text-[10px] text-text-muted border-t border-border flex items-center gap-1">
+            ${iconSvg('checkCircle', 'w-3.5 h-3.5 text-success')}
+            <span>Görüldü Bilgisi İşlendi (${new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })})</span>
+          </div>
+        </div>
+      </main>
+
+      ${renderBottomNav()}
+    </div>
+  `;
+}
+
+// PROFİL EKRANI
+export function renderProfile() {
+  const state = store.getState();
+  const user = state.auth.user;
+
+  return `
+    <div class="min-h-[calc(100vh-41px)] bg-background text-on-surface flex flex-col pb-24">
+      <header class="h-14 bg-surface border-b border-border px-4 flex items-center justify-between sticky top-10 z-30">
+        <h1 class="text-base font-bold text-on-surface">Profil</h1>
+      </header>
+
+      <main class="flex-1 px-4 py-6 max-w-md mx-auto w-full space-y-6">
+        <div class="bg-surface rounded-2xl p-6 border border-border shadow-sm text-center space-y-4">
+          <div class="w-20 h-20 bg-primary text-white rounded-full mx-auto flex items-center justify-center font-bold text-2xl shadow-md">
+            ${user?.fullName?.charAt(0) || 'A'}
+          </div>
+
+          <div>
+            <h2 class="text-lg font-bold text-on-surface">${user?.fullName || 'Ahmet Yılmaz'}</h2>
+            <p class="text-xs text-text-secondary">${user?.role || 'Saha Personeli'} • ${user?.phone || '0532 555 43 21'}</p>
+          </div>
+
+          <div class="pt-2 border-t border-border">
+            <button id="btn-logout" class="w-full h-11 border border-red-200 text-red-600 hover:bg-red-50 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2">
+              ${iconSvg('logOut', 'w-4 h-4')}
+              Çıkış Yap
+            </button>
+          </div>
+        </div>
+      </main>
+
+      ${renderBottomNav()}
+    </div>
+  `;
+}
+
+// EXECUTIVE ADMIN PANEL BİLEŞENİ
+export function renderAdminView() {
+  const state = store.getState();
+  const activeTab = state.adminTab || 'dashboard';
+
+  const navItems = [
+    { id: 'dashboard', label: 'ANA SAYFA', icon: 'dashboard' },
+    { id: 'surveys', label: 'ANKETLER', icon: 'poll' },
+    { id: 'assignments', label: 'ATAMALAR', icon: 'assignment' },
+    { id: 'responses', label: 'CEVAPLAR', icon: 'chatBubble' },
+    { id: 'reports', label: 'RAPORLAR', icon: 'assessment' },
+    { id: 'personnel', label: 'PERSONELLER', icon: 'group' },
+    { id: 'messages', label: 'MESAJLAR', icon: 'mail' }
+  ];
+
+  return `
+    <div class="flex min-h-[calc(100vh-41px)] bg-background relative">
+      ${renderCustomModals(state)}
+
+      <aside class="hidden md:flex flex-col w-64 border-r border-separator bg-surface z-30 shrink-0 sticky top-10 h-[calc(100vh-41px)]">
+        <div class="p-6 border-b border-separator/50 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+            ${iconSvg('clipboard', 'w-6 h-6')}
+          </div>
+          <div>
+            <h1 class="font-bold text-on-surface text-base leading-tight">Saha Anket</h1>
+            <p class="text-[11px] text-text-secondary uppercase tracking-widest font-semibold mt-0.5">Yönetim Paneli</p>
+          </div>
+        </div>
+
+        <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
+          ${navItems.map(item => `
+            <button data-admin-tab="${item.id}" class="btn-admin-tab w-full flex items-center gap-3 px-3 py-3 rounded-lg text-left text-xs font-semibold transition-all relative ${activeTab === item.id || (activeTab === 'builder' && item.id === 'surveys') ? 'text-primary bg-primary/5 font-bold before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-6 before:w-1 before:bg-primary before:rounded-r-full' : 'text-text-secondary hover:text-on-surface hover:bg-surface-container-low'}">
+              ${iconSvg(item.icon, 'w-5 h-5')}
+              <span>${item.label}</span>
+            </button>
+          `).join('')}
+        </nav>
+
+        <div class="p-3 border-t border-separator/50 mt-auto">
+          <div class="flex items-center gap-3 px-3 py-2 text-xs font-semibold text-text-secondary">
+            ${iconSvg('accountCircle', 'w-6 h-6 text-primary')}
+            <div>
+              <div class="text-on-surface font-bold text-xs">${state.auth.user?.fullName || 'Saha Koordinatörü'}</div>
+              <div class="text-[10px] text-text-muted">Sistem Yöneticisi</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <div class="flex-1 flex flex-col min-w-0">
+        <header class="h-16 border-b border-separator/60 bg-surface px-6 flex items-center justify-between sticky top-10 z-20">
+          <div class="flex items-center gap-3">
+            <h2 class="font-bold text-on-surface text-lg uppercase tracking-tight">${activeTab === 'builder' ? 'ANKET OLUŞTUR' : (navItems.find(i => i.id === activeTab)?.label || 'ANA SAYFA')}</h2>
+          </div>
+        </header>
+
+        <main class="p-6 max-w-[1400px] w-full mx-auto space-y-6">
+          ${activeTab === 'builder' ? render4StepSurveyBuilder(state) : renderAdminTabContent(activeTab, state)}
+        </main>
+      </div>
+    </div>
+  `;
+}
+
+// PREMIUM ANKET OLUŞTURUCU (NET, SADE VE TEMİZ 4 ADIMLI AKIŞ)
+function render4StepSurveyBuilder(state) {
+  const step = state.builderStep || 1;
+  const survey = state.builderSurvey;
+
+  return `
+    <div class="space-y-6">
+      
+      <!-- SADE VE PREMİUM ADIM ÜST BAR -->
+      <div class="bg-surface p-4 rounded-2xl border border-border shadow-sm">
+        <div class="flex items-center justify-between max-w-2xl mx-auto text-xs font-bold">
+          
+          <button data-builder-step="1" class="btn-builder-step-nav flex items-center gap-2 ${step >= 1 ? 'text-primary' : 'text-slate-400'}">
+            <span class="w-6 h-6 rounded-full ${step > 1 ? 'bg-emerald-600 text-white' : (step === 1 ? 'bg-primary text-white' : 'bg-slate-200 text-slate-600')} flex items-center justify-center text-xs">
+              ${step > 1 ? '✓' : '1'}
+            </span>
+            <span>Bilgiler</span>
+          </button>
+
+          <span class="h-0.5 w-16 ${step >= 2 ? 'bg-primary' : 'bg-slate-200'}"></span>
+
+          <button data-builder-step="2" class="btn-builder-step-nav flex items-center gap-2 ${step >= 2 ? 'text-primary' : 'text-slate-400'}">
+            <span class="w-6 h-6 rounded-full ${step > 2 ? 'bg-emerald-600 text-white' : (step === 2 ? 'bg-primary text-white' : 'bg-slate-200 text-slate-600')} flex items-center justify-center text-xs">
+              ${step > 2 ? '✓' : '2'}
+            </span>
+            <span>Sorular</span>
+          </button>
+
+          <span class="h-0.5 w-16 ${step >= 3 ? 'bg-primary' : 'bg-slate-200'}"></span>
+
+          <button data-builder-step="3" class="btn-builder-step-nav flex items-center gap-2 ${step >= 3 ? 'text-primary' : 'text-slate-400'}">
+            <span class="w-6 h-6 rounded-full ${step > 3 ? 'bg-emerald-600 text-white' : (step === 3 ? 'bg-primary text-white' : 'bg-slate-200 text-slate-600')} flex items-center justify-center text-xs">
+              ${step > 3 ? '✓' : '3'}
+            </span>
+            <span>Önizleme</span>
+          </button>
+
+          <span class="h-0.5 w-16 ${step >= 4 ? 'bg-primary' : 'bg-slate-200'}"></span>
+
+          <button data-builder-step="4" class="btn-builder-step-nav flex items-center gap-2 ${step >= 4 ? 'text-primary' : 'text-slate-400'}">
+            <span class="w-6 h-6 rounded-full ${step === 4 ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'} flex items-center justify-center text-xs">
+              4
+            </span>
+            <span>Yayınla & Ata</span>
+          </button>
+
+        </div>
+      </div>
+
+      <!-- ADIM 1: ANKET BİLGİLERİ -->
+      ${step === 1 ? `
+        <div class="max-w-xl mx-auto bg-surface p-8 rounded-3xl border border-border shadow-sm space-y-6">
+          <div class="text-center space-y-1">
+            <h3 class="text-xl font-bold text-on-surface">Yeni Anket Tanımla</h3>
+            <p class="text-xs text-text-secondary">Anketinizin adını ve açıklamasını giriniz.</p>
+          </div>
+
+          <form id="form-builder-step1" class="space-y-5">
+            <div>
+              <label class="block text-xs font-bold text-on-surface mb-1.5">Anket Adı *</label>
+              <input type="text" id="builder-info-title" required value="${survey.title}" placeholder="Örn: Üretici İhtiyaç Anketi" class="w-full h-12 px-4 bg-surface-container-low border border-border rounded-xl text-sm focus:outline-none focus:border-primary font-medium"/>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-on-surface mb-1.5">Açıklama</label>
+              <textarea id="builder-info-desc" rows="3" placeholder="Köylerde üreticilerin ihtiyaçlarını tespit etmek için hazırlanan saha çalışması..." class="w-full p-4 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary">${survey.description}</textarea>
+            </div>
+
+            <button type="submit" class="w-full h-12 bg-primary text-white font-bold rounded-xl text-sm hover:bg-primary-dark transition-all flex items-center justify-center gap-2 shadow-sm">
+              <span>Devam →</span>
+            </button>
+          </form>
+        </div>
+      ` : ''}
+
+      <!-- ADIM 2: SORULAR BUILDER -->
+      ${step === 2 ? `
+        <div class="space-y-6">
+          <div class="bg-surface p-4 rounded-2xl border border-border flex justify-between items-center">
+            <div class="flex items-center gap-3">
+              <h3 class="font-bold text-on-surface text-base">${survey.title}</h3>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">Taslak</span>
+              <span class="text-xs text-emerald-700 font-semibold flex items-center gap-1">
+                ${iconSvg('checkCircle', 'w-4 h-4 text-emerald-600')} Kaydedildi ✓
+              </span>
+            </div>
+
+            <button id="btn-builder-goto-step3" class="px-5 py-2 bg-primary text-white font-bold rounded-xl text-xs hover:bg-primary-dark transition-all flex items-center gap-1.5 shadow-sm">
+              <span>Önizlemeye Geç →</span>
+            </button>
+          </div>
+
+          <!-- SORU TÜRÜ SEÇİM KARTLARI PANELİ -->
+          <div class="bg-surface p-5 rounded-2xl border border-border shadow-sm space-y-3">
+            <span class="block text-xs font-bold text-on-surface uppercase tracking-wider">Soru Türü Seçin</span>
+            
+            <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-3">
+              <button data-type="text" class="btn-add-question-type p-3 bg-surface-container-low hover:bg-primary/5 hover:border-primary border border-border rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all">
+                <span class="font-bold text-sm text-primary">Aa</span>
+                <span class="text-[11px] font-semibold text-slate-700">Metin</span>
+              </button>
+
+              <button data-type="number" class="btn-add-question-type p-3 bg-surface-container-low hover:bg-primary/5 hover:border-primary border border-border rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all">
+                <span class="font-bold text-sm text-primary">123</span>
+                <span class="text-[11px] font-semibold text-slate-700">Sayı</span>
+              </button>
+
+              <button data-type="yesno" class="btn-add-question-type p-3 bg-surface-container-low hover:bg-primary/5 hover:border-primary border border-border rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all">
+                <span class="font-bold text-sm text-primary">✓ / ✕</span>
+                <span class="text-[11px] font-semibold text-slate-700">Evet/Hayır</span>
+              </button>
+
+              <button data-type="single" class="btn-add-question-type p-3 bg-surface-container-low hover:bg-primary/5 hover:border-primary border border-border rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all">
+                <span class="font-bold text-sm text-primary">○</span>
+                <span class="text-[11px] font-semibold text-slate-700">Tek Seçim</span>
+              </button>
+
+              <button data-type="multi" class="btn-add-question-type p-3 bg-surface-container-low hover:bg-primary/5 hover:border-primary border border-border rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all">
+                <span class="font-bold text-sm text-primary">☑</span>
+                <span class="text-[11px] font-semibold text-slate-700">Çoklu Seçim</span>
+              </button>
+
+              <button data-type="date" class="btn-add-question-type p-3 bg-surface-container-low hover:bg-primary/5 hover:border-primary border border-border rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all">
+                ${iconSvg('calendar', 'w-5 h-5 text-primary')}
+                <span class="text-[11px] font-semibold text-slate-700">Tarih</span>
+              </button>
+
+              <button data-type="photo" class="btn-add-question-type p-3 bg-surface-container-low hover:bg-primary/5 hover:border-primary border border-border rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all">
+                ${iconSvg('camera', 'w-5 h-5 text-primary')}
+                <span class="text-[11px] font-semibold text-slate-700">Fotoğraf</span>
+              </button>
+
+              <button data-type="gps" class="btn-add-question-type p-3 bg-surface-container-low hover:bg-primary/5 hover:border-primary border border-border rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all">
+                ${iconSvg('mapPin', 'w-5 h-5 text-primary')}
+                <span class="text-[11px] font-semibold text-slate-700">GPS Konum</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- BÖLÜM VE SORULAR LİSTESİ -->
+          <div class="space-y-4">
+            ${survey.questions.length === 0 ? `
+              <div class="border-2 border-dashed border-border rounded-3xl p-12 text-center space-y-3 bg-surface">
+                <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-500 mx-auto flex items-center justify-center">
+                  ${iconSvg('clipboard', 'w-6 h-6')}
+                </div>
+                <h4 class="font-bold text-on-surface text-base">Henüz soru eklenmedi</h4>
+                <p class="text-xs text-text-secondary">Yukarıdaki panelden soru türü seçerek hemen başlayabilirsiniz.</p>
+              </div>
+            ` : survey.questions.map((q, idx) => `
+              <div data-q-id="${q.id}" class="builder-question-card bg-surface rounded-2xl border ${q.expanded ? 'border-primary shadow-md ring-1 ring-primary/20' : 'border-border shadow-xs hover:border-slate-300'} transition-all overflow-hidden">
+                
+                <!-- QUESTION HEADER (COMPACT MODE) -->
+                <div data-q-id="${q.id}" class="btn-toggle-question p-4 flex items-center justify-between cursor-pointer select-none bg-surface">
+                  <div class="flex items-center gap-3">
+                    <span class="text-slate-400 cursor-grab hover:text-slate-600">${iconSvg('grip', 'w-4 h-4')}</span>
+                    <span class="font-mono text-xs font-bold text-primary w-6">${String(idx + 1).padStart(2, '0')}</span>
+                    <span class="font-bold text-on-surface text-sm">${q.title}</span>
+                  </div>
+
+                  <div class="flex items-center gap-3">
+                    <span class="text-[11px] text-text-secondary font-medium uppercase px-2 py-0.5 rounded bg-slate-100">${q.type}</span>
+                    ${q.isRequired ? `<span class="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded">Zorunlu</span>` : ''}
+                    ${q.condition ? `<span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">Koşullu</span>` : ''}
+                    <span class="text-slate-400">${iconSvg(q.expanded ? 'moveUp' : 'moveDown', 'w-4 h-4')}</span>
+                  </div>
+                </div>
+
+                <!-- EXPANDED EDIT BODY -->
+                ${q.expanded ? `
+                  <div class="p-5 border-t border-border bg-slate-50/50 space-y-5">
+                    <div class="space-y-1">
+                      <label class="block text-xs font-bold text-on-surface">Soru Başlığı *</label>
+                      <input type="text" data-q-id="${q.id}" value="${q.title}" class="input-builder-q-title w-full h-11 px-4 bg-white border border-border rounded-xl text-sm focus:outline-none focus:border-primary font-medium"/>
+                    </div>
+
+                    <!-- REAL-TIME EDITABLE OPTIONS BUILDER (NO PROMPT MODAL) -->
+                    ${(q.type === 'single' || q.type === 'multi') ? `
+                      <div class="space-y-2">
+                        <label class="block text-xs font-bold text-on-surface">Seçenekler</label>
+                        <div class="space-y-2">
+                          ${q.options.map(opt => `
+                            <div class="flex items-center gap-2">
+                              <input type="text" data-q-id="${q.id}" data-opt-id="${opt.id}" value="${opt.label}" placeholder="Seçenek adını yazın..." class="input-option-edit flex-1 h-10 px-3 bg-white border border-border rounded-lg text-xs font-medium focus:outline-none focus:border-primary"/>
+                              <button data-q-id="${q.id}" data-opt-id="${opt.id}" class="btn-remove-option text-slate-400 hover:text-red-600 p-2 transition-colors">
+                                ${iconSvg('trash', 'w-4 h-4')}
+                              </button>
+                            </div>
+                          `).join('')}
+                        </div>
+                        <button data-q-id="${q.id}" class="btn-add-option-direct text-xs font-bold text-primary hover:underline flex items-center gap-1 pt-1">
+                          ${iconSvg('plus', 'w-3.5 h-3.5')}
+                          Seçenek Ekle
+                        </button>
+                      </div>
+                    ` : ''}
+
+                    <div class="flex items-center justify-between pt-2 border-t border-border/60">
+                      <span class="text-xs font-bold text-on-surface">Zorunlu Soru</span>
+                      <button data-q-id="${q.id}" class="btn-toggle-required relative w-11 h-6 rounded-full transition-colors ${q.isRequired ? 'bg-primary' : 'bg-slate-300'}">
+                        <span class="absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${q.isRequired ? 'translate-x-5' : ''}"></span>
+                      </button>
+                    </div>
+
+                    <div class="space-y-2 pt-2 border-t border-border/60">
+                      <span class="block text-xs font-bold text-on-surface">Koşul Ayarları</span>
+                      
+                      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <select data-q-id="${q.id}" class="select-condition-source h-10 px-3 bg-white border border-border rounded-lg text-xs font-medium">
+                          <option value="">-- Koşul Yok --</option>
+                          ${survey.questions.filter(x => x.id !== q.id).map(x => `<option value="${x.id}" ${q.condition?.sourceQuestionId === x.id ? 'selected' : ''}>${x.title}</option>`).join('')}
+                        </select>
+
+                        <select data-q-id="${q.id}" class="select-condition-op h-10 px-3 bg-white border border-border rounded-lg text-xs font-medium">
+                          <option value="equals" ${q.condition?.operator === 'equals' ? 'selected' : ''}>Eşittir (==)</option>
+                        </select>
+
+                        <input type="text" data-q-id="${q.id}" value="${q.condition?.value || 'yes'}" placeholder="Değer (örn: yes)" class="input-condition-val h-10 px-3 bg-white border border-border rounded-lg text-xs font-medium"/>
+                      </div>
+
+                      ${q.condition ? `
+                        <div class="p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-xs text-indigo-900 font-medium leading-relaxed">
+                          💡 <strong>İnsan Dili Önizleme:</strong> Bu soru yalnızca '<strong>${survey.questions.find(x => x.id === q.condition.sourceQuestionId)?.title || 'Önceki Soru'}</strong>' = '<strong>${q.condition.value}</strong>' olduğunda gösterilecek.
+                        </div>
+                      ` : ''}
+                    </div>
+
+                    <div class="flex justify-between items-center pt-3 border-t border-border/60">
+                      <div class="flex items-center gap-1">
+                        <button data-q-id="${q.id}" class="btn-move-q-up p-1.5 text-slate-500 hover:text-primary rounded hover:bg-slate-100">
+                          ${iconSvg('moveUp', 'w-4 h-4')}
+                        </button>
+                        <button data-q-id="${q.id}" class="btn-move-q-down p-1.5 text-slate-500 hover:text-primary rounded hover:bg-slate-100">
+                          ${iconSvg('moveDown', 'w-4 h-4')}
+                        </button>
+                      </div>
+
+                      <div class="flex items-center gap-3">
+                        <button data-q-id="${q.id}" class="btn-duplicate-question text-xs font-semibold text-slate-700 hover:text-primary flex items-center gap-1">
+                          ${iconSvg('copy', 'w-4 h-4')}
+                          Kopyala
+                        </button>
+                        <button data-q-id="${q.id}" class="btn-open-delete-modal text-xs font-semibold text-red-600 hover:underline flex items-center gap-1">
+                          ${iconSvg('trash', 'w-4 h-4')}
+                          Sil
+                        </button>
+                      </div>
+                    </div>
+
+                  </div>
+                ` : ''}
+              </div>
+            `).join('')}
+          </div>
+
+          <div class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-border">
+            <button id="btn-open-add-section-modal" class="px-4 py-2 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 transition-all flex items-center gap-1.5">
+              ${iconSvg('plus', 'w-4 h-4')}
+              Bölüm Ekle
+            </button>
+
+            <button id="btn-builder-step2-next" class="px-6 py-3 bg-primary text-white font-bold rounded-xl text-xs hover:bg-primary-dark transition-all flex items-center gap-2 shadow-sm">
+              <span>Önizlemeye Geç →</span>
+            </button>
+          </div>
+        </div>
+      ` : ''}
+
+      <!-- ADIM 3: GERÇEK İNTERAKTİF MOBİL PREVIEW -->
+      ${step === 3 ? `
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          <div class="lg:col-span-6 space-y-6">
+            <div class="bg-surface p-6 rounded-3xl border border-border shadow-sm space-y-4">
+              <h3 class="font-bold text-on-surface text-lg">${survey.title}</h3>
+              <p class="text-xs text-text-secondary leading-relaxed">${survey.description}</p>
+              
+              <div class="grid grid-cols-2 gap-4 p-4 bg-surface-container-low rounded-xl text-xs font-semibold">
+                <div>
+                  <span class="text-text-secondary block">Toplam Soru</span>
+                  <span class="text-base font-bold text-primary">${survey.questions.length} Soru</span>
+                </div>
+                <div>
+                  <span class="text-text-secondary block">Toplam Bölüm</span>
+                  <span class="text-base font-bold text-on-surface">${survey.sections.length} Bölüm</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-surface p-6 rounded-3xl border border-border shadow-sm space-y-4">
+              <h4 class="font-bold text-on-surface text-base">Anket Kontrol Listesi</h4>
+              
+              <div class="space-y-3 text-xs font-semibold">
+                <div class="flex items-center gap-2 text-emerald-800 bg-emerald-50 p-3 rounded-xl border border-emerald-200">
+                  ${iconSvg('checkCircle', 'w-4 h-4 text-emerald-600')}
+                  <span>✓ ${survey.questions.length} Soru Hazır ve Sıralandı</span>
+                </div>
+
+                <div class="flex items-center gap-2 text-emerald-800 bg-emerald-50 p-3 rounded-xl border border-emerald-200">
+                  ${iconSvg('checkCircle', 'w-4 h-4 text-emerald-600')}
+                  <span>✓ Tüm seçim sorularında seçenekler mevcut</span>
+                </div>
+
+                <div class="flex items-center gap-2 text-emerald-800 bg-emerald-50 p-3 rounded-xl border border-emerald-200">
+                  ${iconSvg('checkCircle', 'w-4 h-4 text-emerald-600')}
+                  <span>✓ Mantıksal Koşullar Geçerli</span>
+                </div>
+              </div>
+            </div>
+
+            <button id="btn-builder-step3-next" class="w-full h-12 bg-primary text-white font-bold rounded-xl text-xs hover:bg-primary-dark transition-all flex items-center justify-center gap-2 shadow-sm">
+              <span>Anketi Yayınlamaya Geç →</span>
+            </button>
+          </div>
+
+          <div class="lg:col-span-6 flex justify-center">
+            <div class="w-[360px] h-[700px] bg-slate-950 rounded-[48px] p-4 shadow-2xl border-4 border-slate-800 relative overflow-hidden flex flex-col">
+              
+              <div class="w-36 h-4 bg-slate-900 rounded-full mx-auto mb-3 shrink-0"></div>
+
+              <div class="flex-1 bg-[#f8f9fa] rounded-[32px] overflow-y-auto p-4 space-y-5 text-slate-900 font-sans">
+                <div class="text-center space-y-1">
+                  <span class="text-[10px] font-bold text-primary uppercase">Mobil Önizleme</span>
+                  <h4 class="font-bold text-sm text-[#64B352]">${survey.title}</h4>
+                  <span class="text-[11px] text-slate-500 font-semibold block">Kişisel Bilgiler (Adım 1/2)</span>
+                </div>
+
+                <div class="bg-white rounded-2xl p-4 border border-[#dadce0] space-y-4 shadow-2xs">
+                  ${survey.questions.map((q, idx) => `
+                    <div class="space-y-2 pb-3 border-b border-[#f1f3f4] last:border-0">
+                      <label class="block text-xs font-bold text-slate-900">${idx + 1}. ${q.title}</label>
+
+                      ${q.type === 'text' ? `
+                        <input type="text" placeholder="Cevabınızı giriniz..." class="w-full h-10 px-3 bg-[#f1f3f4] border border-[#dadce0] rounded-lg text-xs text-slate-900"/>
+                      ` : ''}
+
+                      ${q.type === 'yesno' ? `
+                        <div class="grid grid-cols-2 gap-2">
+                          <button class="h-10 border border-[#64B352] bg-[#f0f7ee] text-[#64B352] font-bold text-xs rounded-lg">Evet</button>
+                          <button class="h-10 border border-[#dadce0] bg-white text-slate-700 font-bold text-xs rounded-lg">Hayır</button>
+                        </div>
+                      ` : ''}
+
+                      ${q.type === 'single' ? `
+                        <div class="space-y-1.5">
+                          ${q.options.map(opt => `
+                            <label class="flex items-center justify-between p-2.5 border border-[#dadce0] rounded-lg text-xs font-medium cursor-pointer">
+                              <span>${opt.label}</span>
+                              <span class="w-4 h-4 rounded-full border border-slate-400"></span>
+                            </label>
+                          `).join('')}
+                        </div>
+                      ` : ''}
+                    </div>
+                  `).join('')}
+                </div>
+
+                <button class="w-full h-11 bg-[#64B352] text-white font-bold rounded-full text-xs flex items-center justify-center gap-1 shadow-sm">
+                  <span>Devam Et →</span>
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      ` : ''}
+
+      <!-- ADIM 4: YAYINLA & ATA -->
+      ${step === 4 ? `
+        <div class="max-w-xl mx-auto bg-surface p-8 rounded-3xl border border-border shadow-sm text-center space-y-6">
+          <div class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-700 mx-auto flex items-center justify-center">
+            ${iconSvg('checkCircle', 'w-10 h-10')}
+          </div>
+
+          <div class="space-y-2">
+            <h3 class="text-xl font-bold text-on-surface">Anketiniz Hazır ve Aktif!</h3>
+            <p class="text-xs text-text-secondary leading-relaxed">
+              '<strong>${survey.title}</strong>' anketi başarıyla oluşturuldu ve yayınlandı.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4 p-4 bg-surface-container-low rounded-xl text-xs font-semibold">
+            <div>
+              <span class="text-text-secondary block">Soru Sayısı</span>
+              <span class="text-base font-bold text-primary">${survey.questions.length} Soru</span>
+            </div>
+            <div>
+              <span class="text-text-secondary block">Durum</span>
+              <span class="text-base font-bold text-emerald-700">AKTİF</span>
+            </div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row gap-3 pt-2">
+            <button id="btn-builder-goto-assign" class="flex-1 h-12 bg-primary text-white font-bold rounded-xl text-xs hover:bg-primary-dark transition-all flex items-center justify-center gap-2 shadow-sm">
+              ${iconSvg('assignment', 'w-4 h-4')}
+              Saha Personeline Ata
+            </button>
+
+            <button id="btn-builder-goto-surveys" class="flex-1 h-12 bg-surface-container-low border border-border text-on-surface font-bold rounded-xl text-xs hover:bg-surface-container transition-all">
+              Anketlere Dön
+            </button>
+          </div>
+        </div>
+      ` : ''}
+
+    </div>
+  `;
+}
+
+// 7 SEKME İÇERİK RENDER MOTORU
+function renderAdminTabContent(tab, state) {
+  switch (tab) {
+    case 'dashboard':
+      return `
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-2">
+          <div>
+            <div class="flex items-center gap-3 mb-1">
+              <h2 class="text-2xl font-bold text-on-surface tracking-tight">Genel Bakış</h2>
+            </div>
+            <p class="text-xs text-text-secondary">Anlık saha hareketleri ve operasyonel veriler özet paneli.</p>
+          </div>
+
+          <button id="btn-admin-create-survey-dashboard" class="h-10 px-5 bg-primary text-white rounded-full font-bold text-xs hover:bg-primary-dark transition-all flex items-center justify-center gap-1.5 shadow-sm">
+            ${iconSvg('plus', 'w-4 h-4')}
+            Yeni Anket Oluştur
+          </button>
+        </div>
+
+        <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div class="bg-surface p-4 rounded-2xl border border-border shadow-sm flex flex-col justify-between h-36">
+            <span class="text-[10px] text-text-secondary uppercase font-bold tracking-wider">Toplam Tamamlanan</span>
+            <div class="text-3xl font-bold text-on-surface tracking-tight mt-auto">${state.adminKpis.totalCompleted || '12.480'}</div>
+          </div>
+
+          <div class="bg-surface p-4 rounded-2xl border border-border shadow-sm flex flex-col justify-between h-36">
+            <span class="text-[10px] text-text-secondary uppercase font-bold tracking-wider">Bugün Tamamlanan</span>
+            <div class="text-3xl font-bold text-on-surface tracking-tight mt-auto">${state.adminKpis.todayCompleted || '142'}</div>
+          </div>
+
+          <div class="bg-surface p-4 rounded-2xl border border-primary/20 bg-primary/5 shadow-sm flex flex-col justify-between h-36">
+            <span class="text-[10px] text-primary uppercase font-bold tracking-wider">Aktif Anket</span>
+            <div class="text-3xl font-bold text-primary tracking-tight mt-auto">${state.adminKpis.activeSurveysCount || '8'}</div>
+          </div>
+
+          <div class="bg-surface p-4 rounded-2xl border border-border shadow-sm flex flex-col justify-between h-36">
+            <span class="text-[10px] text-text-secondary uppercase font-bold tracking-wider">Aktif Atama</span>
+            <div class="text-3xl font-bold text-on-surface tracking-tight mt-auto">${state.adminKpis.activeAssignmentsCount || '24'}</div>
+          </div>
+
+          <div class="bg-surface p-4 rounded-2xl border border-border shadow-sm flex flex-col justify-between h-36">
+            <span class="text-[10px] text-text-secondary uppercase font-bold tracking-wider">Sahada Personel</span>
+            <div class="text-3xl font-bold text-on-surface tracking-tight mt-auto">${state.adminKpis.fieldStaffCount || '12'}</div>
+          </div>
+
+          <div class="bg-surface p-4 rounded-2xl border border-amber-200 bg-amber-50/50 shadow-sm flex flex-col justify-between h-36">
+            <span class="text-[10px] text-amber-800 uppercase font-bold tracking-wider">Offline Kayıtlar</span>
+            <div class="text-3xl font-bold text-amber-700 tracking-tight mt-auto">${state.offlineQueueCount || '3'}</div>
+          </div>
+        </section>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <section class="lg:col-span-2 bg-surface rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col">
+            <div class="p-4 border-b border-border flex justify-between items-center bg-surface">
+              <h3 class="font-bold text-on-surface text-base">Aktif Anketler</h3>
+              <span class="text-xs font-bold text-primary">Tümünü Gör</span>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="bg-surface-container border-b border-border text-text-secondary uppercase font-bold text-[10px]">
+                    <th class="p-4">Anket Adı</th>
+                    <th class="p-4">Köy / Bölge</th>
+                    <th class="p-4">İlerleme</th>
+                    <th class="p-4 text-right">Son Tarih</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-border">
+                  <tr>
+                    <td class="p-4 font-bold text-on-surface">Tarımsal İhtiyaç Analizi</td>
+                    <td class="p-4 text-text-secondary">Sinan Köyü</td>
+                    <td class="p-4">
+                      <div class="space-y-1">
+                        <div class="flex justify-between text-[11px]">
+                          <span class="text-text-secondary">320 / 500</span>
+                          <span class="font-bold text-primary">%64</span>
+                        </div>
+                        <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                          <div class="bg-[#0071E3] h-full rounded-full" style="width: 64%"></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="p-4 text-right text-text-secondary font-semibold">30.11.2026</td>
+                  </tr>
+
+                  <tr>
+                    <td class="p-4 font-bold text-on-surface">Altyapı Durum Tespiti</td>
+                    <td class="p-4 text-text-secondary">Merkez Mahalle</td>
+                    <td class="p-4">
+                      <div class="space-y-1">
+                        <div class="flex justify-between text-[11px]">
+                          <span class="text-text-secondary">150 / 200</span>
+                          <span class="font-bold text-emerald-700">%75</span>
+                        </div>
+                        <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                          <div class="bg-emerald-600 h-full rounded-full" style="width: 75%"></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="p-4 text-right text-text-secondary font-semibold">15.11.2026</td>
+                  </tr>
+
+                  <tr>
+                    <td class="p-4 font-bold text-on-surface">Eğitim Memnuniyet Anketi</td>
+                    <td class="p-4 text-text-secondary">Yeşilyurt</td>
+                    <td class="p-4">
+                      <div class="space-y-1">
+                        <div class="flex justify-between text-[11px]">
+                          <span class="text-text-secondary">45 / 300</span>
+                          <span class="font-bold text-amber-700">%15</span>
+                        </div>
+                        <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                          <div class="bg-amber-600 h-full rounded-full" style="width: 15%"></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="p-4 text-right text-text-secondary font-semibold">10.12.2026</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="bg-surface rounded-2xl p-5 border border-border shadow-sm space-y-4">
+            <div class="flex justify-between items-center">
+              <h3 class="font-bold text-on-surface text-base">Son Saha Hareketleri</h3>
+              <span class="text-[11px] text-text-muted">Canlı Akış</span>
+            </div>
+
+            <div class="space-y-4 relative pl-4 border-l-2 border-slate-200">
+              <div class="relative pl-3">
+                <div class="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-primary ring-4 ring-white"></div>
+                <div class="flex justify-between items-baseline">
+                  <span class="font-bold text-xs text-on-surface">Ahmet Yılmaz</span>
+                  <span class="text-[10px] text-text-muted">19:42</span>
+                </div>
+                <p class="text-xs text-text-secondary mt-0.5">Sinan Köyü için 'Tarımsal İhtiyaç Analizi' yanıtını tamamladı.</p>
+              </div>
+
+              <div class="relative pl-3">
+                <div class="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-emerald-600 ring-4 ring-white"></div>
+                <div class="flex justify-between items-baseline">
+                  <span class="font-bold text-xs text-on-surface">Mehmet Demir</span>
+                  <span class="text-[10px] text-text-muted">19:15</span>
+                </div>
+                <p class="text-xs text-text-secondary mt-0.5">Merkez Mahalle konumunda 1 yeni fotoğraf yükledi.</p>
+              </div>
+
+              <div class="relative pl-3">
+                <div class="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-indigo-600 ring-4 ring-white"></div>
+                <div class="flex justify-between items-baseline">
+                  <span class="font-bold text-xs text-on-surface">Ayşe Kaya</span>
+                  <span class="text-[10px] text-text-muted">18:50</span>
+                </div>
+                <p class="text-xs text-text-secondary mt-0.5">Atanan 'Altyapı Durum Tespiti' görevini görüntüledi.</p>
+              </div>
+            </div>
+          </section>
+        </div>
+      `;
+
+    case 'surveys':
+      return `
+        <div class="flex justify-between items-center bg-surface p-4 rounded-2xl border border-border">
+          <h3 class="font-bold text-on-surface text-base">Sistemdeki Anketler (${state.allSurveys.length})</h3>
+          <button id="btn-admin-create-survey-modal" class="px-4 py-2 bg-primary text-white font-bold rounded-xl text-xs hover:bg-primary-dark transition-all flex items-center gap-1.5 shadow-sm">
+            ${iconSvg('plus', 'w-4 h-4')}
+            Anket Oluştur
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          ${state.allSurveys.map(s => `
+            <div class="bg-surface p-5 rounded-2xl border border-border shadow-sm space-y-4">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h4 class="font-bold text-on-surface text-base">${s.title}</h4>
+                  <p class="text-xs text-text-secondary mt-1">${s.description || 'Açıklama belirtilmedi.'}</p>
+                </div>
+                <span class="px-3 py-1 rounded-full text-[10px] font-bold ${s.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'}">
+                  ${s.status === 'ACTIVE' ? 'AKTİF' : 'TASLAK'}
+                </span>
+              </div>
+
+              <div class="flex items-center gap-3 pt-3 border-t border-border">
+                <button data-survey-id="${s.id}" class="btn-admin-clone-survey px-3 py-1.5 bg-surface-container-low border border-border text-on-surface text-xs font-semibold rounded-lg hover:bg-surface-container">
+                  Klonla / Kopyala
+                </button>
+                <button data-survey-id="${s.id}" class="btn-admin-survey-excel px-3 py-1.5 bg-emerald-700 text-white text-xs font-semibold rounded-lg hover:bg-emerald-800">
+                  Excel Rapor
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+
+    case 'assignments':
+      return `
+        <div class="bg-surface p-6 rounded-2xl border border-border shadow-sm space-y-6">
+          <div class="flex justify-between items-center">
+            <div>
+              <h3 class="font-bold text-on-surface text-lg">Yeni Görev Ataması Yap (Not ve Personel Seçimli)</h3>
+              <p class="text-xs text-text-secondary mt-0.5">Saha personellerine hedef bölge, anket ve yönetici talimatı atayın.</p>
+            </div>
+          </div>
+
+          <form id="form-admin-create-assignment" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-on-surface mb-1">Atanacak Anket *</label>
+              <select id="assign-survey-id" required class="w-full h-11 px-3 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary">
+                ${state.allSurveys.map(s => `<option value="${s.id}">${s.title}</option>`).join('')}
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-on-surface mb-1">Hedef Köy / Bölge *</label>
+              <input type="text" id="assign-village-name" required value="Sinan Köyü" class="w-full h-11 px-4 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary"/>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-on-surface mb-1">Hedef Anket Sayısı *</label>
+              <input type="number" id="assign-target-count" required value="50" class="w-full h-11 px-4 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary"/>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-on-surface mb-1">Son Tarih *</label>
+              <input type="date" id="assign-end-date" required value="${new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]}" class="w-full h-11 px-4 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary"/>
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="block text-xs font-bold text-on-surface mb-1">Yönetici Özel Notu (Admin Notu) *</label>
+              <textarea id="assign-note" required rows="2" placeholder="Örn: Sinan Köyü üreticileriyle görüşürken gübre ve ekipman ihtiyaçlarını özellikle not alınız." class="w-full p-3 bg-amber-50/60 border border-amber-200 rounded-xl text-xs text-amber-900 focus:outline-none focus:border-amber-500 font-medium">Sinan Köyü üreticileriyle görüşürken gübre ve ekipman ihtiyaçlarını detaylı olarak not alınız.</textarea>
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="block text-xs font-bold text-on-surface mb-1.5">Görev Atanacak Saha Personelleri</label>
+              <div class="flex flex-wrap gap-3 p-3 bg-surface-container-low border border-border rounded-xl text-xs">
+                ${state.allPersonnel.map(p => `
+                  <label class="flex items-center gap-2 font-medium cursor-pointer">
+                    <input type="checkbox" name="assign-personnel" value="${p.id}" checked class="rounded text-primary focus:ring-primary"/>
+                    <span>${p.fullName} (${p.phone})</span>
+                  </label>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="md:col-span-2 pt-2">
+              <button type="submit" class="h-11 px-6 bg-primary text-white font-bold rounded-xl text-xs hover:bg-primary-dark transition-all flex items-center justify-center gap-2 shadow-sm">
+                ${iconSvg('send', 'w-4 h-4')}
+                Görev Atamasını Kaydet & Saha Ekibine Bildir
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div class="bg-surface p-5 rounded-2xl border border-border shadow-sm space-y-4">
+          <h3 class="font-bold text-on-surface text-base">Aktif Görev Atamaları Listesi (${state.allAssignments.length})</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-surface-container border-b border-border text-text-secondary uppercase font-bold text-[10px]">
+                  <th class="p-3">Anket Adı</th>
+                  <th class="p-3">Hedef Köy / Bölge</th>
+                  <th class="p-3">Yönetici Notu</th>
+                  <th class="p-3">Hedef / Tamamlanan</th>
+                  <th class="p-3 text-right">Saha Görüldü</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-border">
+                ${state.allAssignments.map(a => `
+                  <tr>
+                    <td class="p-3 font-bold text-on-surface">${a.surveyTitle}</td>
+                    <td class="p-3 text-text-secondary">${a.villageName}</td>
+                    <td class="p-3 text-amber-800 font-medium max-w-xs truncate">${a.note || 'Özel not eklenmedi.'}</td>
+                    <td class="p-3 font-bold text-primary">${a.completedCount} / ${a.targetCount}</td>
+                    <td class="p-3 text-right">
+                      <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${a.viewedAt ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                        ${a.viewedAt ? 'Görüldü' : 'Bekliyor'}
+                      </span>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+
+    case 'responses':
+      return `
+        <div class="bg-surface p-5 rounded-2xl border border-border shadow-sm space-y-4">
+          <h3 class="font-bold text-on-surface text-base">Gelen Cevaplar ve İptal/Geçersiz İşlemleri (${state.submissions.length})</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-surface-container border-b border-border text-text-secondary uppercase font-bold text-[10px]">
+                  <th class="p-3">Kayıt ID</th>
+                  <th class="p-3">Saha Kullanıcısı</th>
+                  <th class="p-3">Tarih</th>
+                  <th class="p-3">GPS Konum</th>
+                  <th class="p-3">Geçersizlik Durumu</th>
+                  <th class="p-3 text-right">İşlem</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-border">
+                ${state.submissions.map(sub => `
+                  <tr>
+                    <td class="p-3 font-mono text-[11px] text-text-muted">${sub.clientSubmissionId || sub.id}</td>
+                    <td class="p-3 font-bold text-on-surface">${sub.fieldUserName || 'Ahmet Yılmaz'}</td>
+                    <td class="p-3 text-text-secondary">${new Date(sub.submittedAt || Date.now()).toLocaleTimeString('tr-TR')}</td>
+                    <td class="p-3 text-text-secondary">${sub.latitude ? `${sub.latitude.toFixed(2)}, ${sub.longitude?.toFixed(2)}` : 'Çevrimdışı'}</td>
+                    <td class="p-3">
+                      <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${sub.isInvalid ? 'bg-red-100 text-red-800' : 'bg-emerald-100 text-emerald-800'}">
+                        ${sub.isInvalid ? 'Geçersiz İşaretlendi' : 'Geçerli Yanıt'}
+                      </span>
+                    </td>
+                    <td class="p-3 text-right">
+                      <button data-sub-id="${sub.id}" class="btn-toggle-invalid-sub px-3 py-1 bg-surface-container-low border border-border text-xs font-semibold rounded-lg hover:bg-surface-container">
+                        ${sub.isInvalid ? 'Geçerli Yap' : 'Geçersiz Say'}
+                      </button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+
+    case 'reports':
+      return `
+        <div class="bg-surface p-6 rounded-2xl border border-border shadow-sm space-y-6">
+          <div>
+            <h3 class="font-bold text-on-surface text-lg">Otomatik Rapor Üretim Merkezi</h3>
+            <p class="text-xs text-text-secondary mt-1">Gelişmiş Excel ve PDF rapor motoru ile anlık belgeler indirin.</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="p-5 border border-emerald-200 bg-emerald-50/50 rounded-2xl space-y-3">
+              <h4 class="font-bold text-emerald-900 text-base">Excel (.xlsx) Canlı Veri Seti</h4>
+              <p class="text-xs text-emerald-700 leading-relaxed">Tüm soruları, saha koordinatlarını ve tarihleri kolonlar halinde içeren Excel belgesi üretir.</p>
+              <button id="btn-reports-tab-excel" class="px-5 py-2.5 bg-emerald-700 text-white font-bold rounded-xl text-xs hover:bg-emerald-800 transition-all flex items-center gap-2">
+                ${iconSvg('download', 'w-4 h-4')}
+                Excel Belgesi İndir
+              </button>
+            </div>
+
+            <div class="p-5 border border-red-200 bg-red-50/50 rounded-2xl space-y-3">
+              <h4 class="font-bold text-red-900 text-base">PDF Kurumsal Analiz Raporu</h4>
+              <p class="text-xs text-red-700 leading-relaxed">A4 formatında KPI istatistikleri ve yüzde dağılım tabloları içeren PDF raporu üretir.</p>
+              <button id="btn-reports-tab-pdf" class="px-5 py-2.5 bg-red-700 text-white font-bold rounded-xl text-xs hover:bg-red-800 transition-all flex items-center gap-2">
+                ${iconSvg('fileText', 'w-4 h-4')}
+                PDF Belgesi İndir
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+    case 'personnel':
+      return `
+        <div class="bg-surface p-5 rounded-2xl border border-border shadow-sm space-y-4">
+          <div class="flex justify-between items-center">
+            <div>
+              <h3 class="font-bold text-on-surface text-base">Saha Ekibi ve Personeller (${state.allPersonnel.length})</h3>
+              <p class="text-xs text-text-secondary mt-0.5">Saha görevlileri ve yöneticileri ekleyin, e-posta, şifre ve hesap durumlarını yönetin.</p>
+            </div>
+
+            <button id="btn-open-add-personnel-modal" class="px-4 py-2 bg-primary text-white font-bold rounded-xl text-xs hover:bg-primary-dark transition-all flex items-center gap-1.5 shadow-sm">
+              ${iconSvg('plus', 'w-4 h-4')}
+              Yeni Personel Ekle
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-surface-container border-b border-border text-text-secondary uppercase font-bold text-[10px]">
+                  <th class="p-3">Ad Soyad</th>
+                  <th class="p-3">Kullanıcı Adı</th>
+                  <th class="p-3">E-Posta</th>
+                  <th class="p-3">Telefon</th>
+                  <th class="p-3">Rol</th>
+                  <th class="p-3">Hesap Durumu</th>
+                  <th class="p-3 text-right">İşlem</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-border">
+                ${state.allPersonnel.map(p => `
+                  <tr>
+                    <td class="p-3 font-bold text-on-surface">${p.fullName}</td>
+                    <td class="p-3 font-mono text-text-secondary">${p.username}</td>
+                    <td class="p-3 text-text-secondary">${p.email || `${p.username}@sahaanket.gov.tr`}</td>
+                    <td class="p-3 text-text-secondary">${p.phone}</td>
+                    <td class="p-3 font-semibold ${p.role === 'ADMIN' ? 'text-indigo-600' : 'text-primary'}">${p.role === 'ADMIN' ? 'YÖNETİCİ' : 'SAHA PERSONELİ'}</td>
+                    <td class="p-3">
+                      <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${p.isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}">
+                        ${p.isActive ? 'Aktif' : 'Pasif'}
+                      </span>
+                    </td>
+                    <td class="p-3 text-right">
+                      <button data-user-id="${p.id}" class="btn-toggle-personnel-status px-3 py-1 bg-surface-container-low border border-border text-xs font-semibold rounded-lg hover:bg-surface-container">
+                        ${p.isActive ? 'Pasif Yap' : 'Aktif Yap'}
+                      </button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+
+    case 'messages':
+      return `
+        <div class="bg-surface p-6 rounded-2xl border border-border shadow-sm space-y-6">
+          <div>
+            <h3 class="font-bold text-on-surface text-lg">Saha Ekibine Mesaj Gönder (Kişiye Özel / Toplu Duyuru)</h3>
+            <p class="text-xs text-text-secondary mt-1">İsterseniz özel bir saha personeli seçin, isterseniz tüm ekibe toplu bildirim gönderin.</p>
+          </div>
+
+          <form id="form-admin-send-message" class="space-y-4 max-w-xl">
+            <div>
+              <label class="block text-xs font-bold text-on-surface mb-1.5">Gönderim Modu *</label>
+              <div class="flex gap-4 text-xs font-semibold">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="msg-target-mode" value="all" checked class="text-primary focus:ring-primary"/>
+                  <span>Tüm Saha Ekibine Toplu Duyuru</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="msg-target-mode" value="specific" class="text-primary focus:ring-primary"/>
+                  <span>Özel Kişi Seçerek Gönder</span>
+                </label>
+              </div>
+            </div>
+
+            <div id="msg-personnel-selector-wrapper" class="hidden p-3 bg-surface-container-low border border-border rounded-xl text-xs space-y-2">
+              <span class="block text-[11px] font-bold text-text-secondary uppercase">Mesaj Gönderilecek Personelleri Seçin:</span>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                ${state.allPersonnel.map(p => `
+                  <label class="flex items-center gap-2 font-medium cursor-pointer">
+                    <input type="checkbox" name="msg-selected-personnel" value="${p.id}" class="rounded text-primary focus:ring-primary"/>
+                    <span>${p.fullName} (${p.username})</span>
+                  </label>
+                `).join('')}
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-on-surface mb-1">Mesaj Başlığı *</label>
+              <input type="text" id="admin-msg-title" required placeholder="Örn: Sinan Köyü Saha Hatırlatması" class="w-full h-11 px-4 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary"/>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-on-surface mb-1">Mesaj İçeriği *</label>
+              <textarea id="admin-msg-content" required rows="3" placeholder="Saha personeline iletilecek özel açıklama..." class="w-full p-4 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary"></textarea>
+            </div>
+
+            <button type="submit" class="px-6 py-2.5 bg-primary text-white font-bold rounded-xl text-xs hover:bg-primary-dark transition-all flex items-center gap-2 shadow-sm">
+              ${iconSvg('send', 'w-4 h-4')}
+              Mesajı İlet
+            </button>
+          </form>
+
+          <div class="pt-4 border-t border-border space-y-3">
+            <h4 class="font-bold text-on-surface text-sm">Gönderilmiş Mesajlar (${state.messages.length})</h4>
+            <div class="space-y-2">
+              ${state.messages.map(m => `
+                <div class="p-4 bg-surface-container-low rounded-xl border border-border text-xs flex justify-between items-start">
+                  <div>
+                    <h5 class="font-bold text-on-surface text-sm">${m.title}</h5>
+                    <p class="text-text-secondary mt-1">${m.content}</p>
+                  </div>
+                  <span class="text-[10px] text-text-muted">${m.date}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+
+    default:
+      return '';
+  }
+}

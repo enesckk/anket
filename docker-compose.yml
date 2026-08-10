@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  # Microsoft SQL Server 2022 Container
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: surveyadmin_mssql
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=YourComplexPass123!
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P YourComplexPass123! -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: always
+
+  # ASP.NET Core REST API
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: surveyadmin_api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - UseSqlServer=true
+      - ConnectionStrings__DefaultConnection=Server=mssql;Database=SurveyAdminDb;User Id=sa;Password=YourComplexPass123!;TrustServerCertificate=True;
+      - JwtSettings__Secret=SuperSecretKeySurveyAdmin2026!ProEnterpriseMasterSecret
+    ports:
+      - "5000:5000"
+    volumes:
+      - uploads-data:/app/wwwroot/uploads
+    depends_on:
+      mssql:
+        condition: service_healthy
+    restart: always
+
+  # Nginx Reverse Proxy & SSL Container
+  nginx:
+    image: nginx:alpine
+    container_name: surveyadmin_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - .:/usr/share/nginx/html:ro
+    depends_on:
+      - api
+    restart: always
+
+volumes:
+  mssql-data:
+  uploads-data:

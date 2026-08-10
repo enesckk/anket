@@ -1,0 +1,13 @@
+{
+  "name": "survey-admin-pro",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "SurveyAdmin Intelligence - Saha Anket & Executive Admin Platformu",
+  "main": "index.html",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": ["pwa", "survey", "dashboard", "field-survey", "data-intelligence"],
+  "author": "Antigravity",
+  "license": "MIT"
+}
