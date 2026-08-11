@@ -125,6 +125,20 @@ if (!window.__globalListenersAttached) {
   window.__globalListenersAttached = true;
 
   document.addEventListener('click', async (e) => {
+    const builderTarget = e.target.closest('#btn-home-quick-builder, #btn-surveys-quick-builder, .btn-open-quick-builder, #btn-cancel-builder');
+    if (builderTarget) {
+      if (builderTarget.id === 'btn-cancel-builder') {
+        if (store.state.currentRole === 'pwa') {
+          store.setPwaScreen('home');
+        } else {
+          store.setAdminTab('surveys');
+        }
+      } else {
+        store.startNewBuilder();
+      }
+      return;
+    }
+
     const target = e.target.closest('.btn-open-add-section-modal, #btn-close-custom-modal, .btn-open-review-survey-modal, .btn-set-q-review-status, .btn-submit-survey-revision');
     if (!target) return;
 

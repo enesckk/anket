@@ -529,7 +529,11 @@ class Store {
       ],
       activeQuestionId: 'q-2'
     };
-    this.state.adminTab = 'builder';
+    if (this.state.currentRole === 'pwa' || (this.state.auth.user && this.state.auth.user.role === 'FIELD_USER')) {
+      this.state.pwaScreen = 'builder';
+    } else {
+      this.state.adminTab = 'builder';
+    }
     this.saveState();
   }
 
