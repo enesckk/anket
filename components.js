@@ -1878,9 +1878,9 @@ function renderAdminTabContent(tab, state) {
               <label class="block text-xs font-bold text-on-surface mb-1.5">Görev Atanacak Saha Personelleri</label>
               <div class="flex flex-wrap gap-3 p-3 bg-surface-container-low border border-border rounded-xl text-xs">
                 ${state.allPersonnel.map(p => `
-                  <label class="flex items-center gap-2 font-medium cursor-pointer">
-                    <input type="checkbox" name="assign-personnel" value="${p.id}" checked class="rounded text-primary focus:ring-primary"/>
-                    <span>${p.fullName} (${p.phone})</span>
+                  <label class="flex items-center gap-2 font-medium cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-border hover:border-primary transition-all">
+                    <input type="checkbox" name="assign-personnel" value="${p.id}" checked class="rounded text-primary focus:ring-primary w-4 h-4"/>
+                    <span class="font-bold text-on-surface">${p.fullName}</span>
                   </label>
                 `).join('')}
               </div>
