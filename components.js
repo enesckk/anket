@@ -981,7 +981,7 @@ export function renderQuickBuilder() {
           </div>
 
           <button type="submit" class="w-full h-12 bg-primary text-white font-bold rounded-xl text-xs hover:bg-primary-dark transition-all flex items-center justify-center gap-2 active:scale-[0.98] shadow-sm">
-            Anketi Oluştur & Başlat
+            Anketi Oluştur & Yöneticinin Onayına Gönder
           </button>
         </form>
       </main>

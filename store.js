@@ -1126,15 +1126,33 @@ class Store {
   }
 
   createQuickSurvey(title) {
-    const newQuick = {
-      id: 'quick-' + Date.now(),
+    const isFieldUser = this.state.currentRole === 'pwa' || (this.state.auth.user && this.state.auth.user.role === 'FIELD_USER');
+    const targetStatus = isFieldUser ? 'PENDING_APPROVAL' : 'ACTIVE';
+
+    const newSurvey = {
+      id: 'srv-quick-' + Date.now(),
       title: title || 'Hızlı Saha Anketi',
-      responseCount: 0,
+      description: 'Hızlı Saha Anketi (Saha Yöneticisi Tarafından Tanımlandı)',
+      status: targetStatus,
+      source: isFieldUser ? 'FIELD_USER' : 'ADMIN',
+      createdBy: isFieldUser ? (this.state.auth.user?.fullName || 'Saha Yöneticisi') : 'Yönetici',
       createdAt: 'Bugün',
-      isMySurvey: true
+      questions: [
+        { id: 'q-1', title: 'Genel saha gözlemi ve taleplerinizi yazınız:', type: 'text', isRequired: true }
+      ]
     };
-    this.state.myQuickSurveys.unshift(newQuick);
+
+    if (!Array.isArray(this.state.allSurveys)) {
+      this.state.allSurveys = [];
+    }
+    this.state.allSurveys.unshift(newSurvey);
+
     this.state.pwaScreen = 'my_surveys';
+    if (isFieldUser) {
+      this.setToast('Anketiniz oluşturuldu ve yöneticinin onayına gönderildi!', 'success');
+    } else {
+      this.setToast('Anketiniz onaylandı ve yayınlandı!', 'success');
+    }
     this.saveState();
   }
 
