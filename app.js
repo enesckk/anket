@@ -139,6 +139,15 @@ if (!window.__globalListenersAttached) {
       return;
     }
 
+    const templateBtn = e.target.closest('.btn-preset-template');
+    if (templateBtn) {
+      const title = templateBtn.getAttribute('data-title');
+      const desc = templateBtn.getAttribute('data-desc');
+      store.updateBuilderInfo(title, desc);
+      store.setBuilderStep(2);
+      return;
+    }
+
     const target = e.target.closest('.btn-open-add-section-modal, #btn-close-custom-modal, .btn-open-review-survey-modal, .btn-set-q-review-status, .btn-submit-survey-revision');
     if (!target) return;
 

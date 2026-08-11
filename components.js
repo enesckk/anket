@@ -1271,25 +1271,55 @@ function render4StepSurveyBuilder(state) {
 
       <!-- ADIM 1: ANKET BİLGİLERİ -->
       ${step === 1 ? `
-        <div class="max-w-xl mx-auto bg-surface p-8 rounded-3xl border border-border shadow-sm space-y-6">
+        <div class="max-w-xl mx-auto bg-white p-6 sm:p-8 rounded-3xl shadow-card space-y-6 border-none">
           <div class="text-center space-y-1">
-            <h3 class="text-xl font-bold text-on-surface">Yeni Anket Tanımla</h3>
-            <p class="text-xs text-text-secondary">Anketinizin adını ve açıklamasını giriniz.</p>
+            <h3 class="text-xl font-extrabold text-[#01214A]">Yeni Anket Tanımla</h3>
+            <p class="text-xs text-slate-500 font-medium">Anketinizin adını yazın veya hızlı şablon seçin.</p>
           </div>
 
-          <form id="form-builder-step1" class="space-y-5">
+          <!-- HAZIR ŞABLON PRESETLERİ -->
+          <div class="space-y-2">
+            <span class="block text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Hızlı Şablonlar (İsteğe Bağlı):</span>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <button type="button" class="btn-preset-template p-2.5 bg-slate-50 hover:bg-[#2A9D38]/10 border border-slate-200 hover:border-[#2A9D38] rounded-xl text-left transition-all active:scale-95 space-y-1" data-title="Tarımsal İhtiyaç Tespiti Anketi" data-desc="Çiftçilerimizin gübre, tohum ve ekipman ihtiyaçlarının belirlenmesi.">
+                <div class="flex items-center gap-1.5 text-[#01214A]">
+                  ${iconSvg('poll', 'w-4 h-4 text-[#2A9D38]')}
+                  <span class="text-xs font-extrabold truncate">Tarımsal İhtiyaç</span>
+                </div>
+                <span class="text-[10px] text-slate-500 block truncate">Gübre, tohum & ekipman</span>
+              </button>
+
+              <button type="button" class="btn-preset-template p-2.5 bg-slate-50 hover:bg-[#2A9D38]/10 border border-slate-200 hover:border-[#2A9D38] rounded-xl text-left transition-all active:scale-95 space-y-1" data-title="Saha Altyapı & Yol Problemleri" data-desc="Mahallelerdeki yol bakım, kaldırım ve kanalizasyon altyapı tespiti.">
+                <div class="flex items-center gap-1.5 text-[#01214A]">
+                  ${iconSvg('mapPin', 'w-4 h-4 text-[#00A0DF]')}
+                  <span class="text-xs font-extrabold truncate">Altyapı Tespiti</span>
+                </div>
+                <span class="text-[10px] text-slate-500 block truncate">Yol, asfalt & altyapı</span>
+              </button>
+
+              <button type="button" class="btn-preset-template p-2.5 bg-slate-50 hover:bg-[#2A9D38]/10 border border-slate-200 hover:border-[#2A9D38] rounded-xl text-left transition-all active:scale-95 space-y-1" data-title="Mahalle Sosyal Hizmet Talepleri" data-desc="Sosyal yardım, park ve gençlik merkezi taleplerinin toplanması.">
+                <div class="flex items-center gap-1.5 text-[#01214A]">
+                  ${iconSvg('users', 'w-4 h-4 text-indigo-600')}
+                  <span class="text-xs font-extrabold truncate">Mahalle Talepleri</span>
+                </div>
+                <span class="text-[10px] text-slate-500 block truncate">Sosyal hizmet & parklar</span>
+              </button>
+            </div>
+          </div>
+
+          <form id="form-builder-step1" class="space-y-4 pt-2">
             <div>
-              <label class="block text-xs font-bold text-on-surface mb-1.5">Anket Adı *</label>
-              <input type="text" id="builder-info-title" required value="${survey.title}" placeholder="Örn: Üretici İhtiyaç Anketi" class="w-full h-12 px-4 bg-surface-container-low border border-border rounded-xl text-sm focus:outline-none focus:border-primary font-medium"/>
+              <label class="block text-xs font-extrabold text-[#01214A] mb-1.5">Anket Adı *</label>
+              <input type="text" id="builder-info-title" required value="${survey.title}" placeholder="Örn: Çiftçi İhtiyaç Analiz Anketi" class="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-[#2A9D38] focus:bg-white font-medium transition-all"/>
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-on-surface mb-1.5">Açıklama</label>
-              <textarea id="builder-info-desc" rows="3" placeholder="Köylerde üreticilerin ihtiyaçlarını tespit etmek için hazırlanan saha çalışması..." class="w-full p-4 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary">${survey.description}</textarea>
+              <label class="block text-xs font-extrabold text-[#01214A] mb-1.5">Açıklama (Opsiyonel)</label>
+              <textarea id="builder-info-desc" rows="3" placeholder="Saha personelinin anketi doldururken dikkat edeceği genel noktalar..." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs text-[#01214A] font-medium focus:outline-none focus:border-[#2A9D38] focus:bg-white transition-all font-sans">${survey.description}</textarea>
             </div>
 
-            <button type="submit" class="w-full h-12 bg-primary text-white font-bold rounded-xl text-sm hover:bg-primary-dark transition-all flex items-center justify-center gap-2 shadow-sm">
-              <span>Devam →</span>
+            <button type="submit" class="w-full h-12 bg-[#2A9D38] hover:bg-[#22822e] text-white font-extrabold rounded-xl text-sm transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-98">
+              <span>İleri: Soruları Ekle →</span>
             </button>
           </form>
         </div>
@@ -1313,81 +1343,84 @@ function render4StepSurveyBuilder(state) {
             </div>
           ` : ''}
 
-          <div class="bg-surface p-4 rounded-2xl border border-border flex justify-between items-center">
-            <div class="flex items-center gap-3">
-              <h3 class="font-bold text-on-surface text-base">${survey.title}</h3>
-              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">Taslak</span>
+          <div class="bg-white p-4 rounded-2xl shadow-card flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-none">
+            <div class="flex items-center gap-3 flex-wrap">
+              <h3 class="font-extrabold text-[#01214A] text-base">${survey.title}</h3>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900">Taslak Hazırlanıyor</span>
               <span class="text-xs text-emerald-700 font-semibold flex items-center gap-1">
-                ${iconSvg('checkCircle', 'w-4 h-4 text-emerald-600')} Otomatik Kaydedildi
+                ${iconSvg('checkCircle', 'w-4 h-4 text-emerald-600')} Kaydedildi
               </span>
             </div>
 
-            <button id="btn-builder-goto-step3" class="px-5 py-2 bg-primary text-white font-bold rounded-xl text-xs hover:bg-primary-dark transition-all flex items-center gap-1.5 shadow-sm">
+            <button id="btn-builder-goto-step3" class="w-full sm:w-auto px-5 py-2.5 bg-[#2A9D38] hover:bg-[#22822e] text-white font-extrabold rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-95">
               <span>Önizlemeye Geç →</span>
             </button>
           </div>
 
-          <!-- ANKET BÖLÜMLERİ BARİ VE YENİ BÖLÜM EKLE BUTTONU -->
-          <div class="bg-surface p-4 rounded-2xl border border-border shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <!-- ANKET BÖLÜMLERİ VE YENİ BÖLÜM EKLE BUTTONU -->
+          <div class="bg-white p-4 rounded-2xl shadow-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-none">
             <div class="flex items-center gap-2 flex-wrap">
-              <span class="text-xs font-bold text-text-secondary uppercase tracking-wider">Bölümler (${(survey.sections || []).length}):</span>
+              <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Bölümler (${(survey.sections || []).length}):</span>
               ${(survey.sections || []).map(sec => `
-                <span class="px-3 py-1 bg-primary/10 border border-primary/20 text-primary rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-2xs">
-                  ${iconSvg('poll', 'w-3.5 h-3.5')}
+                <span class="px-3 py-1 bg-[#01214A]/10 text-[#01214A] rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-2xs">
+                  ${iconSvg('poll', 'w-3.5 h-3.5 text-[#00A0DF]')}
                   <span>${sec.title}</span>
                 </span>
               `).join('')}
             </div>
 
-            <button id="btn-open-add-section-modal" type="button" class="px-4 py-2 bg-primary text-white font-bold rounded-xl text-xs hover:bg-primary-dark transition-all flex items-center gap-1.5 shadow-sm whitespace-nowrap">
-              ${iconSvg('plus', 'w-4 h-4')}
+            <button id="btn-open-add-section-modal" type="button" class="w-full sm:w-auto px-4 py-2 bg-slate-100 hover:bg-slate-200 text-[#01214A] font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-xs whitespace-nowrap">
+              ${iconSvg('plus', 'w-4 h-4 text-[#00A0DF]')}
               <span>Yeni Bölüm Ekle</span>
             </button>
           </div>
 
-          <!-- SORU TÜRÜ SEÇİM KARTLARI PANELİ -->
-          <div class="bg-surface p-5 rounded-2xl border border-border shadow-sm space-y-3">
-            <span class="block text-xs font-bold text-on-surface uppercase tracking-wider">Soru Türü Seçin</span>
+          <!-- SORU TÜRÜ SEÇİM KARTLARI PANELİ (FULL RESPONSIVE) -->
+          <div class="bg-white p-5 rounded-2xl shadow-card space-y-3 border-none">
+            <div class="flex justify-between items-center">
+              <span class="block text-xs font-extrabold text-[#01214A] uppercase tracking-wider">+ Hızlı Soru Türü Ekleyin</span>
+              <span class="text-[10px] text-slate-400 font-semibold">Tıklayarak soru ekleyin</span>
+            </div>
             
-            <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-3">
-              <button data-type="text" class="btn-add-question-type p-3 bg-surface-container-low hover:bg-primary/5 hover:border-primary border border-border rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all">
-                <span class="font-bold text-sm text-primary">Aa</span>
-                <span class="text-[11px] font-semibold text-slate-700">Metin</span>
+            <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2.5">
+              <button data-type="text" class="btn-add-question-type p-3 bg-slate-50 hover:bg-[#2A9D38]/10 hover:border-[#2A9D38] border border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all active:scale-95">
+                <span class="font-bold text-sm text-[#01214A]">Aa</span>
+                <span class="text-[11px] font-bold text-slate-700">Metin</span>
               </button>
 
-              <button data-type="number" class="btn-add-question-type p-3 bg-surface-container-low hover:bg-primary/5 hover:border-primary border border-border rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all">
-                <span class="font-bold text-sm text-primary">123</span>
-                <span class="text-[11px] font-semibold text-slate-700">Sayı</span>
+              <button data-type="number" class="btn-add-question-type p-3 bg-slate-50 hover:bg-[#2A9D38]/10 hover:border-[#2A9D38] border border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all active:scale-95">
+                <span class="font-bold text-sm text-[#01214A]">123</span>
+                <span class="text-[11px] font-bold text-slate-700">Sayı</span>
               </button>
 
-              <button data-type="yesno" class="btn-add-question-type p-3 bg-surface-container-low hover:bg-primary/5 hover:border-primary border border-border rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all">
-                <span class="font-bold text-xs text-primary flex items-center gap-0.5">${iconSvg('check', 'w-3.5 h-3.5')}/${iconSvg('block', 'w-3.5 h-3.5')}</span>
-                <span class="text-[11px] font-semibold text-slate-700">Evet/Hayır</span>
+              <button data-type="yesno" class="btn-add-question-type p-3 bg-slate-50 hover:bg-[#2A9D38]/10 hover:border-[#2A9D38] border border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all active:scale-95">
+                <span class="font-bold text-xs text-[#01214A] flex items-center gap-0.5">${iconSvg('check', 'w-3.5 h-3.5 text-emerald-600')}/${iconSvg('block', 'w-3.5 h-3.5 text-red-600')}</span>
+                <span class="text-[11px] font-bold text-slate-700">Evet/Hayır</span>
               </button>
 
-              <button data-type="single" class="btn-add-question-type p-3 bg-surface-container-low hover:bg-primary/5 hover:border-primary border border-border rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all">
-                <span class="font-bold text-sm text-primary">○</span>
-                <span class="text-[11px] font-semibold text-slate-700">Tek Seçim</span>
+              <button data-type="single" class="btn-add-question-type p-3 bg-slate-50 hover:bg-[#2A9D38]/10 hover:border-[#2A9D38] border border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all active:scale-95">
+                <span class="font-bold text-sm text-[#00A0DF]">○</span>
+                <span class="text-[11px] font-bold text-slate-700">Tek Seçim</span>
               </button>
 
-              <button data-type="multi" class="btn-add-question-type p-3 bg-surface-container-low hover:bg-primary/5 hover:border-primary border border-border rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all">
-                <span class="font-bold text-sm text-primary">${iconSvg('checkCircle', 'w-4 h-4')}</span>
-                <span class="text-[11px] font-semibold text-slate-700">Çoklu Seçim</span>
+              <button data-type="multi" class="btn-add-question-type p-3 bg-slate-50 hover:bg-[#2A9D38]/10 hover:border-[#2A9D38] border border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all active:scale-95">
+                <span class="font-bold text-sm text-[#2A9D38]">${iconSvg('checkCircle', 'w-4 h-4')}</span>
+                <span class="text-[11px] font-bold text-slate-700">Çoklu Seçim</span>
               </button>
 
-              <button data-type="date" class="btn-add-question-type p-3 bg-surface-container-low hover:bg-primary/5 hover:border-primary border border-border rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all">
-                ${iconSvg('calendar', 'w-5 h-5 text-primary')}
-                <span class="text-[11px] font-semibold text-slate-700">Tarih</span>
+              <button data-type="date" class="btn-add-question-type p-3 bg-slate-50 hover:bg-[#2A9D38]/10 hover:border-[#2A9D38] border border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all active:scale-95">
+                ${iconSvg('calendar', 'w-5 h-5 text-[#00A0DF]')}
+                <span class="text-[11px] font-bold text-slate-700">Tarih</span>
               </button>
 
-              <button data-type="photo" class="btn-add-question-type p-3 bg-surface-container-low hover:bg-primary/5 hover:border-primary border border-border rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all">
-                ${iconSvg('camera', 'w-5 h-5 text-primary')}
-                <span class="text-[11px] font-semibold text-slate-700">Fotoğraf</span>
+              <button data-type="photo" class="btn-add-question-type p-3 bg-slate-50 hover:bg-[#2A9D38]/10 hover:border-[#2A9D38] border border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all active:scale-95">
+                ${iconSvg('camera', 'w-5 h-5 text-indigo-600')}
+                <span class="text-[11px] font-bold text-slate-700">Fotoğraf</span>
               </button>
 
-              <button data-type="gps" class="btn-add-question-type p-3 bg-surface-container-low hover:bg-primary/5 hover:border-primary border border-border rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all">
-                ${iconSvg('mapPin', 'w-5 h-5 text-primary')}
-                <span class="text-[11px] font-semibold text-slate-700">GPS Konum</span>
+              <button data-type="gps" class="btn-add-question-type p-3 bg-slate-50 hover:bg-[#2A9D38]/10 hover:border-[#2A9D38] border border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all active:scale-95">
+                ${iconSvg('mapPin', 'w-5 h-5 text-[#2A9D38]')}
+                <span class="text-[11px] font-bold text-slate-700">GPS Konum</span>
               </button>
             </div>
           </div>
