@@ -123,15 +123,47 @@ if (!window.__globalListenersAttached) {
   window.__globalListenersAttached = true;
 
   document.addEventListener('click', (e) => {
-    const addSecBtn = e.target.closest('#btn-open-add-section-modal');
-    if (addSecBtn) {
+    const target = e.target.closest('.btn-open-add-section-modal, #btn-close-custom-modal, .btn-open-review-survey-modal, .btn-set-q-review-status, .btn-submit-survey-revision');
+    if (!target) return;
+
+    if (target.classList.contains('btn-open-add-section-modal')) {
       store.openModal('add_section');
       return;
     }
 
-    const closeBtn = e.target.closest('#btn-close-custom-modal');
-    if (closeBtn) {
+    if (target.id === 'btn-close-custom-modal') {
       store.closeModal();
+      return;
+    }
+
+    if (target.classList.contains('btn-open-review-survey-modal')) {
+      const surveyId = target.getAttribute('data-survey-id');
+      const survey = store.getState().allSurveys.find(s => s.id === surveyId);
+      if (survey) store.openModal('review_survey', { survey });
+      return;
+    }
+
+    if (target.classList.contains('btn-set-q-review-status')) {
+      const surveyId = target.getAttribute('data-survey-id');
+      const qId = target.getAttribute('data-q-id');
+      const status = target.getAttribute('data-status');
+      
+      const noteInput = document.querySelector(`.input-q-review-note[data-survey-id="${surveyId}"][data-q-id="${qId}"]`);
+      const note = noteInput ? noteInput.value.trim() : '';
+
+      if (surveyId && qId && status) {
+        store.updateQuestionReviewStatus(surveyId, qId, status, note);
+        const currentSurvey = store.getState().allSurveys.find(s => s.id === surveyId);
+        if (currentSurvey) store.openModal('review_survey', { survey: currentSurvey });
+      }
+      return;
+    }
+
+    if (target.classList.contains('btn-submit-survey-revision')) {
+      const surveyId = target.getAttribute('data-survey-id');
+      if (surveyId) {
+        store.requestSurveyRevision(surveyId, 'Yönetici bazı sorularda revizyon talep etti.');
+      }
       return;
     }
   });

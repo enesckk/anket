@@ -10,7 +10,7 @@ const defaultState = {
   adminTab: 'dashboard', // 'dashboard' | 'surveys' | 'assignments' | 'responses' | 'reports' | 'personnel' | 'messages'
   
   // Custom Modal Overlay State & Toast Notification
-  activeModal: null, // null | { type: 'add_section' } | { type: 'confirm_delete', questionId } | { type: 'add_personnel' } | { type: 'reject_survey', survey }
+  activeModal: null, // null | { type: 'add_section' } | { type: 'confirm_delete', questionId } | { type: 'add_personnel' } | { type: 'reject_survey', survey } | { type: 'review_survey', survey }
   toast: null, // null | { message, type: 'success' | 'error', id }
 
   // 4-STEP PREMIUM SURVEY BUILDER WIZARD STATE
@@ -761,21 +761,58 @@ class Store {
     const survey = (this.state.allSurveys || []).find(s => s.id === surveyId);
     if (survey) {
       survey.status = 'ACTIVE';
-      this.setToast(`'${survey.title}' anketi onaylandı ve yayınlandı!`, 'success');
+      (survey.questions || []).forEach(q => q.reviewStatus = 'APPROVED');
+      this.closeModal();
+      this.setToast(`'${survey.title}' anketi onaylandı ve başarıyla yayınlandı!`, 'success');
     }
     if (this.state.builderSurvey && this.state.builderSurvey.id === surveyId) {
       this.state.builderSurvey.status = 'ACTIVE';
     }
+    this.saveState();
     this.apiFetch(`/surveys/${surveyId}/approve`, { method: 'POST' }).catch(e => console.warn('Approve note:', e.message));
+  }
+
+  async updateQuestionReviewStatus(surveyId, questionId, status, note = '') {
+    const survey = (this.state.allSurveys || []).find(s => s.id === surveyId);
+    if (survey && survey.questions) {
+      const q = survey.questions.find(x => x.id === questionId);
+      if (q) {
+        q.reviewStatus = status; // 'APPROVED' | 'REVISION_REQUESTED' | 'REJECTED'
+        q.reviewNote = note;
+      }
+    }
+    if (this.state.builderSurvey && this.state.builderSurvey.id === surveyId && this.state.builderSurvey.questions) {
+      const q = this.state.builderSurvey.questions.find(x => x.id === questionId);
+      if (q) {
+        q.reviewStatus = status;
+        q.reviewNote = note;
+      }
+    }
+    this.saveState();
+  }
+
+  async requestSurveyRevision(surveyId, reason = '') {
+    const survey = (this.state.allSurveys || []).find(s => s.id === surveyId);
+    if (survey) {
+      survey.status = 'REVISION_REQUESTED';
+      survey.rejectionReason = reason || 'Yönetici bazı sorularda revizyon talep etti.';
+      this.closeModal();
+      this.setToast(`'${survey.title}' anketi için revizyon talebi saha personeline iletildi.`, 'error');
+    }
+    if (this.state.builderSurvey && this.state.builderSurvey.id === surveyId) {
+      this.state.builderSurvey.status = 'REVISION_REQUESTED';
+    }
+    this.saveState();
+    this.apiFetch(`/surveys/${surveyId}/request-revision`, { method: 'POST', body: JSON.stringify({ reason }) }).catch(e => console.warn('Revision note:', e.message));
   }
 
   async rejectAdminSurvey(surveyId, reason) {
     const survey = (this.state.allSurveys || []).find(s => s.id === surveyId);
     if (survey) {
       survey.status = 'REJECTED';
-      survey.rejectionReason = reason || 'Yönetici revizyon istedi.';
+      survey.rejectionReason = reason || 'Yönetici anketi reddetti.';
       this.closeModal();
-      this.setToast(`'${survey.title}' anketi reddedildi ve revizyona gönderildi.`, 'error');
+      this.setToast(`'${survey.title}' anketi tamamen reddedildi.`, 'error');
     }
     this.apiFetch(`/surveys/${surveyId}/reject`, { method: 'POST', body: JSON.stringify({ reason }) }).catch(e => console.warn('Reject note:', e.message));
   }
