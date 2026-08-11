@@ -1506,7 +1506,7 @@ function render4StepSurveyBuilder(state) {
             </div>
 
             <button id="btn-builder-step3-next" class="w-full h-12 bg-primary text-white font-bold rounded-xl text-xs hover:bg-primary-dark transition-all flex items-center justify-center gap-2 shadow-sm">
-              <span>Anketi Yayınlamaya Geç →</span>
+              <span>${state.currentRole === 'pwa' || (state.auth.user && state.auth.user.role === 'FIELD_USER') ? 'Yöneticinin Onayına Gönder →' : 'Anketi Onayla & Yayınla →'}</span>
             </button>
           </div>
 

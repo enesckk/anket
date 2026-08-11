@@ -818,6 +818,11 @@ class Store {
   }
 
   async publishBuilderSurvey() {
+    const isFieldUser = this.state.currentRole === 'pwa' || (this.state.auth.user && this.state.auth.user.role === 'FIELD_USER');
+    if (isFieldUser) {
+      return this.submitForApproval();
+    }
+
     try {
       if (this.state.isOnline) {
         await this.apiFetch('/surveys', {
