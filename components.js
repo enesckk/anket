@@ -1431,10 +1431,10 @@ function render4StepSurveyBuilder(state) {
             </div>
 
             <form id="form-inline-add-section" class="flex items-center gap-2 w-full sm:w-auto">
-              <input type="text" id="inline-sec-title" placeholder="Hızlı Bölüm Adı..." class="h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#01214A] w-full sm:w-44"/>
-              <button type="submit" class="h-9 px-3.5 bg-[#01214A] hover:bg-[#011633] text-white font-extrabold text-xs rounded-xl transition-all shadow-xs flex items-center gap-1 shrink-0 active:scale-95">
+              <input type="text" id="inline-sec-title" placeholder="Yeni Bölüm Adı..." class="h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#01214A] w-full sm:w-48"/>
+              <button type="submit" class="h-9 px-4 bg-[#01214A] hover:bg-[#011633] text-white font-extrabold text-xs rounded-xl transition-all shadow-xs flex items-center gap-1.5 shrink-0 active:scale-95">
                 ${iconSvg('plus', 'w-3.5 h-3.5 text-[#00A0DF]')}
-                <span>+ Bölüm Ekle</span>
+                <span>Bölüm Ekle</span>
               </button>
             </form>
           </div>
@@ -1601,13 +1601,8 @@ function render4StepSurveyBuilder(state) {
             `).join('')}
           </div>
 
-          <div class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-border">
-            <button id="btn-open-add-section-modal" class="px-4 py-2 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 transition-all flex items-center gap-1.5">
-              ${iconSvg('plus', 'w-4 h-4')}
-              Bölüm Ekle
-            </button>
-
-            <button id="btn-builder-step2-next" class="px-6 py-3 bg-primary text-white font-bold rounded-xl text-xs hover:bg-primary-dark transition-all flex items-center gap-2 shadow-sm">
+          <div class="flex flex-col sm:flex-row justify-end items-center gap-4 pt-4 border-t border-border">
+            <button id="btn-builder-step2-next" class="px-6 py-3 bg-[#2A9D38] hover:bg-[#22822e] text-white font-extrabold rounded-xl text-xs transition-all flex items-center gap-2 shadow-md active:scale-95">
               <span>Önizlemeye Geç →</span>
             </button>
           </div>
