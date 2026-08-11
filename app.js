@@ -171,9 +171,6 @@ if (!window.__globalListenersAttached) {
       return;
     }
 
-    const target = e.target.closest('.btn-open-add-section-modal, #btn-close-custom-modal, .btn-open-review-survey-modal, .btn-set-q-review-status, .btn-submit-survey-revision');
-    if (!target) return;
-
     const addSecBtn = e.target.closest('#btn-open-add-section-modal, .btn-open-add-section-modal');
     if (addSecBtn) {
       store.openModal('add_section');
@@ -190,10 +187,89 @@ if (!window.__globalListenersAttached) {
       return;
     }
 
-    if (target.id === 'btn-close-custom-modal') {
+    const addQTypeBtn = e.target.closest('.btn-add-question-type');
+    if (addQTypeBtn) {
+      const type = addQTypeBtn.getAttribute('data-type');
+      if (type) store.addQuestionToBuilder(type);
+      return;
+    }
+
+    const toggleQBtn = e.target.closest('.btn-toggle-question');
+    if (toggleQBtn) {
+      const id = toggleQBtn.getAttribute('data-q-id');
+      if (id) store.toggleQuestionExpanded(id);
+      return;
+    }
+
+    const reqBtn = e.target.closest('.btn-toggle-required');
+    if (reqBtn) {
+      const id = reqBtn.getAttribute('data-q-id');
+      if (id) store.toggleQuestionRequired(id);
+      return;
+    }
+
+    const addOptBtn = e.target.closest('.btn-add-option-direct');
+    if (addOptBtn) {
+      const id = addOptBtn.getAttribute('data-q-id');
+      if (id) store.addOptionToQuestion(id);
+      return;
+    }
+
+    const remOptBtn = e.target.closest('.btn-remove-option');
+    if (remOptBtn) {
+      const qId = remOptBtn.getAttribute('data-q-id');
+      const optId = remOptBtn.getAttribute('data-opt-id');
+      if (qId && optId) store.removeOptionFromQuestion(qId, optId);
+      return;
+    }
+
+    const dupBtn = e.target.closest('.btn-duplicate-question');
+    if (dupBtn) {
+      const id = dupBtn.getAttribute('data-q-id');
+      if (id) store.duplicateQuestion(id);
+      return;
+    }
+
+    const moveUpBtn = e.target.closest('.btn-move-q-up');
+    if (moveUpBtn) {
+      const id = moveUpBtn.getAttribute('data-q-id');
+      if (id) store.moveQuestion(id, 'up');
+      return;
+    }
+    const moveDownBtn = e.target.closest('.btn-move-q-down');
+    if (moveDownBtn) {
+      const id = moveDownBtn.getAttribute('data-q-id');
+      if (id) store.moveQuestion(id, 'down');
+      return;
+    }
+
+    const stepNavBtn = e.target.closest('.btn-builder-step-nav');
+    if (stepNavBtn) {
+      const st = parseInt(stepNavBtn.getAttribute('data-builder-step'));
+      if (st) store.setBuilderStep(st);
+      return;
+    }
+
+    const gotoStep3Btn = e.target.closest('#btn-builder-goto-step3, #btn-builder-step2-next');
+    if (gotoStep3Btn) {
+      store.setBuilderStep(3);
+      return;
+    }
+
+    const step3NextBtn = e.target.closest('#btn-builder-step3-next');
+    if (step3NextBtn) {
+      await store.submitForApproval();
+      return;
+    }
+
+    const closeCustomModalBtn = e.target.closest('#btn-close-custom-modal');
+    if (closeCustomModalBtn) {
       store.closeModal();
       return;
     }
+
+    const target = e.target.closest('.btn-open-review-survey-modal, .btn-set-q-review-status, .btn-submit-survey-revision');
+    if (!target) return;
 
     if (target.classList.contains('btn-open-review-survey-modal')) {
       const surveyId = target.getAttribute('data-survey-id');
@@ -243,6 +319,40 @@ if (!window.__globalListenersAttached) {
       if (surveyId) {
         store.state.showRevisionBox = false;
         await store.requestSurveyRevision(surveyId, reason);
+      }
+      return;
+    }
+  });
+
+  document.addEventListener('input', (e) => {
+    const target = e.target;
+    if (!target) return;
+
+    if (target.classList.contains('input-builder-q-title')) {
+      const id = target.getAttribute('data-q-id');
+      if (id) store.updateQuestionTitle(id, target.value);
+      return;
+    }
+
+    if (target.classList.contains('input-option-edit')) {
+      const qId = target.getAttribute('data-q-id');
+      const optId = target.getAttribute('data-opt-id');
+      if (qId && optId) store.updateOptionLabel(qId, optId, target.value);
+      return;
+    }
+  });
+
+  document.addEventListener('change', (e) => {
+    const target = e.target;
+    if (!target) return;
+
+    if (target.classList.contains('select-condition-source') || target.classList.contains('select-condition-op') || target.classList.contains('input-condition-val')) {
+      const qId = target.getAttribute('data-q-id');
+      const srcSel = document.querySelector(`.select-condition-source[data-q-id="${qId}"]`);
+      const opSel = document.querySelector(`.select-condition-op[data-q-id="${qId}"]`);
+      const valInput = document.querySelector(`.input-condition-val[data-q-id="${qId}"]`);
+      if (qId) {
+        store.setQuestionCondition(qId, srcSel?.value || '', opSel?.value || 'esittir', valInput?.value || 'evet');
       }
       return;
     }
