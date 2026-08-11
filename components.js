@@ -338,7 +338,7 @@ export function renderCustomModals(state) {
                     ${q.reviewStatus === 'APPROVED' ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-800 inline-flex items-center gap-1">${iconSvg('checkCircle', 'w-3 h-3 text-emerald-600')} Soruda Hata Yok</span>` : ''}
                     ${q.reviewStatus === 'REVISION_REQUESTED' ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-orange-100 text-orange-800 inline-flex items-center gap-1">${iconSvg('edit', 'w-3 h-3 text-orange-600')} Revizyon İstendi</span>` : ''}
                     ${q.reviewStatus === 'REJECTED' ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-red-100 text-red-800 inline-flex items-center gap-1">${iconSvg('block', 'w-3 h-3 text-red-600')} Soru Çıkarılsın</span>` : ''}
-                    {(!q.reviewStatus || q.reviewStatus === 'PENDING') ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-200 text-slate-700 inline-flex items-center gap-1">${iconSvg('history', 'w-3 h-3 text-slate-500')} İncelenmedi</span>` : ''}
+                    ${(!q.reviewStatus || q.reviewStatus === 'PENDING') ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-200 text-slate-700 inline-flex items-center gap-1">${iconSvg('history', 'w-3 h-3 text-slate-500')} İncelenmedi</span>` : ''}
                   </div>
                 </div>
 
