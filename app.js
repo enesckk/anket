@@ -15,7 +15,8 @@ import {
   renderMessageDetail,
   renderProfile,
   renderAdminView,
-  renderToastNotification
+  renderToastNotification,
+  renderCustomModals
 } from './components.js';
 
 function renderApp() {
