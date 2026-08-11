@@ -303,24 +303,18 @@ export function renderCustomModals(state) {
   if (state.activeModal.type === 'review_survey') {
     const survey = state.activeModal.survey || {};
     const questions = survey.questions || [];
+    const hasRevisionRequested = questions.some(q => q.reviewStatus === 'REVISION_REQUESTED') || state.showRevisionBox;
 
     return `
       <div class="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl p-6 max-w-2xl w-full shadow-2xl space-y-5 max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-150 border-none font-sans">
+        <div class="bg-white rounded-3xl p-6 max-w-xl w-full shadow-2xl space-y-5 max-h-[88vh] flex flex-col animate-in zoom-in-95 duration-150 border-none font-sans">
           
           <!-- SADE KADEMELİ KURUMSAL HEADER -->
-          <div class="flex justify-between items-start pb-4 border-b border-slate-100 shrink-0">
+          <div class="flex justify-between items-start pb-3 border-b border-slate-100 shrink-0">
             <div class="space-y-1">
-              <div class="flex items-center gap-2">
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#01214A] text-white">ŞEHİTKAMİL BELEDİYESİ</span>
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">⏳ ONAY BEKLİYOR</span>
-              </div>
-              <h3 class="text-lg font-extrabold text-[#01214A] tracking-tight leading-snug">${survey.title}</h3>
-              <div class="flex items-center gap-2 text-[11px] text-slate-500 font-medium pt-0.5">
-                <span>Oluşturan: <strong class="text-slate-800">${survey.createdBy || 'Saha Görevlisi'}</strong></span>
-                <span>•</span>
-                <span class="font-bold text-[#00A0DF]">${questions.length} Soru İncelemede</span>
-              </div>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#01214A] text-white">ŞEHİTKAMİL BELEDİYESİ</span>
+              <h3 class="text-lg font-extrabold text-[#01214A] tracking-tight mt-1">${survey.title}</h3>
+              <p class="text-xs text-slate-500 font-medium">${survey.createdBy || 'Saha Görevlisi'} • ${questions.length} Soru İncelemede</p>
             </div>
             
             <button type="button" id="btn-close-custom-modal" class="p-2 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-all">
@@ -328,97 +322,84 @@ export function renderCustomModals(state) {
             </button>
           </div>
 
-          <!-- SORU BAZLI DETAYLI KONTROL LİSTESİ -->
-          <div class="flex-1 overflow-y-auto space-y-4 pr-1">
-            <div class="flex items-center justify-between">
-              <h4 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Soru Bazlı İnceleme Listesi</h4>
-              <span class="text-[11px] text-slate-500 font-medium">Soruları tek tek değerlendirebilirsiniz</span>
-            </div>
-            
+          <!-- SORU LİSTESİ -->
+          <div class="flex-1 overflow-y-auto space-y-3.5 pr-1">
             ${questions.length === 0 ? `
-              <div class="p-6 bg-slate-50 rounded-2xl text-center text-xs text-slate-500 font-medium border border-dashed border-slate-200">Bu ankette henüz soru bulunmuyor.</div>
+              <div class="p-6 bg-slate-50 rounded-2xl text-center text-xs text-slate-500 font-medium">Bu ankette henüz soru tanımlanmamıştır.</div>
             ` : questions.map((q, idx) => {
               const status = q.reviewStatus || 'PENDING';
               return `
-                <div class="p-4 bg-slate-50/90 rounded-2xl border border-slate-200/80 space-y-3">
-                  
-                  <!-- Soru Başlığı ve Türü -->
+                <div class="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/80 space-y-3">
                   <div class="flex justify-between items-start gap-2">
-                    <div class="space-y-1">
-                      <div class="flex items-center gap-1.5">
-                        <span class="px-2 py-0.5 rounded-md bg-[#00A0DF]/10 text-[#00A0DF] text-[10px] font-extrabold">Soru ${idx + 1}</span>
-                        <span class="px-2 py-0.5 rounded-md bg-slate-200/70 text-slate-700 text-[10px] font-semibold">${formatQuestionType(q.type)}</span>
-                      </div>
+                    <div class="space-y-0.5">
+                      <span class="text-[10px] font-extrabold text-[#00A0DF] uppercase">Soru ${idx + 1} • ${formatQuestionType(q.type)}</span>
                       <h5 class="font-extrabold text-[#01214A] text-xs leading-relaxed">${q.title}</h5>
-                    </div>
-
-                    <!-- Durum Etiketi -->
-                    <div class="shrink-0">
-                      ${status === 'APPROVED' ? `<span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 inline-flex items-center gap-1">${iconSvg('checkCircle', 'w-3.5 h-3.5 text-emerald-600')} Uygun</span>` : ''}
-                      ${status === 'REVISION_REQUESTED' ? `<span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-900 inline-flex items-center gap-1">${iconSvg('edit', 'w-3.5 h-3.5 text-amber-700')} Revize Edilmeli</span>` : ''}
-                      ${status === 'REJECTED' ? `<span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-red-100 text-red-800 inline-flex items-center gap-1">${iconSvg('block', 'w-3.5 h-3.5 text-red-600')} Çıkarılsın</span>` : ''}
-                      ${status === 'PENDING' ? `<span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-200/80 text-slate-600 inline-flex items-center gap-1">İncelenmedi</span>` : ''}
                     </div>
                   </div>
 
                   ${(q.options && q.options.length > 0) ? `
-                    <div class="flex flex-wrap gap-1.5 pt-0.5">
-                      ${q.options.map(opt => `<span class="px-2.5 py-0.5 bg-white border border-slate-200 rounded-lg text-[10px] text-slate-600 font-medium">${opt.label}</span>`).join('')}
+                    <div class="flex flex-wrap gap-1.5">
+                      ${q.options.map(opt => `<span class="px-2 py-0.5 bg-white border border-slate-200 rounded text-[10px] text-slate-600 font-medium">${opt.label}</span>`).join('')}
                     </div>
                   ` : ''}
 
-                  <!-- Soru Bazlı Seçenek Butonları & Özel Not Kutusu -->
-                  <div class="pt-2.5 border-t border-slate-200/60 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+                  <!-- SEGMENTED BUTONLAR -->
+                  <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between gap-2">
                     <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shrink-0">
-                      <button type="button" data-survey-id="${survey.id}" data-q-id="${q.id}" data-status="APPROVED" class="btn-set-q-review-status px-3 py-1.5 ${status === 'APPROVED' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'} font-bold text-[10px] rounded-lg transition-all inline-flex items-center gap-1">
+                      <button type="button" data-survey-id="${survey.id}" data-q-id="${q.id}" data-status="APPROVED" class="btn-set-q-review-status px-3 py-1.5 ${status === 'APPROVED' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'} font-bold text-[10px] rounded-lg transition-all flex items-center gap-1">
                         ${iconSvg('checkCircle', 'w-3 h-3')}
                         <span>Uygun</span>
                       </button>
 
-                      <button type="button" data-survey-id="${survey.id}" data-q-id="${q.id}" data-status="REVISION_REQUESTED" class="btn-set-q-review-status px-3 py-1.5 ${status === 'REVISION_REQUESTED' ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'} font-bold text-[10px] rounded-lg transition-all inline-flex items-center gap-1">
+                      <button type="button" data-survey-id="${survey.id}" data-q-id="${q.id}" data-status="REVISION_REQUESTED" class="btn-set-q-review-status px-3 py-1.5 ${status === 'REVISION_REQUESTED' ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'} font-bold text-[10px] rounded-lg transition-all flex items-center gap-1">
                         ${iconSvg('edit', 'w-3 h-3')}
                         <span>Revize Et</span>
                       </button>
 
-                      <button type="button" data-survey-id="${survey.id}" data-q-id="${q.id}" data-status="REJECTED" class="btn-set-q-review-status px-3 py-1.5 ${status === 'REJECTED' ? 'bg-red-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'} font-bold text-[10px] rounded-lg transition-all inline-flex items-center gap-1">
+                      <button type="button" data-survey-id="${survey.id}" data-q-id="${q.id}" data-status="REJECTED" class="btn-set-q-review-status px-3 py-1.5 ${status === 'REJECTED' ? 'bg-red-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'} font-bold text-[10px] rounded-lg transition-all flex items-center gap-1">
                         ${iconSvg('block', 'w-3 h-3')}
                         <span>Çıkar</span>
                       </button>
                     </div>
-
-                    <input type="text" data-survey-id="${survey.id}" data-q-id="${q.id}" value="${q.reviewNote || ''}" placeholder="Soruya özel not yazınız (opsiyonel)..." class="input-q-review-note flex-1 h-9 px-3 bg-white border border-slate-200 rounded-xl text-[11px] focus:outline-none focus:border-[#2A9D38] font-medium transition-all"/>
                   </div>
+
+                  <!-- SADECE REVİZE ET SEÇİLDİĞİNDE DİNAMİK AÇILAN SORU NOTU -->
+                  ${status === 'REVISION_REQUESTED' ? `
+                    <div class="pt-2 animate-in fade-in-50 duration-200">
+                      <input type="text" data-survey-id="${survey.id}" data-q-id="${q.id}" value="${q.reviewNote || ''}" placeholder="Bu soru için özel düzeltme talimatı yazınız..." class="input-q-review-note w-full h-9 px-3 bg-white border border-amber-300 rounded-xl text-[11px] focus:outline-none focus:border-[#2A9D38] font-medium transition-all shadow-xs"/>
+                    </div>
+                  ` : ''}
 
                 </div>
               `;
             }).join('')}
 
-            <!-- GENEL REVİZYON AÇIKLAMASI (Opsiyonel) -->
-            <div class="p-4 bg-amber-50/70 border border-amber-200/80 rounded-2xl space-y-2 mt-4">
-              <label class="block text-xs font-extrabold text-[#01214A] flex items-center justify-between">
-                <span class="flex items-center gap-1.5">
+            <!-- SADECE REVİZYON TALEBİ VARSA AÇILAN GENEL TALİMAT KUTUSU -->
+            ${hasRevisionRequested ? `
+              <div class="p-4 bg-amber-50/80 border border-amber-300/80 rounded-2xl space-y-2 mt-4 animate-in fade-in-50 duration-200">
+                <label class="block text-xs font-extrabold text-[#01214A] flex items-center gap-1.5">
                   ${iconSvg('edit', 'w-4 h-4 text-amber-600')}
-                  <span>Saha Personeline Genel Mesaj / Revizyon Notu (Opsiyonel)</span>
-                </span>
-                <span class="text-[10px] text-amber-800 font-bold bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">Revizyonda İletilir</span>
-              </label>
-              <textarea id="input-general-revision-reason" rows="2" placeholder="Örn: Sorular genel olarak başarılı fakat seçeneklerin sırası gözden geçirilmeli..." class="w-full p-3 bg-white border border-amber-200/80 rounded-xl text-xs text-[#01214A] font-medium focus:outline-none focus:border-[#2A9D38] transition-all placeholder:text-slate-400 font-sans"></textarea>
-            </div>
+                  <span>Saha Ekibine Genel Revizyon Talimatı *</span>
+                </label>
+                <textarea id="input-general-revision-reason" rows="2" placeholder="Saha ekibine iletilecek genel düzeltme notunu giriniz..." class="w-full p-3 bg-white border border-amber-200 rounded-xl text-xs text-[#01214A] font-medium focus:outline-none focus:border-[#2A9D38] font-sans"></textarea>
+              </div>
+            ` : ''}
+
           </div>
 
-          <!-- NET VE ANLAŞILIR ALT AKSİYON BAR -->
-          <div class="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
-            <button type="button" id="btn-close-custom-modal" class="w-full sm:w-auto h-11 px-5 text-slate-500 hover:text-slate-800 font-bold text-xs rounded-xl hover:bg-slate-100 transition-all">
+          <!-- MİNİMAL ALT AKSİYON BAR -->
+          <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-3 shrink-0">
+            <button type="button" id="btn-close-custom-modal" class="h-11 px-4 text-slate-500 hover:text-slate-800 font-bold text-xs rounded-xl hover:bg-slate-100 transition-all">
               Vazgeç
             </button>
 
-            <div class="flex items-center gap-2.5 w-full sm:w-auto">
-              <button type="button" data-survey-id="${survey.id}" class="btn-submit-survey-revision flex-1 sm:flex-initial h-11 px-5 bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs rounded-xl shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2">
+            <div class="flex items-center gap-2">
+              <button type="button" data-survey-id="${survey.id}" class="btn-submit-survey-revision h-11 px-4 bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center gap-1.5">
                 ${iconSvg('edit', 'w-4 h-4 text-white')}
-                <span>Revizyon Talebini İlet</span>
+                <span>Revizyon Talebi Gönder</span>
               </button>
 
-              <button type="button" data-survey-id="${survey.id}" class="btn-approve-admin-survey flex-1 sm:flex-initial h-11 px-6 bg-[#2A9D38] hover:bg-[#22822e] text-white font-extrabold text-xs rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2">
+              <button type="button" data-survey-id="${survey.id}" class="btn-approve-admin-survey h-11 px-5 bg-[#2A9D38] hover:bg-[#22822e] text-white font-extrabold text-xs rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-1.5">
                 ${iconSvg('checkCircle', 'w-4 h-4 text-white')}
                 <span>Anketi Onayla & Yayınla</span>
               </button>

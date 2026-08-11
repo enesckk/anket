@@ -162,15 +162,27 @@ if (!window.__globalListenersAttached) {
     if (target.classList.contains('btn-submit-survey-revision')) {
       const surveyId = target.getAttribute('data-survey-id');
       const reasonInput = document.getElementById('input-general-revision-reason');
-      const reason = reasonInput ? reasonInput.value.trim() : '';
+      
+      if (!reasonInput) {
+        store.state.showRevisionBox = true;
+        const currentSurvey = store.getState().allSurveys.find(s => s.id === surveyId);
+        if (currentSurvey) store.openModal('review_survey', { survey: currentSurvey });
+        setTimeout(() => {
+          document.getElementById('input-general-revision-reason')?.focus();
+        }, 100);
+        store.setToast('Lütfen saha ekibine iletilecek revizyon talimatını yazınız.', 'info');
+        return;
+      }
 
+      const reason = reasonInput.value.trim();
       if (!reason) {
-        store.setToast('Lütfen saha personeline iletilecek revizyon gerekçesini/talimatını yazınız!', 'error');
-        reasonInput?.focus();
+        store.setToast('Lütfen saha ekibine iletilecek revizyon talimatını yazınız!', 'error');
+        reasonInput.focus();
         return;
       }
 
       if (surveyId) {
+        store.state.showRevisionBox = false;
         await store.requestSurveyRevision(surveyId, reason);
       }
       return;
