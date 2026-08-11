@@ -1037,44 +1037,47 @@ export function renderAdminView() {
   ];
 
   return `
-    <div class="flex min-h-[calc(100vh-41px)] bg-background relative">
+    <div class="flex min-h-[calc(100vh-41px)] bg-[#F4F7F9] relative">
       ${renderCustomModals(state)}
 
-      <aside class="hidden md:flex flex-col w-64 border-r border-separator bg-surface z-30 shrink-0 sticky top-10 h-[calc(100vh-41px)]">
-        <div class="p-6 border-b border-separator/50 flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-            ${iconSvg('clipboard', 'w-6 h-6')}
+      <aside class="hidden md:flex flex-col w-64 border-r border-slate-100 bg-white z-30 shrink-0 sticky top-10 h-[calc(100vh-41px)] shadow-sm">
+        <!-- LOGO YERLEŞİMİ: ŞEHİTKAMİL STRATEJİ GELİŞTİRME MERKEZİ -->
+        <div class="p-6 border-b border-slate-100 flex flex-col items-center justify-center text-center space-y-2.5">
+          <div class="w-12 h-12 rounded-2xl bg-[#01214A] text-white flex items-center justify-center shadow-md shrink-0 ring-4 ring-[#01214A]/10">
+            ${iconSvg('clipboard', 'w-6 h-6 text-[#2A9D38]')}
           </div>
           <div>
-            <h1 class="font-bold text-on-surface text-base leading-tight">Saha Anket</h1>
-            <p class="text-[11px] text-text-secondary uppercase tracking-widest font-semibold mt-0.5">Yönetim Paneli</p>
+            <h1 class="font-extrabold text-[#01214A] text-xs uppercase tracking-wider leading-snug">ŞEHİTKAMİL</h1>
+            <p class="text-[9px] text-[#00A0DF] uppercase tracking-widest font-extrabold">STRATEJİ GELİŞTİRME MERKEZİ</p>
           </div>
         </div>
 
-        <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
+        <nav class="flex-1 p-3 space-y-1.5 overflow-y-auto">
           ${navItems.map(item => `
-            <button data-admin-tab="${item.id}" class="btn-admin-tab w-full flex items-center gap-3 px-3 py-3 rounded-lg text-left text-xs font-semibold transition-all relative ${activeTab === item.id || (activeTab === 'builder' && item.id === 'surveys') ? 'text-primary bg-primary/5 font-bold before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-6 before:w-1 before:bg-primary before:rounded-r-full' : 'text-text-secondary hover:text-on-surface hover:bg-surface-container-low'}">
-              ${iconSvg(item.icon, 'w-5 h-5')}
+            <button data-admin-tab="${item.id}" class="btn-admin-tab w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-left text-xs font-semibold transition-all relative ${activeTab === item.id || (activeTab === 'builder' && item.id === 'surveys') ? 'text-[#01214A] bg-[#2A9D38]/10 font-bold before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-6 before:w-1.5 before:bg-[#2A9D38] before:rounded-r-full' : 'text-slate-500 hover:text-[#01214A] hover:bg-slate-50'}">
+              ${iconSvg(item.icon, `w-5 h-5 ${activeTab === item.id ? 'text-[#2A9D38]' : 'text-slate-400'}`)}
               <span>${item.label}</span>
             </button>
           `).join('')}
         </nav>
 
-        <div class="p-3 border-t border-separator/50 mt-auto">
-          <div class="flex items-center gap-3 px-3 py-2 text-xs font-semibold text-text-secondary">
-            ${iconSvg('accountCircle', 'w-6 h-6 text-primary')}
-            <div>
-              <div class="text-on-surface font-bold text-xs">${state.auth.user?.fullName || 'Saha Koordinatörü'}</div>
-              <div class="text-[10px] text-text-muted">Sistem Yöneticisi</div>
+        <div class="p-3 border-t border-slate-100 mt-auto">
+          <div class="flex items-center gap-3 px-3 py-2.5 text-xs font-semibold text-slate-600 bg-slate-50/80 rounded-xl">
+            <div class="w-8 h-8 rounded-full bg-[#01214A] text-white flex items-center justify-center font-bold text-xs shrink-0">
+              SK
+            </div>
+            <div class="truncate">
+              <div class="text-[#01214A] font-bold text-xs truncate">${state.auth.user?.fullName || 'Saha Koordinatörü'}</div>
+              <div class="text-[10px] text-[#00A0DF] font-semibold">Sistem Yöneticisi</div>
             </div>
           </div>
         </div>
       </aside>
 
       <div class="flex-1 flex flex-col min-w-0">
-        <header class="h-16 border-b border-separator/60 bg-surface px-6 flex items-center justify-between sticky top-10 z-20">
+        <header class="h-16 border-b border-slate-100 bg-white px-6 flex items-center justify-between sticky top-10 z-20 shadow-header">
           <div class="flex items-center gap-3">
-            <h2 class="font-bold text-on-surface text-lg uppercase tracking-tight">${activeTab === 'builder' ? 'ANKET OLUŞTUR' : (navItems.find(i => i.id === activeTab)?.label || 'ANA SAYFA')}</h2>
+            <h2 class="font-extrabold text-[#01214A] text-lg uppercase tracking-tight">${activeTab === 'builder' ? 'ANKET OLUŞTUR' : (navItems.find(i => i.id === activeTab)?.label || 'ANA SAYFA')}</h2>
           </div>
         </header>
 
@@ -1611,154 +1614,155 @@ function renderAdminTabContent(tab, state) {
         <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-2">
           <div>
             <div class="flex items-center gap-3 mb-1">
-              <h2 class="text-2xl font-bold text-on-surface tracking-tight">Genel Bakış</h2>
+              <h2 class="text-2xl font-extrabold text-[#01214A] tracking-tight">Genel Bakış</h2>
             </div>
-            <p class="text-xs text-text-secondary">Anlık saha hareketleri ve operasyonel veriler özet paneli.</p>
+            <p class="text-xs text-slate-500 font-medium">Anlık saha hareketleri ve operasyonel veriler özet paneli.</p>
           </div>
 
-          <button id="btn-admin-create-survey-dashboard" class="h-10 px-5 bg-primary text-white rounded-full font-bold text-xs hover:bg-primary-dark transition-all flex items-center justify-center gap-1.5 shadow-sm">
-            ${iconSvg('plus', 'w-4 h-4')}
-            Yeni Anket Oluştur
+          <button id="btn-admin-create-survey-dashboard" class="h-11 px-5 bg-[#2A9D38] hover:bg-[#22822e] text-white rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg hover:-translate-y-0.5">
+            ${iconSvg('plus', 'w-4 h-4 text-white')}
+            <span>Yeni Anket Oluştur</span>
           </button>
         </div>
 
         <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <div class="bg-surface p-4 rounded-2xl border border-border shadow-sm flex flex-col justify-between h-36">
-            <span class="text-[10px] text-text-secondary uppercase font-bold tracking-wider">Toplam Tamamlanan</span>
-            <div class="text-3xl font-bold text-on-surface tracking-tight mt-auto">${state.adminKpis.totalCompleted || '12.480'}</div>
+          <div class="bg-white p-5 rounded-2xl shadow-card hover-lift flex flex-col justify-between h-36 border-none">
+            <span class="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">TOPLAM TAMAMLANAN</span>
+            <div class="text-3xl font-extrabold text-[#01214A] tracking-tight mt-auto">${state.adminKpis.totalCompleted || '12.480'}</div>
           </div>
 
-          <div class="bg-surface p-4 rounded-2xl border border-border shadow-sm flex flex-col justify-between h-36">
-            <span class="text-[10px] text-text-secondary uppercase font-bold tracking-wider">Bugün Tamamlanan</span>
-            <div class="text-3xl font-bold text-on-surface tracking-tight mt-auto">${state.adminKpis.todayCompleted || '142'}</div>
+          <div class="bg-white p-5 rounded-2xl shadow-card hover-lift flex flex-col justify-between h-36 border-none">
+            <span class="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">BUGÜN TAMAMLANAN</span>
+            <div class="text-3xl font-extrabold text-[#01214A] tracking-tight mt-auto">${state.adminKpis.todayCompleted || '142'}</div>
           </div>
 
-          <div class="bg-surface p-4 rounded-2xl border border-primary/20 bg-primary/5 shadow-sm flex flex-col justify-between h-36">
-            <span class="text-[10px] text-primary uppercase font-bold tracking-wider">Aktif Anket</span>
-            <div class="text-3xl font-bold text-primary tracking-tight mt-auto">${state.adminKpis.activeSurveysCount || '8'}</div>
+          <div class="bg-white p-5 rounded-2xl shadow-card hover-lift flex flex-col justify-between h-36 border-none ring-2 ring-[#2A9D38]/20 bg-[#2A9D38]/5">
+            <span class="text-[10px] text-[#2A9D38] uppercase font-bold tracking-wider mb-1">AKTİF ANKET</span>
+            <div class="text-3xl font-extrabold text-[#2A9D38] tracking-tight mt-auto">${state.adminKpis.activeSurveysCount || '8'}</div>
           </div>
 
-          <div class="bg-surface p-4 rounded-2xl border border-border shadow-sm flex flex-col justify-between h-36">
-            <span class="text-[10px] text-text-secondary uppercase font-bold tracking-wider">Aktif Atama</span>
-            <div class="text-3xl font-bold text-on-surface tracking-tight mt-auto">${state.adminKpis.activeAssignmentsCount || '24'}</div>
+          <div class="bg-white p-5 rounded-2xl shadow-card hover-lift flex flex-col justify-between h-36 border-none">
+            <span class="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">AKTİF ATAMA</span>
+            <div class="text-3xl font-extrabold text-[#01214A] tracking-tight mt-auto">${state.adminKpis.activeAssignmentsCount || '24'}</div>
           </div>
 
-          <div class="bg-surface p-4 rounded-2xl border border-border shadow-sm flex flex-col justify-between h-36">
-            <span class="text-[10px] text-text-secondary uppercase font-bold tracking-wider">Sahada Personel</span>
-            <div class="text-3xl font-bold text-on-surface tracking-tight mt-auto">${state.adminKpis.fieldStaffCount || '12'}</div>
+          <div class="bg-white p-5 rounded-2xl shadow-card hover-lift flex flex-col justify-between h-36 border-none">
+            <span class="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">SAHADA PERSONEL</span>
+            <div class="text-3xl font-extrabold text-[#01214A] tracking-tight mt-auto">${state.adminKpis.fieldStaffCount || '12'}</div>
           </div>
 
-          <div class="bg-surface p-4 rounded-2xl border border-amber-200 bg-amber-50/50 shadow-sm flex flex-col justify-between h-36">
-            <span class="text-[10px] text-amber-800 uppercase font-bold tracking-wider">Offline Kayıtlar</span>
-            <div class="text-3xl font-bold text-amber-700 tracking-tight mt-auto">${state.offlineQueueCount || '3'}</div>
+          <div class="bg-white p-5 rounded-2xl shadow-card hover-lift flex flex-col justify-between h-36 border-none bg-amber-50/40">
+            <span class="text-[10px] text-amber-800 uppercase font-bold tracking-wider mb-1">OFFLINE KAYITLAR</span>
+            <div class="text-3xl font-extrabold text-amber-700 tracking-tight mt-auto">${state.offlineQueueCount || '3'}</div>
           </div>
         </section>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <section class="lg:col-span-2 bg-surface rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col">
-            <div class="p-4 border-b border-border flex justify-between items-center bg-surface">
-              <h3 class="font-bold text-on-surface text-base">Aktif Anketler</h3>
-              <span class="text-xs font-bold text-primary">Tümünü Gör</span>
+          <section class="lg:col-span-2 bg-white rounded-2xl shadow-card overflow-hidden flex flex-col border-none">
+            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-white">
+              <h3 class="font-extrabold text-[#01214A] text-base">Aktif Anketler</h3>
+              <span class="text-xs font-bold text-[#00A0DF] hover:underline cursor-pointer">Tümünü Gör</span>
             </div>
 
             <div class="overflow-x-auto">
               <table class="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr class="bg-surface-container border-b border-border text-text-secondary uppercase font-bold text-[10px]">
+                  <tr class="bg-slate-100/70 border-b border-slate-100 text-[#01214A] uppercase font-extrabold text-[10px] tracking-wider">
                     <th class="p-4">Anket Adı</th>
                     <th class="p-4">Köy / Bölge</th>
                     <th class="p-4">İlerleme</th>
                     <th class="p-4 text-right">Son Tarih</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-border">
-                  <tr>
-                    <td class="p-4 font-bold text-on-surface">Tarımsal İhtiyaç Analizi</td>
-                    <td class="p-4 text-text-secondary">Sinan Köyü</td>
+                <tbody class="divide-y divide-slate-100/80">
+                  <tr class="hover:bg-slate-50/60 transition-all">
+                    <td class="p-4 font-bold text-[#01214A]">Tarımsal İhtiyaç Analizi</td>
+                    <td class="p-4 text-slate-500 font-medium">Sinan Köyü</td>
                     <td class="p-4">
                       <div class="space-y-1">
-                        <div class="flex justify-between text-[11px]">
-                          <span class="text-text-secondary">320 / 500</span>
-                          <span class="font-bold text-primary">%64</span>
+                        <div class="flex justify-between text-[11px] font-bold">
+                          <span class="text-slate-500">320 / 500</span>
+                          <span class="text-[#00A0DF]">%64</span>
                         </div>
-                        <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-                          <div class="bg-[#0071E3] h-full rounded-full" style="width: 64%"></div>
+                        <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                          <div class="bg-[#00A0DF] h-full rounded-full transition-all duration-300" style="width: 64%"></div>
                         </div>
                       </div>
                     </td>
-                    <td class="p-4 text-right text-text-secondary font-semibold">30.11.2026</td>
+                    <td class="p-4 text-right text-slate-500 font-semibold">30.11.2026</td>
                   </tr>
 
-                  <tr>
-                    <td class="p-4 font-bold text-on-surface">Altyapı Durum Tespiti</td>
-                    <td class="p-4 text-text-secondary">Merkez Mahalle</td>
+                  <tr class="hover:bg-slate-50/60 transition-all">
+                    <td class="p-4 font-bold text-[#01214A]">Altyapı Durum Tespiti</td>
+                    <td class="p-4 text-slate-500 font-medium">Merkez Mahalle</td>
                     <td class="p-4">
                       <div class="space-y-1">
-                        <div class="flex justify-between text-[11px]">
-                          <span class="text-text-secondary">150 / 200</span>
-                          <span class="font-bold text-emerald-700">%75</span>
+                        <div class="flex justify-between text-[11px] font-bold">
+                          <span class="text-slate-500">150 / 200</span>
+                          <span class="text-[#2A9D38]">%75</span>
                         </div>
-                        <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-                          <div class="bg-emerald-600 h-full rounded-full" style="width: 75%"></div>
+                        <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                          <div class="bg-[#2A9D38] h-full rounded-full transition-all duration-300" style="width: 75%"></div>
                         </div>
                       </div>
                     </td>
-                    <td class="p-4 text-right text-text-secondary font-semibold">15.11.2026</td>
+                    <td class="p-4 text-right text-slate-500 font-semibold">15.11.2026</td>
                   </tr>
 
-                  <tr>
-                    <td class="p-4 font-bold text-on-surface">Eğitim Memnuniyet Anketi</td>
-                    <td class="p-4 text-text-secondary">Yeşilyurt</td>
+                  <tr class="hover:bg-slate-50/60 transition-all">
+                    <td class="p-4 font-bold text-[#01214A]">Eğitim Memnuniyet Anketi</td>
+                    <td class="p-4 text-slate-500 font-medium">Yeşilyurt</td>
                     <td class="p-4">
                       <div class="space-y-1">
-                        <div class="flex justify-between text-[11px]">
-                          <span class="text-text-secondary">45 / 300</span>
-                          <span class="font-bold text-amber-700">%15</span>
+                        <div class="flex justify-between text-[11px] font-bold">
+                          <span class="text-slate-500">45 / 300</span>
+                          <span class="text-amber-600">%15</span>
                         </div>
-                        <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-                          <div class="bg-amber-600 h-full rounded-full" style="width: 15%"></div>
+                        <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                          <div class="bg-amber-500 h-full rounded-full transition-all duration-300" style="width: 15%"></div>
                         </div>
                       </div>
                     </td>
-                    <td class="p-4 text-right text-text-secondary font-semibold">10.12.2026</td>
+                    <td class="p-4 text-right text-slate-500 font-semibold">10.12.2026</td>
                   </tr>
                 </tbody>
               </table>
             </div>
           </section>
 
-          <section class="bg-surface rounded-2xl p-5 border border-border shadow-sm space-y-4">
-            <div class="flex justify-between items-center">
-              <h3 class="font-bold text-on-surface text-base">Son Saha Hareketleri</h3>
-              <span class="text-[11px] text-text-muted">Canlı Akış</span>
+          <!-- SON SAHA HAREKETLERİ: DAİRESEL AVATARLAR (AHMET YILMAZ -> AY, MEHMET DEMİR -> MD, AYŞE KAYA -> AK) -->
+          <section class="bg-white rounded-2xl p-5 shadow-card space-y-4 border-none">
+            <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+              <h3 class="font-extrabold text-[#01214A] text-base">Son Saha Hareketleri</h3>
+              <span class="text-[11px] text-[#00A0DF] font-bold bg-[#00A0DF]/10 px-2.5 py-0.5 rounded-full">Canlı Akış</span>
             </div>
 
-            <div class="space-y-4 relative pl-4 border-l-2 border-slate-200">
-              <div class="relative pl-3">
-                <div class="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-primary ring-4 ring-white"></div>
+            <div class="space-y-5 relative pl-4 border-l-2 border-slate-100">
+              <div class="relative pl-5">
+                <div class="absolute -left-[29px] top-0 w-8 h-8 rounded-full bg-[#01214A] text-white font-extrabold text-[11px] flex items-center justify-center ring-4 ring-white shadow-xs">AY</div>
                 <div class="flex justify-between items-baseline">
-                  <span class="font-bold text-xs text-on-surface">Ahmet Yılmaz</span>
-                  <span class="text-[10px] text-text-muted">19:42</span>
+                  <span class="font-bold text-xs text-[#01214A]">Ahmet Yılmaz</span>
+                  <span class="text-[10px] text-slate-400 font-semibold">19:42</span>
                 </div>
-                <p class="text-xs text-text-secondary mt-0.5">Sinan Köyü için 'Tarımsal İhtiyaç Analizi' yanıtını tamamladı.</p>
+                <p class="text-xs text-slate-600 mt-0.5">Sinan Köyü için 'Tarımsal İhtiyaç Analizi' yanıtını tamamladı.</p>
               </div>
 
-              <div class="relative pl-3">
-                <div class="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-emerald-600 ring-4 ring-white"></div>
+              <div class="relative pl-5">
+                <div class="absolute -left-[29px] top-0 w-8 h-8 rounded-full bg-[#2A9D38] text-white font-extrabold text-[11px] flex items-center justify-center ring-4 ring-white shadow-xs">MD</div>
                 <div class="flex justify-between items-baseline">
-                  <span class="font-bold text-xs text-on-surface">Mehmet Demir</span>
-                  <span class="text-[10px] text-text-muted">19:15</span>
+                  <span class="font-bold text-xs text-[#01214A]">Mehmet Demir</span>
+                  <span class="text-[10px] text-slate-400 font-semibold">19:15</span>
                 </div>
-                <p class="text-xs text-text-secondary mt-0.5">Merkez Mahalle konumunda 1 yeni fotoğraf yükledi.</p>
+                <p class="text-xs text-slate-600 mt-0.5">Merkez Mahalle konumunda 1 yeni fotoğraf yükledi.</p>
               </div>
 
-              <div class="relative pl-3">
-                <div class="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-indigo-600 ring-4 ring-white"></div>
+              <div class="relative pl-5">
+                <div class="absolute -left-[29px] top-0 w-8 h-8 rounded-full bg-[#00A0DF] text-white font-extrabold text-[11px] flex items-center justify-center ring-4 ring-white shadow-xs">AK</div>
                 <div class="flex justify-between items-baseline">
-                  <span class="font-bold text-xs text-on-surface">Ayşe Kaya</span>
-                  <span class="text-[10px] text-text-muted">18:50</span>
+                  <span class="font-bold text-xs text-[#01214A]">Ayşe Kaya</span>
+                  <span class="text-[10px] text-slate-400 font-semibold">18:50</span>
                 </div>
-                <p class="text-xs text-text-secondary mt-0.5">Atanan 'Altyapı Durum Tespiti' görevini görüntüledi.</p>
+                <p class="text-xs text-slate-600 mt-0.5">Atanan 'Altyapı Durum Tespiti' görevini görüntüledi.</p>
               </div>
             </div>
           </section>

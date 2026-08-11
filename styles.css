@@ -1,28 +1,27 @@
-/* SurveyAdmin Intelligence - Design System Styles & Utilities */
+/* SurveyAdmin Intelligence - Şehitkamil Strateji Geliştirme Merkezi Design System */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 
 :root {
-  --color-primary: #64B352;
-  --color-primary-dark: #4e953f;
-  --color-background: #edf2eb;
-  --color-surface: #ffffff;
-  --color-border: #e0e7de;
-  --color-separator: #edf2eb;
-  --color-success: #64B352;
-  --color-warning: #b25000;
-  --color-error: #d70015;
+  --color-navy: #01214A;
+  --color-primary: #2A9D38;
+  --color-primary-dark: #22822e;
+  --color-accent-blue: #00A0DF;
+  --color-background: #F4F7F9;
+  --color-surface: #FFFFFF;
+  --color-text-secondary: #64748B;
+  --color-text-muted: #94A3B8;
+  --color-border: #E2E8F0;
 }
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: linear-gradient(180deg, #edf2eb 0%, #e6ece4 100%);
-  background-attachment: fixed;
-  color: #1a1c1d;
+  background-color: #F4F7F9;
+  color: #01214A;
   -webkit-tap-highlight-color: transparent;
   overflow-x: hidden;
-  min-h-screen: 100vh;
+  min-height: 100vh;
 }
 
 .material-symbols-outlined {
@@ -35,74 +34,73 @@ body {
 
 /* Glassmorphism & Elevation */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
 }
 
 .glass-header {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 2px 10px rgba(1, 33, 74, 0.03);
 }
 
-.premium-shadow {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-}
-
+/* Soft Floating Card Shadows without harsh borders */
 .premium-card {
   background-color: #ffffff;
-  border: 1px solid #e5e5ea;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  border: none !important;
+  box-shadow: 0 4px 20px -2px rgba(1, 33, 74, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02) !important;
   border-radius: 1rem;
 }
 
 .hover-lift {
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .hover-lift:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 12px 25px -3px rgba(1, 33, 74, 0.08), 0 4px 10px -2px rgba(0, 0, 0, 0.03) !important;
+}
+
+/* Primary CTA Button Hover Glow */
+.btn-accent-green {
+  background-color: #2A9D38;
+  color: #ffffff;
+  font-weight: 700;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgba(42, 157, 56, 0.25);
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-accent-green:hover {
+  background-color: #22822e;
+  box-shadow: 0 6px 18px rgba(42, 157, 56, 0.35);
+  transform: translateY(-1px);
 }
 
 /* Animations */
-.pulse-ring {
-  animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
-}
-
-@keyframes pulse-ring {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(36, 138, 61, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(36, 138, 61, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(36, 138, 61, 0); }
-}
-
-.success-icon-bg {
-  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-}
-
 .fade-in {
-  animation: fadeIn 0.3s ease-in-out forwards;
+  animation: fadeIn 0.25s ease-in-out forwards;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(5px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Custom Scrollbars */
+/* Custom Soft Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #c2c6d4;
+  background: #cbd5e1;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #727783;
+  background: #94a3b8;
 }
