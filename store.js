@@ -40,7 +40,7 @@ const defaultState = {
         type: 'yesno',
         isRequired: true,
         expanded: true,
-        options: [{ id: 'opt-1', label: 'Evet', value: 'yes' }, { id: 'opt-2', label: 'Hayır', value: 'no' }]
+        options: [{ id: 'opt-1', label: 'Evet', value: 'evet' }, { id: 'opt-2', label: 'Hayır', value: 'hayir' }]
       }
     ],
     activeQuestionId: 'q-demo-2'
@@ -510,7 +510,7 @@ class Store {
           type: 'yesno',
           isRequired: true,
           expanded: true,
-          options: [{ id: 'opt-1', label: 'Evet', value: 'yes' }, { id: 'opt-2', label: 'Hayır', value: 'no' }]
+          options: [{ id: 'opt-1', label: 'Evet', value: 'evet' }, { id: 'opt-2', label: 'Hayır', value: 'hayir' }]
         },
         {
           id: 'q-3',
@@ -519,7 +519,7 @@ class Store {
           type: 'single',
           isRequired: true,
           expanded: false,
-          condition: { sourceQuestionId: 'q-2', operator: 'equals', value: 'yes' },
+          condition: { sourceQuestionId: 'q-2', operator: 'equals', value: 'evet' },
           options: [
             { id: 'opt-10', label: 'Buğday', value: 'Buğday' },
             { id: 'opt-11', label: 'Arpa', value: 'Arpa' },
@@ -560,8 +560,8 @@ class Store {
       ];
     } else if (type === 'yesno') {
       defaultOptions = [
-        { id: 'opt-y', label: 'Evet', value: 'yes' },
-        { id: 'opt-n', label: 'Hayır', value: 'no' }
+        { id: 'opt-y', label: 'Evet', value: 'evet' },
+        { id: 'opt-n', label: 'Hayır', value: 'hayir' }
       ];
     }
 
@@ -697,7 +697,7 @@ class Store {
       if (!sourceQuestionId) {
         delete q.condition;
       } else {
-        q.condition = { sourceQuestionId, operator: operator || 'equals', value: value || 'yes' };
+        q.condition = { sourceQuestionId, operator: operator || 'equals', value: value || 'evet' };
       }
     }
     this.saveState();
@@ -939,7 +939,7 @@ class Store {
       this.state.activeSectionIndex = 0;
       this.state.activeFormAnswers = {
         q1: '',
-        q4: 'yes',
+        q4: 'evet',
         q5: '',
         q6: 'Buğday / Arpa'
       };

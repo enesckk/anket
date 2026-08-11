@@ -553,7 +553,7 @@ function validatePersonnelInput(email, phone, password, isPasswordOptional = fal
       const qId = e.target.getAttribute('data-q-id');
       const srcId = e.target.value;
       const valInput = document.querySelector(`.input-condition-val[data-q-id="${qId}"]`);
-      store.setQuestionCondition(qId, srcId, 'equals', valInput?.value || 'yes');
+      store.setQuestionCondition(qId, srcId, 'equals', valInput?.value || 'evet');
     });
   });
 

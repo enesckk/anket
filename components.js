@@ -758,9 +758,9 @@ export function renderSurveyRunner() {
   const task = state.assignedSurveys.find(t => t.id === state.selectedTaskId) || state.assignedSurveys[0];
   const secIndex = state.activeSectionIndex || 0;
   const answers = state.activeFormAnswers;
-  const yesNoVal = answers['q4'] || 'yes';
-  const tractorVal = answers['q6'] || 'yes';
-  const fertVal = answers['q7'] || 'yes';
+  const yesNoVal = answers['q4'] || 'evet';
+  const tractorVal = answers['q6'] || 'evet';
+  const fertVal = answers['q7'] || 'evet';
 
   const stepTitles = [
     'Kişisel Bilgiler',
@@ -803,13 +803,13 @@ export function renderSurveyRunner() {
             <div class="space-y-3 pb-6 border-b border-[#f1f3f4]">
               <label class="block text-base font-bold text-slate-900">2. Araziniz var mı?</label>
               <div class="grid grid-cols-2 gap-4">
-                <button type="button" data-q-id="q4" data-val="yes" class="btn-runner-yesno h-36 border-2 ${yesNoVal === 'yes' ? 'border-[#64B352] bg-[#f0f7ee] text-[#64B352]' : 'border-[#dadce0] bg-white text-slate-700'} rounded-2xl flex flex-col items-center justify-center gap-3 font-bold text-base transition-all active:scale-95 shadow-2xs">
-                  ${iconSvg('land', `w-8 h-8 ${yesNoVal === 'yes' ? 'text-[#64B352]' : 'text-slate-600'}`)}
+                <button type="button" data-q-id="q4" data-val="evet" class="btn-runner-yesno h-36 border-2 ${yesNoVal === 'evet' ? 'border-[#64B352] bg-[#f0f7ee] text-[#64B352]' : 'border-[#dadce0] bg-white text-slate-700'} rounded-2xl flex flex-col items-center justify-center gap-3 font-bold text-base transition-all active:scale-95 shadow-2xs">
+                  ${iconSvg('land', `w-8 h-8 ${yesNoVal === 'evet' ? 'text-[#64B352]' : 'text-slate-600'}`)}
                   <span>Evet</span>
                 </button>
 
-                <button type="button" data-q-id="q4" data-val="no" class="btn-runner-yesno h-36 border-2 ${yesNoVal === 'no' ? 'border-[#64B352] bg-[#f0f7ee] text-[#64B352]' : 'border-[#dadce0] bg-white text-slate-700'} rounded-2xl flex flex-col items-center justify-center gap-3 font-bold text-base transition-all active:scale-95 shadow-2xs">
-                  ${iconSvg('block', `w-8 h-8 ${yesNoVal === 'no' ? 'text-[#64B352]' : 'text-slate-600'}`)}
+                <button type="button" data-q-id="q4" data-val="hayir" class="btn-runner-yesno h-36 border-2 ${yesNoVal === 'hayir' ? 'border-[#64B352] bg-[#f0f7ee] text-[#64B352]' : 'border-[#dadce0] bg-white text-slate-700'} rounded-2xl flex flex-col items-center justify-center gap-3 font-bold text-base transition-all active:scale-95 shadow-2xs">
+                  ${iconSvg('block', `w-8 h-8 ${yesNoVal === 'hayir' ? 'text-[#64B352]' : 'text-slate-600'}`)}
                   <span>Hayır</span>
                 </button>
               </div>
@@ -854,10 +854,10 @@ export function renderSurveyRunner() {
             <div class="space-y-3 pb-6 border-b border-[#f1f3f4]">
               <label class="block text-base font-bold text-slate-900">6. Traktör veya Ekipmanınız Var Mı?</label>
               <div class="grid grid-cols-2 gap-4">
-                <button type="button" data-q-id="q6" data-val="yes" class="btn-runner-yesno h-32 border-2 ${tractorVal === 'yes' ? 'border-[#64B352] bg-[#f0f7ee] text-[#64B352]' : 'border-[#dadce0] bg-white text-slate-700'} rounded-2xl flex flex-col items-center justify-center gap-2 font-bold text-base transition-all">
+                <button type="button" data-q-id="q6" data-val="evet" class="btn-runner-yesno h-32 border-2 ${tractorVal === 'evet' ? 'border-[#64B352] bg-[#f0f7ee] text-[#64B352]' : 'border-[#dadce0] bg-white text-slate-700'} rounded-2xl flex flex-col items-center justify-center gap-2 font-bold text-base transition-all">
                   <span>Evet var</span>
                 </button>
-                <button type="button" data-q-id="q6" data-val="no" class="btn-runner-yesno h-32 border-2 ${tractorVal === 'no' ? 'border-[#64B352] bg-[#f0f7ee] text-[#64B352]' : 'border-[#dadce0] bg-white text-slate-700'} rounded-2xl flex flex-col items-center justify-center gap-2 font-bold text-base transition-all">
+                <button type="button" data-q-id="q6" data-val="hayir" class="btn-runner-yesno h-32 border-2 ${tractorVal === 'hayir' ? 'border-[#64B352] bg-[#f0f7ee] text-[#64B352]' : 'border-[#dadce0] bg-white text-slate-700'} rounded-2xl flex flex-col items-center justify-center gap-2 font-bold text-base transition-all">
                   <span>Hayır yok</span>
                 </button>
               </div>
@@ -866,10 +866,10 @@ export function renderSurveyRunner() {
             <div class="space-y-3">
               <label class="block text-base font-bold text-slate-900">7. Gübre & Tohum Desteği İhtiyacınız Var Mı?</label>
               <div class="grid grid-cols-2 gap-4">
-                <button type="button" data-q-id="q7" data-val="yes" class="btn-runner-yesno h-32 border-2 ${fertVal === 'yes' ? 'border-[#64B352] bg-[#f0f7ee] text-[#64B352]' : 'border-[#dadce0] bg-white text-slate-700'} rounded-2xl flex flex-col items-center justify-center gap-2 font-bold text-base transition-all">
+                <button type="button" data-q-id="q7" data-val="evet" class="btn-runner-yesno h-32 border-2 ${fertVal === 'evet' ? 'border-[#64B352] bg-[#f0f7ee] text-[#64B352]' : 'border-[#dadce0] bg-white text-slate-700'} rounded-2xl flex flex-col items-center justify-center gap-2 font-bold text-base transition-all">
                   <span>Evet var</span>
                 </button>
-                <button type="button" data-q-id="q7" data-val="no" class="btn-runner-yesno h-32 border-2 ${fertVal === 'no' ? 'border-[#64B352] bg-[#f0f7ee] text-[#64B352]' : 'border-[#dadce0] bg-white text-slate-700'} rounded-2xl flex flex-col items-center justify-center gap-2 font-bold text-base transition-all">
+                <button type="button" data-q-id="q7" data-val="hayir" class="btn-runner-yesno h-32 border-2 ${fertVal === 'hayir' ? 'border-[#64B352] bg-[#f0f7ee] text-[#64B352]' : 'border-[#dadce0] bg-white text-slate-700'} rounded-2xl flex flex-col items-center justify-center gap-2 font-bold text-base transition-all">
                   <span>İhtiyaç yok</span>
                 </button>
               </div>
@@ -1559,7 +1559,7 @@ function render4StepSurveyBuilder(state) {
                           <option value="equals" ${q.condition?.operator === 'equals' ? 'selected' : ''}>Eşittir (==)</option>
                         </select>
 
-                        <input type="text" data-q-id="${q.id}" value="${q.condition?.value || 'yes'}" placeholder="Değer (örn: yes)" class="input-condition-val h-10 px-3 bg-white border border-border rounded-lg text-xs font-medium"/>
+                        <input type="text" data-q-id="${q.id}" value="${q.condition?.value || 'evet'}" placeholder="Değer (örn: evet)" class="input-condition-val h-10 px-3 bg-white border border-border rounded-lg text-xs font-medium"/>
                       </div>
 
                       ${q.condition ? `
@@ -1731,13 +1731,13 @@ function render4StepSurveyBuilder(state) {
 
                           ${q.type === 'yesno' ? `
                             <div class="grid grid-cols-2 gap-3">
-                              <button type="button" data-q-id="${q.id}" data-val="yes" class="btn-preview-yesno h-24 border-2 ${currentAnswer === 'yes' ? 'border-[#64B352] bg-[#f0f7ee] text-[#64B352]' : 'border-[#dadce0] bg-white text-slate-700'} rounded-2xl flex flex-col items-center justify-center gap-2 font-bold text-xs transition-all active:scale-95 shadow-2xs">
-                                ${iconSvg('land', `w-6 h-6 ${currentAnswer === 'yes' ? 'text-[#64B352]' : 'text-slate-600'}`)}
+                              <button type="button" data-q-id="${q.id}" data-val="evet" class="btn-preview-yesno h-24 border-2 ${currentAnswer === 'evet' ? 'border-[#64B352] bg-[#f0f7ee] text-[#64B352]' : 'border-[#dadce0] bg-white text-slate-700'} rounded-2xl flex flex-col items-center justify-center gap-2 font-bold text-xs transition-all active:scale-95 shadow-2xs">
+                                ${iconSvg('land', `w-6 h-6 ${currentAnswer === 'evet' ? 'text-[#64B352]' : 'text-slate-600'}`)}
                                 <span>Evet</span>
                               </button>
 
-                              <button type="button" data-q-id="${q.id}" data-val="no" class="btn-preview-yesno h-24 border-2 ${currentAnswer === 'no' ? 'border-[#64B352] bg-[#f0f7ee] text-[#64B352]' : 'border-[#dadce0] bg-white text-slate-700'} rounded-2xl flex flex-col items-center justify-center gap-2 font-bold text-xs transition-all active:scale-95 shadow-2xs">
-                                ${iconSvg('block', `w-6 h-6 ${currentAnswer === 'no' ? 'text-[#64B352]' : 'text-slate-600'}`)}
+                              <button type="button" data-q-id="${q.id}" data-val="hayir" class="btn-preview-yesno h-24 border-2 ${currentAnswer === 'hayir' ? 'border-[#64B352] bg-[#f0f7ee] text-[#64B352]' : 'border-[#dadce0] bg-white text-slate-700'} rounded-2xl flex flex-col items-center justify-center gap-2 font-bold text-xs transition-all active:scale-95 shadow-2xs">
+                                ${iconSvg('block', `w-6 h-6 ${currentAnswer === 'hayir' ? 'text-[#64B352]' : 'text-slate-600'}`)}
                                 <span>Hayır</span>
                               </button>
                             </div>
