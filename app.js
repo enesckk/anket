@@ -87,6 +87,7 @@ function renderApp() {
   root.innerHTML = `
     ${renderSystemBar()}
     ${screenContent}
+    ${renderCustomModals(state)}
   `;
 
   attachGlobalSystemListeners();
@@ -365,11 +366,12 @@ if (!window.__globalListenersAttached) {
       return;
     }
 
-    if (target.id === 'form-custom-add-section') {
+    if (target.id === 'form-custom-add-section' || target.id === 'form-inline-add-section') {
       e.preventDefault();
-      const titleInput = document.getElementById('custom-sec-title');
+      const titleInput = document.getElementById(target.id === 'form-custom-add-section' ? 'custom-sec-title' : 'inline-sec-title');
       const title = titleInput ? titleInput.value.trim() : '';
       store.addSectionToBuilder(title || 'Yeni Bölüm');
+      if (titleInput) titleInput.value = '';
       return;
     }
 

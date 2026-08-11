@@ -1430,10 +1430,13 @@ function render4StepSurveyBuilder(state) {
               `).join('')}
             </div>
 
-            <button id="btn-open-add-section-modal" type="button" class="btn-open-add-section-modal w-full sm:w-auto px-4 py-2 bg-slate-100 hover:bg-slate-200 text-[#01214A] font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-xs whitespace-nowrap">
-              ${iconSvg('plus', 'w-4 h-4 text-[#00A0DF]')}
-              <span>Yeni Bölüm Ekle</span>
-            </button>
+            <form id="form-inline-add-section" class="flex items-center gap-2 w-full sm:w-auto">
+              <input type="text" id="inline-sec-title" placeholder="Hızlı Bölüm Adı..." class="h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#01214A] w-full sm:w-44"/>
+              <button type="submit" class="h-9 px-3.5 bg-[#01214A] hover:bg-[#011633] text-white font-extrabold text-xs rounded-xl transition-all shadow-xs flex items-center gap-1 shrink-0 active:scale-95">
+                ${iconSvg('plus', 'w-3.5 h-3.5 text-[#00A0DF]')}
+                <span>+ Bölüm Ekle</span>
+              </button>
+            </form>
           </div>
 
           <!-- SORU TÜRÜ SEÇİM KARTLARI PANELİ (FULL RESPONSIVE) -->
@@ -1497,27 +1500,24 @@ function render4StepSurveyBuilder(state) {
                 <p class="text-xs text-text-secondary">Yukarıdaki panelden soru türü seçerek hemen başlayabilirsiniz.</p>
               </div>
             ` : survey.questions.map((q, idx) => `
-              <div data-q-id="${q.id}" class="builder-question-card bg-surface rounded-2xl border ${q.expanded ? 'border-primary shadow-md ring-1 ring-primary/20' : 'border-border shadow-xs hover:border-slate-300'} transition-all overflow-hidden">
+              <div data-q-id="${q.id}" class="builder-question-card bg-surface rounded-2xl border border-border shadow-xs hover:border-slate-300 transition-all overflow-hidden">
                 
-                <!-- QUESTION HEADER (COMPACT MODE) -->
-                <div data-q-id="${q.id}" class="btn-toggle-question p-4 flex items-center justify-between cursor-pointer select-none bg-surface">
+                <!-- QUESTION HEADER (ALWAYS CLEAN & STABLE) -->
+                <div class="p-4 flex items-center justify-between bg-slate-50/80 border-b border-border">
                   <div class="flex items-center gap-3">
-                    <span class="text-slate-400 cursor-grab hover:text-slate-600">${iconSvg('grip', 'w-4 h-4')}</span>
-                    <span class="font-mono text-xs font-bold text-primary w-6">${String(idx + 1).padStart(2, '0')}</span>
-                    <span class="font-bold text-on-surface text-sm">${q.title}</span>
+                    <span class="text-slate-400 font-mono text-xs font-bold text-[#01214A] w-6">${String(idx + 1).padStart(2, '0')}</span>
+                    <span class="font-bold text-[#01214A] text-sm">${q.title}</span>
                   </div>
 
-                  <div class="flex items-center gap-3">
-                    <span class="text-[11px] text-text-secondary font-bold px-2 py-0.5 rounded bg-slate-100">${formatQuestionType(q.type)}</span>
-                    ${q.isRequired ? `<span class="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded">Zorunlu</span>` : ''}
-                    ${q.condition ? `<span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">Koşullu</span>` : ''}
-                    <span class="text-slate-400">${iconSvg(q.expanded ? 'moveUp' : 'moveDown', 'w-4 h-4')}</span>
+                  <div class="flex items-center gap-2">
+                    <span class="text-[11px] text-slate-600 font-bold px-2.5 py-1 rounded-lg bg-white border border-slate-200">${formatQuestionType(q.type)}</span>
+                    ${q.isRequired ? `<span class="text-[10px] font-extrabold text-emerald-800 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200">Zorunlu</span>` : ''}
+                    ${q.condition ? `<span class="text-[10px] font-extrabold text-indigo-800 bg-indigo-50 px-2 py-1 rounded-lg border border-indigo-200">Koşullu</span>` : ''}
                   </div>
                 </div>
 
-                <!-- EXPANDED EDIT BODY -->
-                ${q.expanded ? `
-                  <div class="p-5 border-t border-border bg-slate-50/50 space-y-5">
+                <!-- ALWAYS FULLY EXPANDED EDIT BODY -->
+                <div class="p-5 bg-white space-y-5">
                     <div class="space-y-1">
                       <label class="block text-xs font-bold text-on-surface">Soru Başlığı *</label>
                       <input type="text" data-q-id="${q.id}" value="${q.title}" class="input-builder-q-title w-full h-11 px-4 bg-white border border-border rounded-xl text-sm focus:outline-none focus:border-primary font-medium"/>
@@ -1596,10 +1596,7 @@ function render4StepSurveyBuilder(state) {
                           <span>Soruyu Sil</span>
                         </button>
                       </div>
-                    </div>
-
                   </div>
-                ` : ''}
               </div>
             `).join('')}
           </div>
