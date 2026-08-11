@@ -187,13 +187,6 @@ if (!window.__globalListenersAttached) {
       return;
     }
 
-    const toggleQBtn = e.target.closest('.btn-toggle-question');
-    if (toggleQBtn) {
-      const id = toggleQBtn.getAttribute('data-q-id');
-      if (id) store.toggleQuestionExpanded(id);
-      return;
-    }
-
     const reqBtn = e.target.closest('.btn-toggle-required');
     if (reqBtn) {
       const id = reqBtn.getAttribute('data-q-id');
@@ -233,6 +226,13 @@ if (!window.__globalListenersAttached) {
     if (moveDownBtn) {
       const id = moveDownBtn.getAttribute('data-q-id');
       if (id) store.moveQuestion(id, 'down');
+      return;
+    }
+
+    const toggleQBtn = e.target.closest('.btn-toggle-question');
+    if (toggleQBtn && !e.target.closest('button, input, select, textarea')) {
+      const id = toggleQBtn.getAttribute('data-q-id');
+      if (id) store.toggleQuestionExpanded(id);
       return;
     }
 
