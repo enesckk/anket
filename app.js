@@ -174,8 +174,19 @@ if (!window.__globalListenersAttached) {
     const target = e.target.closest('.btn-open-add-section-modal, #btn-close-custom-modal, .btn-open-review-survey-modal, .btn-set-q-review-status, .btn-submit-survey-revision');
     if (!target) return;
 
-    if (target.classList.contains('btn-open-add-section-modal')) {
+    const addSecBtn = e.target.closest('#btn-open-add-section-modal, .btn-open-add-section-modal');
+    if (addSecBtn) {
       store.openModal('add_section');
+      return;
+    }
+
+    const deleteSecBtn = e.target.closest('.btn-delete-section');
+    if (deleteSecBtn) {
+      const secId = deleteSecBtn.getAttribute('data-sec-id');
+      if (secId) {
+        store.deleteSectionFromBuilder(secId);
+        store.setToast('Bölüm kaldırıldı.', 'info');
+      }
       return;
     }
 

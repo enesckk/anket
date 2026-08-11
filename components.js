@@ -1421,11 +1421,16 @@ function render4StepSurveyBuilder(state) {
                 <span class="px-3 py-1 bg-[#01214A]/10 text-[#01214A] rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-2xs">
                   ${iconSvg('poll', 'w-3.5 h-3.5 text-[#00A0DF]')}
                   <span>${sec.title}</span>
+                  ${(survey.sections || []).length > 1 ? `
+                    <button type="button" data-sec-id="${sec.id}" class="btn-delete-section text-slate-400 hover:text-red-600 p-0.5 ml-1 transition-colors">
+                      ${iconSvg('close', 'w-3.5 h-3.5')}
+                    </button>
+                  ` : ''}
                 </span>
               `).join('')}
             </div>
 
-            <button id="btn-open-add-section-modal" type="button" class="w-full sm:w-auto px-4 py-2 bg-slate-100 hover:bg-slate-200 text-[#01214A] font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-xs whitespace-nowrap">
+            <button id="btn-open-add-section-modal" type="button" class="btn-open-add-section-modal w-full sm:w-auto px-4 py-2 bg-slate-100 hover:bg-slate-200 text-[#01214A] font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-xs whitespace-nowrap">
               ${iconSvg('plus', 'w-4 h-4 text-[#00A0DF]')}
               <span>Yeni Bölüm Ekle</span>
             </button>

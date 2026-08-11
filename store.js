@@ -688,6 +688,14 @@ class Store {
     };
     this.state.builderSurvey.sections.push(newSec);
     this.state.activeModal = null;
+    this.setToast('Yeni bölüm başarıyla eklendi.', 'success');
+    this.saveState();
+  }
+
+  deleteSectionFromBuilder(secId) {
+    if (Array.isArray(this.state.builderSurvey.sections)) {
+      this.state.builderSurvey.sections = this.state.builderSurvey.sections.filter(s => s.id !== secId);
+    }
     this.saveState();
   }
 
