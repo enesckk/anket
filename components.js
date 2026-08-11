@@ -980,6 +980,31 @@ export function renderMySurveys() {
   `;
 }
 
+// PWA FULL 4-STEP SURVEY BUILDER CONTAINER FOR FIELD MANAGERS
+export function renderPwaSurveyBuilderContainer(state) {
+  return `
+    <div class="min-h-[calc(100vh-41px)] bg-background text-on-surface flex flex-col pb-24">
+      <header class="h-14 bg-white border-b border-slate-200 px-4 flex items-center justify-between sticky top-10 z-30 shadow-2xs">
+        <button id="btn-cancel-builder" class="p-2 -ml-2 text-slate-700 hover:bg-slate-100 rounded-xl flex items-center gap-1.5 text-xs font-bold">
+          ${iconSvg('arrowLeft', 'w-5 h-5 text-slate-800')}
+          <span>Çık</span>
+        </button>
+        <div class="text-center">
+          <h1 class="text-xs font-extrabold text-[#01214A]">Saha Anket Oluşturucu</h1>
+          <span class="text-[9px] text-[#00A0DF] font-bold uppercase tracking-wider block">Şehitkamil SGM</span>
+        </div>
+        <div class="w-8"></div>
+      </header>
+
+      <main class="flex-1 px-3 py-4 max-w-3xl mx-auto w-full space-y-4">
+        ${render4StepSurveyBuilder(state)}
+      </main>
+
+      ${renderBottomNav()}
+    </div>
+  `;
+}
+
 // HIZLI ANKET OLUŞTURUCU
 export function renderQuickBuilder() {
   return `

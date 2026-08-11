@@ -10,6 +10,7 @@ import {
   renderSurveySuccess,
   renderMySurveys,
   renderQuickBuilder,
+  renderPwaSurveyBuilderContainer,
   renderMessages,
   renderMessageDetail,
   renderProfile,
@@ -66,8 +67,9 @@ function renderApp() {
     case 'my_surveys':
       screenContent = renderMySurveys();
       break;
+    case 'builder':
     case 'quick_builder':
-      screenContent = renderQuickBuilder();
+      screenContent = renderPwaSurveyBuilderContainer(state);
       break;
     case 'messages':
       screenContent = renderMessages();
@@ -757,8 +759,8 @@ function attachPwaListeners() {
   });
 
   // Quick Builder buttons
-  document.getElementById('btn-home-quick-builder')?.addEventListener('click', () => store.setPwaScreen('quick_builder'));
-  document.getElementById('btn-surveys-quick-builder')?.addEventListener('click', () => store.setPwaScreen('quick_builder'));
+  document.getElementById('btn-home-quick-builder')?.addEventListener('click', () => store.startNewBuilder());
+  document.getElementById('btn-surveys-quick-builder')?.addEventListener('click', () => store.startNewBuilder());
 
   // Messages Preview on Home
   document.getElementById('btn-home-msg-preview')?.addEventListener('click', () => {
@@ -857,6 +859,109 @@ function attachPwaListeners() {
       store.createQuickSurvey(title);
     });
   }
+
+  // 4-STEP BUILDER EVENT LISTENERS FOR PWA / FIELD USERS
+  document.querySelectorAll('.btn-builder-step-nav').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const st = parseInt(e.currentTarget.getAttribute('data-builder-step'));
+      store.setBuilderStep(st);
+    });
+  });
+
+  const formStep1 = document.getElementById('form-builder-step1');
+  if (formStep1) {
+    formStep1.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const title = document.getElementById('builder-info-title')?.value;
+      const desc = document.getElementById('builder-info-desc')?.value;
+      store.updateBuilderInfo(title, desc);
+      store.setBuilderStep(2);
+    });
+  }
+
+  document.querySelectorAll('.btn-add-question-type').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const type = e.currentTarget.getAttribute('data-type');
+      store.addQuestionToBuilder(type);
+    });
+  });
+
+  document.querySelectorAll('.btn-toggle-question').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = e.currentTarget.getAttribute('data-q-id');
+      store.toggleQuestionExpanded(id);
+    });
+  });
+
+  document.querySelectorAll('.input-builder-q-title').forEach(input => {
+    input.addEventListener('change', (e) => {
+      const id = e.target.getAttribute('data-q-id');
+      store.updateQuestionTitle(id, e.target.value);
+    });
+  });
+
+  document.querySelectorAll('.btn-toggle-required').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = e.currentTarget.getAttribute('data-q-id');
+      store.toggleQuestionRequired(id);
+    });
+  });
+
+  document.querySelectorAll('.input-option-edit').forEach(input => {
+    input.addEventListener('input', (e) => {
+      const qId = e.target.getAttribute('data-q-id');
+      const optId = e.target.getAttribute('data-opt-id');
+      store.updateOptionLabel(qId, optId, e.target.value);
+    });
+  });
+
+  document.querySelectorAll('.btn-add-option-direct').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = e.currentTarget.getAttribute('data-q-id');
+      store.addOptionToQuestion(id);
+    });
+  });
+
+  document.querySelectorAll('.btn-remove-option').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const qId = e.currentTarget.getAttribute('data-q-id');
+      const optId = e.currentTarget.getAttribute('data-opt-id');
+      store.removeOptionFromQuestion(qId, optId);
+    });
+  });
+
+  document.querySelectorAll('.btn-duplicate-question').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = e.currentTarget.getAttribute('data-q-id');
+      store.duplicateQuestion(id);
+    });
+  });
+
+  document.querySelectorAll('.btn-open-delete-modal').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = e.currentTarget.getAttribute('data-q-id');
+      store.openModal('confirm_delete', { questionId: id });
+    });
+  });
+
+  document.querySelectorAll('.btn-move-q-up').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = e.currentTarget.getAttribute('data-q-id');
+      store.moveQuestion(id, 'up');
+    });
+  });
+  document.querySelectorAll('.btn-move-q-down').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = e.currentTarget.getAttribute('data-q-id');
+      store.moveQuestion(id, 'down');
+    });
+  });
+
+  document.getElementById('btn-builder-step2-next')?.addEventListener('click', () => store.setBuilderStep(3));
+  document.getElementById('btn-builder-goto-step3')?.addEventListener('click', () => store.setBuilderStep(3));
+  document.getElementById('btn-builder-step3-next')?.addEventListener('click', async () => {
+    await store.submitForApproval();
+  });
 
   // PROFILE LOGOUT
   document.getElementById('btn-logout')?.addEventListener('click', () => store.logout());
