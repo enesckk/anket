@@ -1134,15 +1134,9 @@ export function renderAdminView() {
       ${renderCustomModals(state)}
 
       <aside class="hidden md:flex flex-col w-64 border-r border-slate-100 bg-white z-30 shrink-0 sticky top-10 h-[calc(100vh-41px)] shadow-sm">
-        <!-- LOGO YERLEŞİMİ: ŞEHİTKAMİL STRATEJİ GELİŞTİRME MERKEZİ -->
-        <div class="p-6 border-b border-slate-100 flex flex-col items-center justify-center text-center space-y-2.5">
-          <div class="w-12 h-12 rounded-2xl bg-[#01214A] text-white flex items-center justify-center shadow-md shrink-0 ring-4 ring-[#01214A]/10">
-            ${iconSvg('clipboard', 'w-6 h-6 text-[#2A9D38]')}
-          </div>
-          <div>
-            <h1 class="font-extrabold text-[#01214A] text-xs uppercase tracking-wider leading-snug">ŞEHİTKAMİL</h1>
-            <p class="text-[9px] text-[#00A0DF] uppercase tracking-widest font-extrabold">STRATEJİ GELİŞTİRME MERKEZİ</p>
-          </div>
+        <!-- LOGO YERLEŞİMİ: ŞEHİTKAMİL STRATEJİ GELİŞTİRME MERKEZİ (GERÇEK KURUMSAL İMAJ) -->
+        <div class="p-5 border-b border-slate-100/80 flex items-center justify-center bg-white shrink-0">
+          <img src="./logo_sehitkamil.png" alt="Şehitkamil Strateji Geliştirme Merkezi Logo" class="h-20 w-auto object-contain mx-auto transition-transform hover:scale-105 duration-200" />
         </div>
 
         <nav class="flex-1 p-3 space-y-1.5 overflow-y-auto">
@@ -1831,31 +1825,31 @@ function renderAdminTabContent(tab, state) {
             </div>
 
             <div class="space-y-5 relative pl-4 border-l-2 border-slate-100">
-              <div class="relative pl-5">
-                <div class="absolute -left-[29px] top-0 w-8 h-8 rounded-full bg-[#01214A] text-white font-extrabold text-[11px] flex items-center justify-center ring-4 ring-white shadow-xs">AY</div>
+              <div class="relative pl-6">
+                <div class="absolute -left-[30px] top-0 w-8 h-8 rounded-full bg-slate-100 border border-slate-200 text-[#01214A] font-extrabold text-[11px] flex items-center justify-center ring-4 ring-white shadow-xs">AY</div>
                 <div class="flex justify-between items-baseline">
-                  <span class="font-bold text-xs text-[#01214A]">Ahmet Yılmaz</span>
+                  <span class="font-extrabold text-xs text-[#01214A]">Ahmet Yılmaz</span>
                   <span class="text-[10px] text-slate-400 font-semibold">19:42</span>
                 </div>
-                <p class="text-xs text-slate-600 mt-0.5">Sinan Köyü için 'Tarımsal İhtiyaç Analizi' yanıtını tamamladı.</p>
+                <p class="text-xs text-slate-600 mt-0.5 font-medium">Sinan Köyü için 'Tarımsal İhtiyaç Analizi' yanıtını tamamladı.</p>
               </div>
 
-              <div class="relative pl-5">
-                <div class="absolute -left-[29px] top-0 w-8 h-8 rounded-full bg-[#2A9D38] text-white font-extrabold text-[11px] flex items-center justify-center ring-4 ring-white shadow-xs">MD</div>
+              <div class="relative pl-6">
+                <div class="absolute -left-[30px] top-0 w-8 h-8 rounded-full bg-slate-100 border border-slate-200 text-[#01214A] font-extrabold text-[11px] flex items-center justify-center ring-4 ring-white shadow-xs">MD</div>
                 <div class="flex justify-between items-baseline">
-                  <span class="font-bold text-xs text-[#01214A]">Mehmet Demir</span>
+                  <span class="font-extrabold text-xs text-[#01214A]">Mehmet Demir</span>
                   <span class="text-[10px] text-slate-400 font-semibold">19:15</span>
                 </div>
-                <p class="text-xs text-slate-600 mt-0.5">Merkez Mahalle konumunda 1 yeni fotoğraf yükledi.</p>
+                <p class="text-xs text-slate-600 mt-0.5 font-medium">Merkez Mahalle konumunda 1 yeni fotoğraf yükledi.</p>
               </div>
 
-              <div class="relative pl-5">
-                <div class="absolute -left-[29px] top-0 w-8 h-8 rounded-full bg-[#00A0DF] text-white font-extrabold text-[11px] flex items-center justify-center ring-4 ring-white shadow-xs">AK</div>
+              <div class="relative pl-6">
+                <div class="absolute -left-[30px] top-0 w-8 h-8 rounded-full bg-slate-100 border border-slate-200 text-[#01214A] font-extrabold text-[11px] flex items-center justify-center ring-4 ring-white shadow-xs">AK</div>
                 <div class="flex justify-between items-baseline">
-                  <span class="font-bold text-xs text-[#01214A]">Ayşe Kaya</span>
+                  <span class="font-extrabold text-xs text-[#01214A]">Ayşe Kaya</span>
                   <span class="text-[10px] text-slate-400 font-semibold">18:50</span>
                 </div>
-                <p class="text-xs text-slate-600 mt-0.5">Atanan 'Altyapı Durum Tespiti' görevini görüntüledi.</p>
+                <p class="text-xs text-slate-600 mt-0.5 font-medium">Atanan 'Altyapı Durum Tespiti' görevini görüntüledi.</p>
               </div>
             </div>
           </section>
