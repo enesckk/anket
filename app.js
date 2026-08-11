@@ -148,6 +148,12 @@ if (!window.__globalListenersAttached) {
       return;
     }
 
+    const composeMsgBtn = e.target.closest('#btn-open-compose-msg-modal');
+    if (composeMsgBtn) {
+      store.openModal('compose_message');
+      return;
+    }
+
     const target = e.target.closest('.btn-open-add-section-modal, #btn-close-custom-modal, .btn-open-review-survey-modal, .btn-set-q-review-status, .btn-submit-survey-revision');
     if (!target) return;
 
@@ -217,6 +223,16 @@ if (!window.__globalListenersAttached) {
   document.addEventListener('submit', async (e) => {
     const target = e.target;
     if (!target) return;
+
+    if (target.id === 'form-pwa-send-message') {
+      e.preventDefault();
+      const title = document.getElementById('input-pwa-msg-title')?.value;
+      const content = document.getElementById('input-pwa-msg-content')?.value;
+      if (title && content) {
+        store.sendPwaMessageToAdmin(title, content);
+      }
+      return;
+    }
 
     if (target.id === 'form-custom-add-section') {
       e.preventDefault();

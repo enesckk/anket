@@ -761,6 +761,33 @@ class Store {
     }).catch(e => console.warn('Background survey approval submission note:', e.message));
   }
 
+  sendPwaMessageToAdmin(title, content) {
+    if (!title || !content) return;
+    const newMsg = {
+      id: 'msg-' + Date.now(),
+      title: title.trim(),
+      content: content.trim(),
+      sender: this.state.auth.user?.fullName || 'Saha Personeli',
+      senderRole: 'FIELD_USER',
+      recipient: 'Yönetici',
+      date: 'Bugün ' + new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
+      isUnread: true,
+      status: 'SENT_TO_ADMIN'
+    };
+    if (!Array.isArray(this.state.messages)) {
+      this.state.messages = [];
+    }
+    this.state.messages.unshift(newMsg);
+    this.state.activeModal = null;
+    this.setToast('Mesajınız başarıyla ana yöneticiye iletildi!', 'success');
+    this.saveState();
+
+    this.apiFetch('/messages', {
+      method: 'POST',
+      body: JSON.stringify(newMsg)
+    }).catch(e => console.warn('Background send message note:', e.message));
+  }
+
   async approveAdminSurvey(surveyId) {
     const survey = (this.state.allSurveys || []).find(s => s.id === surveyId);
     if (survey) {

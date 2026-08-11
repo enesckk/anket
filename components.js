@@ -110,6 +110,46 @@ export function renderCustomModals(state) {
     `;
   }
 
+  if (state.activeModal.type === 'compose_message') {
+    return `
+      <div class="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white border-none rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5 animate-in zoom-in-95 duration-150">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div class="flex items-center gap-2">
+              ${iconSvg('mail', 'w-5 h-5 text-[#00A0DF]')}
+              <h3 class="text-base font-extrabold text-[#01214A]">Admine Mesaj Gönder</h3>
+            </div>
+            <button id="btn-close-custom-modal" class="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg">
+              ${iconSvg('close', 'w-5 h-5')}
+            </button>
+          </div>
+
+          <form id="form-pwa-send-message" class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold text-[#01214A] mb-1.5">Mesaj Konusu *</label>
+              <input type="text" id="input-pwa-msg-title" required autofocus placeholder="Örn: Saha Ekipmanı İhtiyacı / Yol Kapalı Bildirimi" class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#00A0DF]"/>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-[#01214A] mb-1.5">Mesaj Detayı *</label>
+              <textarea id="input-pwa-msg-content" rows="4" required placeholder="Sayın Yöneticim, saha çalışması esnasında karşılaştığımız durum..." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs text-[#01214A] font-medium focus:outline-none focus:border-[#00A0DF] font-sans"></textarea>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+              <button type="button" id="btn-close-custom-modal" class="flex-1 h-11 border border-slate-200 text-slate-700 font-bold text-xs rounded-xl hover:bg-slate-100 transition-all">
+                İptal
+              </button>
+              <button type="submit" class="flex-1 h-11 bg-[#2A9D38] text-white font-extrabold text-xs rounded-xl hover:bg-[#22822e] transition-all shadow-md flex items-center justify-center gap-1.5">
+                ${iconSvg('play', 'w-3.5 h-3.5')}
+                <span>Mesajı Gönder</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+  }
+
   if (state.activeModal.type === 'add_personnel') {
     return `
       <div class="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -1038,24 +1078,40 @@ export function renderQuickBuilder() {
 // MESAJLAR EKRANI
 export function renderMessages() {
   const state = store.getState();
+  const messages = Array.isArray(state.messages) ? state.messages : [];
 
   return `
     <div class="min-h-[calc(100vh-41px)] bg-background text-on-surface flex flex-col pb-24">
-      <header class="h-14 bg-surface border-b border-border px-4 flex items-center justify-between sticky top-10 z-30">
-        <h1 class="text-base font-bold text-on-surface">Mesajlar</h1>
+      <header class="h-14 bg-white border-b border-slate-200 px-4 flex items-center justify-between sticky top-10 z-30 shadow-2xs">
+        <h1 class="text-base font-extrabold text-[#01214A]">Mesaj Kutusu</h1>
+        <button id="btn-open-compose-msg-modal" class="px-3.5 py-2 bg-[#2A9D38] hover:bg-[#22822e] text-white font-extrabold text-xs rounded-xl flex items-center gap-1.5 shadow-sm active:scale-95 transition-all">
+          ${iconSvg('plus', 'w-4 h-4')}
+          <span>Admine Mesaj Yaz</span>
+        </button>
       </header>
 
-      <main class="flex-1 px-4 py-6 max-w-md mx-auto w-full space-y-3">
-        ${state.messages.map(msg => `
-          <div data-msg-id="${msg.id}" class="btn-open-msg-detail bg-surface p-4 rounded-xl border border-border shadow-sm flex items-start gap-3 cursor-pointer hover:border-primary/40 transition-all">
-            ${msg.isUnread ? `<div class="w-2.5 h-2.5 rounded-full bg-primary shrink-0 mt-1"></div>` : `<div class="w-2.5 h-2.5"></div>`}
+      <main class="flex-1 px-4 py-5 max-w-md mx-auto w-full space-y-3">
+        ${messages.length === 0 ? `
+          <div class="text-center py-12 space-y-3 bg-white rounded-2xl border border-slate-200 p-6 shadow-card">
+            ${iconSvg('mail', 'w-10 h-10 text-slate-300 mx-auto')}
+            <h3 class="text-sm font-bold text-slate-700">Henüz mesajınız yok</h3>
+            <p class="text-xs text-slate-400">Yukarıdaki butonla yöneticiye doğrudan mesaj iletebilirsiniz.</p>
+          </div>
+        ` : messages.map(msg => `
+          <div data-msg-id="${msg.id}" class="btn-open-msg-detail bg-white p-4 rounded-2xl border border-slate-200 shadow-card flex items-start gap-3 cursor-pointer hover:border-[#00A0DF] transition-all">
+            ${msg.isUnread ? `<div class="w-2.5 h-2.5 rounded-full bg-[#00A0DF] shrink-0 mt-1"></div>` : `<div class="w-2.5 h-2.5"></div>`}
             <div class="flex-1 min-w-0">
-              <div class="flex justify-between items-baseline">
-                <h3 class="text-xs font-bold text-on-surface truncate">${msg.title}</h3>
-                <span class="text-[10px] text-text-secondary shrink-0 ml-2">${msg.date}</span>
+              <div class="flex justify-between items-baseline gap-2">
+                <h3 class="text-xs font-extrabold text-[#01214A] truncate">${msg.title}</h3>
+                <span class="text-[10px] text-slate-400 shrink-0 font-medium">${msg.date}</span>
               </div>
-              <span class="text-[11px] text-text-secondary block font-medium mt-0.5">${msg.sender}</span>
-              <p class="text-xs text-text-secondary line-clamp-2 mt-1">${msg.content}</p>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-md ${msg.senderRole === 'FIELD_USER' ? 'bg-cyan-50 text-cyan-800 border border-cyan-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}">
+                  ${msg.senderRole === 'FIELD_USER' ? 'YÖNETİCİYE GÖNDERİLDİ' : 'YÖNETİCİ BİLDİRİMİ'}
+                </span>
+                <span class="text-[11px] text-slate-500 font-semibold truncate">${msg.sender}</span>
+              </div>
+              <p class="text-xs text-slate-600 line-clamp-2 mt-1 font-medium">${msg.content}</p>
             </div>
           </div>
         `).join('')}
