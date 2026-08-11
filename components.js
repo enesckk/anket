@@ -58,8 +58,8 @@ export function renderCustomModals(state) {
       <div class="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-surface border border-border rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5 animate-in zoom-in-95 duration-150">
           <div class="text-center space-y-1">
-            <div class="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-3 font-bold text-xl">
-              +
+            <div class="w-12 h-12 rounded-2xl bg-[#2A9D38]/10 text-[#2A9D38] flex items-center justify-center mx-auto mb-3 font-bold">
+              ${iconSvg('plus', 'w-6 h-6 text-[#2A9D38]')}
             </div>
             <h3 class="text-lg font-bold text-on-surface">Yeni Bölüm Ekle</h3>
             <p class="text-xs text-text-secondary">Ankete eklemek istediğiniz bölüm adını yazınız.</p>
@@ -1432,8 +1432,7 @@ function render4StepSurveyBuilder(state) {
 
             <form id="form-inline-add-section" class="flex items-center gap-2 w-full sm:w-auto">
               <input type="text" id="inline-sec-title" placeholder="Yeni Bölüm Adı..." class="h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#01214A] w-full sm:w-48"/>
-              <button type="submit" class="h-9 px-4 bg-[#01214A] hover:bg-[#011633] text-white font-extrabold text-xs rounded-xl transition-all shadow-xs flex items-center gap-1.5 shrink-0 active:scale-95">
-                ${iconSvg('plus', 'w-3.5 h-3.5 text-[#00A0DF]')}
+              <button type="submit" class="h-9 px-4 bg-[#01214A] hover:bg-[#011633] text-white font-extrabold text-xs rounded-xl transition-all shadow-xs flex items-center justify-center shrink-0 active:scale-95">
                 <span>Bölüm Ekle</span>
               </button>
             </form>
@@ -1442,7 +1441,7 @@ function render4StepSurveyBuilder(state) {
           <!-- SORU TÜRÜ SEÇİM KARTLARI PANELİ (FULL RESPONSIVE) -->
           <div class="bg-white p-5 rounded-2xl shadow-card space-y-3 border-none">
             <div class="flex justify-between items-center">
-              <span class="block text-xs font-extrabold text-[#01214A] uppercase tracking-wider">+ Hızlı Soru Türü Ekleyin</span>
+              <span class="block text-xs font-extrabold text-[#01214A] uppercase tracking-wider">Hızlı Soru Türü Ekleyin</span>
               <span class="text-[10px] text-slate-400 font-semibold">Tıklayarak soru ekleyin</span>
             </div>
             
