@@ -154,19 +154,12 @@ if (!window.__globalListenersAttached) {
       return;
     }
 
-    const deleteBtn = e.target.closest('#btn-confirm-delete-q, .btn-open-delete-modal');
+    const deleteBtn = e.target.closest('#btn-confirm-delete-q, .btn-open-delete-modal, .btn-direct-delete-q');
     if (deleteBtn) {
-      if (deleteBtn.id === 'btn-confirm-delete-q') {
-        const qId = deleteBtn.getAttribute('data-q-id');
-        if (qId) {
-          store.deleteQuestion(qId);
-          store.setToast('Soru başarıyla silindi.', 'success');
-        }
-      } else if (deleteBtn.classList.contains('btn-open-delete-modal')) {
-        const qId = deleteBtn.getAttribute('data-q-id');
-        if (qId) {
-          store.openModal('confirm_delete', { questionId: qId });
-        }
+      const qId = deleteBtn.getAttribute('data-q-id');
+      if (qId) {
+        store.deleteQuestion(qId);
+        store.setToast('Soru başarıyla silindi.', 'success');
       }
       return;
     }
@@ -376,9 +369,7 @@ if (!window.__globalListenersAttached) {
       e.preventDefault();
       const titleInput = document.getElementById('custom-sec-title');
       const title = titleInput ? titleInput.value.trim() : '';
-      if (title) {
-        store.addSectionToBuilder(title);
-      }
+      store.addSectionToBuilder(title || 'Yeni Bölüm');
       return;
     }
 

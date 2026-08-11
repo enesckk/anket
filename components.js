@@ -68,7 +68,7 @@ export function renderCustomModals(state) {
           <form id="form-custom-add-section" class="space-y-4">
             <div>
               <label class="block text-xs font-bold text-on-surface mb-1.5">Bölüm Adı *</label>
-              <input type="text" id="custom-sec-title" required autofocus placeholder="Örn: Arazi & Üretim Bilgileri" class="w-full h-12 px-4 bg-surface-container-low border border-border rounded-xl text-sm focus:outline-none focus:border-primary font-medium"/>
+              <input type="text" id="custom-sec-title" autofocus placeholder="Örn: Arazi & Üretim Bilgileri" class="w-full h-12 px-4 bg-surface-container-low border border-border rounded-xl text-sm focus:outline-none focus:border-primary font-medium"/>
             </div>
 
             <div class="flex gap-3 pt-2">
@@ -1591,9 +1591,9 @@ function render4StepSurveyBuilder(state) {
                           ${iconSvg('copy', 'w-4 h-4')}
                           Kopyala
                         </button>
-                        <button data-q-id="${q.id}" class="btn-open-delete-modal text-xs font-semibold text-red-600 hover:underline flex items-center gap-1">
-                          ${iconSvg('trash', 'w-4 h-4')}
-                          Sil
+                        <button data-q-id="${q.id}" type="button" class="btn-direct-delete-q text-xs font-semibold text-red-600 hover:text-red-700 p-1.5 rounded hover:bg-red-50 flex items-center gap-1 transition-colors">
+                          ${iconSvg('trash', 'w-4 h-4 text-red-600')}
+                          <span>Soruyu Sil</span>
                         </button>
                       </div>
                     </div>
