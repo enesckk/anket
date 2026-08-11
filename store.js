@@ -697,7 +697,7 @@ class Store {
       if (!sourceQuestionId) {
         delete q.condition;
       } else {
-        q.condition = { sourceQuestionId, operator: operator || 'equals', value: value || 'evet' };
+        q.condition = { sourceQuestionId, operator: operator || 'esittir', value: value || 'evet' };
       }
     }
     this.saveState();

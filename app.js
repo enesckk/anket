@@ -154,6 +154,23 @@ if (!window.__globalListenersAttached) {
       return;
     }
 
+    const deleteBtn = e.target.closest('#btn-confirm-delete-q, .btn-open-delete-modal');
+    if (deleteBtn) {
+      if (deleteBtn.id === 'btn-confirm-delete-q') {
+        const qId = deleteBtn.getAttribute('data-q-id');
+        if (qId) {
+          store.deleteQuestion(qId);
+          store.setToast('Soru başarıyla silindi.', 'success');
+        }
+      } else if (deleteBtn.classList.contains('btn-open-delete-modal')) {
+        const qId = deleteBtn.getAttribute('data-q-id');
+        if (qId) {
+          store.openModal('confirm_delete', { questionId: qId });
+        }
+      }
+      return;
+    }
+
     const target = e.target.closest('.btn-open-add-section-modal, #btn-close-custom-modal, .btn-open-review-survey-modal, .btn-set-q-review-status, .btn-submit-survey-revision');
     if (!target) return;
 
@@ -552,8 +569,20 @@ function validatePersonnelInput(email, phone, password, isPasswordOptional = fal
     sel.addEventListener('change', (e) => {
       const qId = e.target.getAttribute('data-q-id');
       const srcId = e.target.value;
+      const opSel = document.querySelector(`.select-condition-op[data-q-id="${qId}"]`);
       const valInput = document.querySelector(`.input-condition-val[data-q-id="${qId}"]`);
-      store.setQuestionCondition(qId, srcId, 'equals', valInput?.value || 'evet');
+      store.setQuestionCondition(qId, srcId, opSel?.value || 'esittir', valInput?.value || 'evet');
+    });
+  });
+
+  document.querySelectorAll('.select-condition-op').forEach(sel => {
+    sel.addEventListener('change', (e) => {
+      const qId = e.target.getAttribute('data-q-id');
+      const srcSel = document.querySelector(`.select-condition-source[data-q-id="${qId}"]`);
+      const valInput = document.querySelector(`.input-condition-val[data-q-id="${qId}"]`);
+      if (srcSel?.value) {
+        store.setQuestionCondition(qId, srcSel.value, e.target.value, valInput?.value || 'evet');
+      }
     });
   });
 
@@ -561,8 +590,9 @@ function validatePersonnelInput(email, phone, password, isPasswordOptional = fal
     input.addEventListener('change', (e) => {
       const qId = e.target.getAttribute('data-q-id');
       const srcSel = document.querySelector(`.select-condition-source[data-q-id="${qId}"]`);
+      const opSel = document.querySelector(`.select-condition-op[data-q-id="${qId}"]`);
       if (srcSel?.value) {
-        store.setQuestionCondition(qId, srcSel.value, 'equals', e.target.value);
+        store.setQuestionCondition(qId, srcSel.value, opSel?.value || 'esittir', e.target.value);
       }
     });
   });

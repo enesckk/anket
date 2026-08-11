@@ -1556,7 +1556,8 @@ function render4StepSurveyBuilder(state) {
                         </select>
 
                         <select data-q-id="${q.id}" class="select-condition-op h-10 px-3 bg-white border border-border rounded-lg text-xs font-medium">
-                          <option value="equals" ${q.condition?.operator === 'equals' ? 'selected' : ''}>Eşittir (==)</option>
+                          <option value="esittir" ${(!q.condition?.operator || q.condition?.operator === 'esittir' || q.condition?.operator === 'equals') ? 'selected' : ''}>Eşittir (==)</option>
+                          <option value="esit_degildir" ${q.condition?.operator === 'esit_degildir' ? 'selected' : ''}>Eşit Değildir (!=)</option>
                         </select>
 
                         <input type="text" data-q-id="${q.id}" value="${q.condition?.value || 'evet'}" placeholder="Değer (örn: evet)" class="input-condition-val h-10 px-3 bg-white border border-border rounded-lg text-xs font-medium"/>
