@@ -122,7 +122,7 @@ function attachGlobalSystemListeners() {
 if (!window.__globalListenersAttached) {
   window.__globalListenersAttached = true;
 
-  document.addEventListener('click', (e) => {
+  document.addEventListener('click', async (e) => {
     const target = e.target.closest('.btn-open-add-section-modal, #btn-close-custom-modal, .btn-open-review-survey-modal, .btn-set-q-review-status, .btn-submit-survey-revision');
     if (!target) return;
 
@@ -161,8 +161,17 @@ if (!window.__globalListenersAttached) {
 
     if (target.classList.contains('btn-submit-survey-revision')) {
       const surveyId = target.getAttribute('data-survey-id');
+      const reasonInput = document.getElementById('input-general-revision-reason');
+      const reason = reasonInput ? reasonInput.value.trim() : '';
+
+      if (!reason) {
+        store.setToast('Lütfen saha personeline iletilecek revizyon gerekçesini/talimatını yazınız!', 'error');
+        reasonInput?.focus();
+        return;
+      }
+
       if (surveyId) {
-        store.requestSurveyRevision(surveyId, 'Yönetici bazı sorularda revizyon talep etti.');
+        await store.requestSurveyRevision(surveyId, reason);
       }
       return;
     }

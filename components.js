@@ -376,6 +376,19 @@ export function renderCustomModals(state) {
             `).join('')}
           </div>
 
+          <!-- YÖNETİCİ GENEL REVİZYON TALİMATI & GEREKÇE ALANI -->
+          <div class="p-4 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent border border-amber-200/80 rounded-2xl space-y-2 shrink-0">
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-extrabold text-[#01214A] flex items-center gap-1.5">
+                ${iconSvg('edit', 'w-4 h-4 text-amber-600')}
+                <span>Saha Personeline Genel Revizyon Talimatı / Gerekçesi *</span>
+              </label>
+              <span class="text-[10px] text-amber-800 font-bold bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">Saha Görevlisi Görecektir</span>
+            </div>
+            
+            <textarea id="input-general-revision-reason" rows="2" placeholder="Örn: 2. Bölümdeki sorulara 'Diğer' seçeneği eklenmeli ve soru başlıkları sadeleştirilmelidir. Lütfen güncelleyip tekrar onaya gönderiniz." class="w-full p-3 bg-white border border-amber-200 rounded-xl text-xs text-[#01214A] font-medium focus:outline-none focus:border-[#2A9D38] focus:ring-2 focus:ring-[#2A9D38]/20 transition-all placeholder:text-slate-400 font-sans"></textarea>
+          </div>
+
           <!-- GENEL AKSİYON BUTONLARI -->
           <div class="pt-3 border-t border-slate-100 flex flex-col sm:flex-row gap-2.5 shrink-0">
             <button type="button" data-survey-id="${survey.id}" class="btn-approve-admin-survey flex-1 h-12 bg-[#2A9D38] hover:bg-[#22822e] text-white font-extrabold text-xs rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2">
@@ -1259,6 +1272,21 @@ function render4StepSurveyBuilder(state) {
       <!-- ADIM 2: SORULAR BUILDER -->
       ${step === 2 ? `
         <div class="space-y-6">
+          ${survey.status === 'REVISION_REQUESTED' ? `
+            <div class="p-5 bg-gradient-to-r from-orange-500/15 via-amber-500/10 to-transparent border-l-4 border-l-orange-600 rounded-2xl shadow-card space-y-2">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  ${iconSvg('edit', 'w-5 h-5 text-orange-600')}
+                  <h4 class="font-extrabold text-[#01214A] text-sm">Yönetici Revizyon Talimatı & Gerekçesi</h4>
+                </div>
+                <span class="text-[10px] font-extrabold bg-orange-100 text-orange-900 border border-orange-300 px-3 py-1 rounded-full">REVİZYON TALEBİ</span>
+              </div>
+              <p class="text-xs text-orange-950 font-semibold leading-relaxed bg-white/90 p-3.5 rounded-xl border border-orange-200 shadow-2xs">
+                "${survey.rejectionReason || 'Yönetici bazı sorularda düzenleme yapmanızı talep etti.'}"
+              </p>
+            </div>
+          ` : ''}
+
           <div class="bg-surface p-4 rounded-2xl border border-border flex justify-between items-center">
             <div class="flex items-center gap-3">
               <h3 class="font-bold text-on-surface text-base">${survey.title}</h3>
