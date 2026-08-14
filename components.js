@@ -44,13 +44,392 @@ export function iconSvg(name, extraClass = 'w-5 h-5') {
     search: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>`,
     zap: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
     check: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
-    close: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`
+    close: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+    trendingUp: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
+    clock: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+    bell: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 1 3.4 0"/></svg>`,
+    users: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+    edit: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`,
+    eye: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`,
+    eyeOff: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>`
   };
   return icons[name] || '';
 }
 
-// Custom Glassmorphism UI Modals Renderer (Replaces all native browser prompts/alerts)
+// // Custom Glassmorphism UI Modals Renderer (Replaces all native browser prompts/alerts)
+export function renderSurveyDetailedCharts(surveyOrReport, state) {
+  let report = null;
+  let survey = null;
+
+  if (surveyOrReport && surveyOrReport.questions) {
+    survey = surveyOrReport;
+    report = ((state && state.reports) || []).find(r => r.surveyId === survey.id) || null;
+  } else if (surveyOrReport) {
+    report = surveyOrReport;
+    survey = ((state && state.allSurveys) || []).find(s => s.id === report.surveyId || s.title === report.surveyTitle) || null;
+  }
+
+  const surveyTitle = survey?.title || report?.surveyTitle || 'Şehitkamil Tarımsal İhtiyaç ve Arazi Değerlendirme Anketi';
+  const villageName = survey?.villageName || report?.villageName || 'Sinan Köyü';
+  const totalCount = survey?.completedCount || report?.completedCount || 100;
+  const targetCount = survey?.targetCount || report?.targetCount || 100;
+  const completionRate = Math.round((totalCount / (targetCount || 1)) * 100);
+  const createdBy = survey?.createdBy || 'Saha Koordinatörü (Admin)';
+  const createdAt = survey?.createdAt || report?.createdAt || '12 Ağustos 2026';
+
+  let rawQuestions = (survey && Array.isArray(survey.questions) && survey.questions.length > 0) ? survey.questions : null;
+
+  const defaultQuestions = [
+    {
+      id: 'q100-1',
+      title: '1. Faaliyet Gösterdiğiniz Temel Alan Nedir?',
+      type: 'single',
+      options: [
+        { label: 'Besicilik / Hayvancılık', percent: 64, count: Math.round(totalCount * 0.64), color: 'bg-emerald-600', textColor: 'text-emerald-700' },
+        { label: 'Tarımsal Çiftçilik', percent: 36, count: Math.round(totalCount * 0.36), color: 'bg-[#00A0DF]', textColor: 'text-[#00A0DF]' }
+      ]
+    },
+    {
+      id: 'q100-2',
+      title: '2. Gübre ve Tohum Desteği Talep Ediyor musunuz?',
+      type: 'yesno',
+      options: [
+        { label: 'Evet, Tohum ve Gübre İhtiyacı Var', percent: 88, count: Math.round(totalCount * 0.88), color: 'bg-emerald-600', textColor: 'text-emerald-700' },
+        { label: 'Hayır / İhtiyaç Yok', percent: 12, count: Math.round(totalCount * 0.12), color: 'bg-amber-500', textColor: 'text-amber-700' }
+      ]
+    },
+    {
+      id: 'q100-3',
+      title: '3. Arazi Büyüklüğünüz (Dönüm)',
+      type: 'number',
+      averageVal: '48.5 Dönüm (Bölge Ortalaması)',
+      options: [
+        { label: '0 - 25 Dönüm', percent: 30, count: Math.round(totalCount * 0.30), color: 'bg-indigo-600', textColor: 'text-indigo-700' },
+        { label: '26 - 50 Dönüm', percent: 52, count: Math.round(totalCount * 0.52), color: 'bg-[#00A0DF]', textColor: 'text-[#00A0DF]' },
+        { label: '50+ Dönüm Üzeri', percent: 18, count: Math.round(totalCount * 0.18), color: 'bg-emerald-600', textColor: 'text-emerald-700' }
+      ]
+    },
+    {
+      id: 'q100-4',
+      title: '4. Mevcut Sulama Tesisatı Durumu Yeterli mi?',
+      type: 'yesno',
+      options: [
+        { label: 'Yetersiz / Yenileme ve Bakım Gerekli', percent: 72, count: Math.round(totalCount * 0.72), color: 'bg-amber-600', textColor: 'text-amber-700' },
+        { label: 'Yeterli / Sorun Yok', percent: 28, count: Math.round(totalCount * 0.28), color: 'bg-emerald-600', textColor: 'text-emerald-700' }
+      ]
+    },
+    {
+      id: 'q100-5',
+      title: '5. Saha Notları ve Üretici Talep Özetleri',
+      type: 'text',
+      textNotes: [
+        'Hayvancılıkla uğraşan 64 üretici yem desteği ve veteriner kontrolü talep ediyor.',
+        'Sinan Köyü sulama hattında basınç düşüklüğü ve boru deformasyonu tespit edildi.',
+        'Sertifikalı buğday tohumu dağıtımı için ön talep kayıtları tamamlandı.'
+      ]
+    }
+  ];
+
+  const questions = rawQuestions || defaultQuestions;
+
+  return `
+    <div class="space-y-6 text-slate-800">
+      <!-- MİNİMAL METRİK PANOLARI -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="p-4 bg-slate-900 text-white rounded-2xl space-y-1">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Saha Katılımı</span>
+          <div class="text-lg font-black text-emerald-400">${totalCount} / ${targetCount} (%${completionRate})</div>
+        </div>
+
+        <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-1">
+          <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Bölge</span>
+          <div class="text-sm font-black text-[#01214A] truncate">${villageName}</div>
+        </div>
+
+        <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-1">
+          <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Geçerli Kayıt</span>
+          <div class="text-sm font-black text-emerald-700">%100 Doğrulanmış</div>
+        </div>
+
+        <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-1">
+          <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Rapor Durumu</span>
+          <div class="text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded inline-block">Onaylandı</div>
+        </div>
+      </div>
+
+      <!-- SADE & PREMİUM YÖNETİCİ ÖZETİ (5 SIRALI BULGU) -->
+      <div class="p-6 bg-white border border-slate-200 rounded-3xl shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <h4 class="text-sm font-black text-[#01214A] flex items-center gap-2">
+            ${iconSvg('assessment', 'w-4 h-4 text-[#00A0DF]')}
+            <span>Öne Çıkan Saha Bulguları &amp; Kurumsal Özet</span>
+          </h4>
+          <span class="text-[11px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">Özet Rapor</span>
+        </div>
+
+        <div class="space-y-3 text-xs leading-relaxed">
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-0.5">
+            <span class="font-black text-[#01214A]">1. Bölgesel Üretim Yapısı:</span>
+            <p class="text-slate-600">${villageName} bölgesinde katılımcıların <strong>%64'ü (64 kişi)</strong> besicilik ve hayvancılık, <strong>%36'sı (36 kişi)</strong> ise çiftçilik yapmaktadır.</p>
+          </div>
+
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-0.5">
+            <span class="font-black text-amber-900">2. Sulama Tesisatı Durumu:</span>
+            <p class="text-slate-600">Üreticilerin <strong>%72'si (72 kişi)</strong> mevcut sulama borularının ve hatlarının yetersiz olduğunu bildirmiştir.</p>
+          </div>
+
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-0.5">
+            <span class="font-black text-emerald-900">3. Tarımsal Destek Talebi:</span>
+            <p class="text-slate-600">Çiftçilerin <strong>%88'i (88 kişi)</strong> önümüzdeki sezon için sertifikalı tohum ve gübre desteği talep etmiştir.</p>
+          </div>
+
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-0.5">
+            <span class="font-black text-blue-900">4. Saha Ekip Notları:</span>
+            <p class="text-slate-600">Yem maliyeti baskısı ve periyodik veteriner desteği besiciler tarafından en çok iletilen istekler arasındadır.</p>
+          </div>
+
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-0.5">
+            <span class="font-black text-purple-900">5. Tavsiye Edilen Aksiyon:</span>
+            <p class="text-slate-600">88 üreticiye öncelikli tohum dağıtımı yapılması ve sulama bakım ekibinin Sinan Köyü hattına yönlendirilmesi önerilmektedir.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- EN ÇOK TALEP EDİLEN 5 İHTİYAÇ (SADE LİSTE) -->
+      <div class="p-6 bg-white border border-slate-200 rounded-3xl shadow-sm space-y-4">
+        <h4 class="text-sm font-black text-[#01214A] flex items-center gap-2">
+          ${iconSvg('trendingUp', 'w-4 h-4 text-emerald-600')}
+          <span>En Çok Talep Edilen 5 Saha İhtiyacı</span>
+        </h4>
+
+        <div class="space-y-2.5">
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs font-bold">
+              <span>1. Tohum ve Gübre Desteği</span>
+              <span class="text-emerald-700 font-extrabold">%88 (88 Kişi)</span>
+            </div>
+            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+              <div class="bg-emerald-600 h-full rounded-full" style="width: 88%"></div>
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs font-bold">
+              <span>2. Sulama Tesisatı &amp; Boru Yenileme</span>
+              <span class="text-[#00A0DF] font-extrabold">%72 (72 Kişi)</span>
+            </div>
+            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+              <div class="bg-[#00A0DF] h-full rounded-full" style="width: 72%"></div>
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs font-bold">
+              <span>3. Yem &amp; Hayvancılık Sübvansiyonu</span>
+              <span class="text-indigo-700 font-extrabold">%64 (64 Kişi)</span>
+            </div>
+            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+              <div class="bg-indigo-600 h-full rounded-full" style="width: 64%"></div>
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs font-bold">
+              <span>4. Traktör &amp; Ekipman Desteği</span>
+              <span class="text-amber-700 font-extrabold">%45 (45 Kişi)</span>
+            </div>
+            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+              <div class="bg-amber-500 h-full rounded-full" style="width: 45%"></div>
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs font-bold">
+              <span>5. Veteriner &amp; Aşılama Hizmetleri</span>
+              <span class="text-purple-700 font-extrabold">%38 (38 Kişi)</span>
+            </div>
+            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+              <div class="bg-purple-600 h-full rounded-full" style="width: 38%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DETAYLI SORU SONUÇ GRAFİKLERİ -->
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <h4 class="font-black text-[#01214A] text-sm flex items-center gap-2">
+            ${iconSvg('poll', 'w-4 h-4 text-[#00A0DF]')}
+            <span>Anket Soruları Yanıt Dağılımı</span>
+          </h4>
+          <span class="text-xs font-bold text-slate-500">${questions.length} Soru</span>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4">
+          ${questions.map((q, qIdx) => {
+            const qTitle = q.title || `Soru ${qIdx + 1}`;
+            const qType = q.type || 'single';
+            
+            let opts = q.options;
+            if (!opts || opts.length === 0) {
+              if (qType === 'yesno') {
+                opts = [
+                  { label: 'Evet / Katılıyorum', percent: 78, count: Math.round(totalCount * 0.78), color: 'bg-emerald-600' },
+                  { label: 'Hayır / Katılmıyorum', percent: 22, count: Math.round(totalCount * 0.22), color: 'bg-amber-500' }
+                ];
+              } else if (qType === 'single' || qType === 'multiple') {
+                opts = [
+                  { label: 'Besicilik / Hayvancılık', percent: 64, count: Math.round(totalCount * 0.64), color: 'bg-emerald-600' },
+                  { label: 'Tarımsal Çiftçilik', percent: 36, count: Math.round(totalCount * 0.36), color: 'bg-[#00A0DF]' }
+                ];
+              }
+            }
+
+            return `
+              <div class="p-5 bg-white rounded-3xl border border-slate-200 space-y-3">
+                <div class="flex items-start justify-between gap-3 pb-2 border-b border-slate-100">
+                  <div class="space-y-0.5">
+                    <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                      SORU ${qIdx + 1}
+                    </span>
+                    <h5 class="text-sm font-bold text-[#01214A]">${qTitle}</h5>
+                  </div>
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 shrink-0">
+                    100 / 100 Yanıt
+                  </span>
+                </div>
+
+                ${q.averageVal ? `
+                  <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 flex justify-between">
+                    <span>Ortalama Değer:</span>
+                    <span class="text-[#00A0DF] font-black">${q.averageVal}</span>
+                  </div>
+                ` : ''}
+
+                ${opts && opts.length > 0 ? `
+                  <div class="space-y-2.5 pt-1">
+                    ${opts.map((opt, oIdx) => {
+                      const label = opt.label || `Seçenek ${oIdx + 1}`;
+                      let percent = 50;
+                      if (typeof opt.percent === 'number') {
+                        percent = opt.percent;
+                      } else if (opt.label && opt.label.includes('%')) {
+                        const match = opt.label.match(/%(\d+)/);
+                        if (match) percent = parseInt(match[1]);
+                      } else {
+                        percent = oIdx === 0 ? 64 : (oIdx === 1 ? 36 : 20);
+                      }
+                      const count = opt.count !== undefined ? opt.count : Math.round((percent / 100) * totalCount);
+                      const barBg = opt.color || (oIdx === 0 ? 'bg-emerald-600' : (oIdx === 1 ? 'bg-[#00A0DF]' : 'bg-slate-700'));
+
+                      return `
+                        <div class="space-y-1">
+                          <div class="flex justify-between text-xs font-semibold text-slate-700">
+                            <span>${label}</span>
+                            <span class="font-extrabold text-slate-900">%${percent} (${count} Kişi)</span>
+                          </div>
+                          <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                            <div class="${barBg} h-full rounded-full" style="width: ${percent}%"></div>
+                          </div>
+                        </div>
+                      `;
+                    }).join('')}
+                  </div>
+                ` : ''}
+
+                ${q.textNotes && q.textNotes.length > 0 ? `
+                  <div class="space-y-1.5 pt-1">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Öne Çıkan Notlar</span>
+                    ${q.textNotes.map(nt => `
+                      <div class="p-2.5 bg-slate-50 rounded-xl text-xs text-slate-600 border border-slate-100">
+                        "${nt}"
+                      </div>
+                    `).join('')}
+                  </div>
+                ` : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 export function renderCustomModals(state) {
+  // 1. FULL ANALYTICAL REPORT DETAIL MODAL (SECTION 14-18)
+  if (state.selectedReportDetailId || (state.activeModal && state.activeModal.type === 'view_report_detail')) {
+    const reportId = state.selectedReportDetailId || state.activeModal?.reportId;
+    const allReports = Array.isArray(state.reports) ? state.reports : [];
+    const rpt = allReports.find(r => r.id === reportId || r.surveyId === reportId) || allReports[0] || {
+      id: 'rpt-100',
+      surveyTitle: 'Şehitkamil Tarımsal İhtiyaç ve Arazi Değerlendirme Anketi',
+      villageName: 'Sinan Köyü',
+      completedCount: 100,
+      targetCount: 100,
+      createdAt: '12 Ağustos 2026'
+    };
+
+    return `
+      <div class="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div class="bg-white rounded-[16px] border border-[#E9EDF2] max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
+          
+          <!-- HEADER BAR WITH BREADCRUMB & DOWNLOAD BUTTONS -->
+          <div class="p-5 sm:p-6 border-b border-[#E9EDF2] flex flex-col sm:flex-row sm:items-center justify-between gap-4 sticky top-0 bg-white z-10">
+            <div>
+              <div class="text-[11px] text-slate-400 font-normal">Rapor Kütüphanesi / Analitik Rapor Detayı</div>
+              <h2 class="text-lg sm:text-xl font-bold text-[#01214A] leading-snug mt-0.5">${rpt.surveyTitle}</h2>
+              <div class="text-xs text-slate-500 font-normal mt-0.5">Bölge: <strong class="text-slate-700 font-medium">${rpt.villageName || 'Sinan Köyü'}</strong> · Tarih: <strong class="text-slate-700 font-medium">${rpt.createdAt || '12 Ağustos 2026'}</strong></div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+              <button id="btn-reports-tab-excel" class="h-9 px-3 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 text-xs font-normal rounded-[8px] transition-colors cursor-pointer flex items-center gap-1">
+                ${iconSvg('download', 'w-3.5 h-3.5 text-emerald-700')}
+                <span>Excel</span>
+              </button>
+              <button id="btn-reports-tab-pdf" class="h-9 px-3 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 text-xs font-normal rounded-[8px] transition-colors cursor-pointer flex items-center gap-1">
+                ${iconSvg('fileText', 'w-3.5 h-3.5 text-red-600')}
+                <span>PDF</span>
+              </button>
+              <button id="btn-close-report-detail" class="h-9 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-[8px] transition-colors cursor-pointer ml-1">
+                Kapat
+              </button>
+            </div>
+          </div>
+          
+          <!-- BODY WITH ANALYTICAL CHARTS & SUMMARY STATS -->
+          <div class="p-6 overflow-y-auto space-y-6 flex-1">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div class="p-4 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px]">
+                <span class="text-[10px] text-slate-400 font-semibold uppercase block tracking-wider">KATILIMCI SAYISI</span>
+                <span class="text-xl font-bold text-[#01214A] leading-tight block mt-1">${rpt.completedCount || 100} Yanıt</span>
+              </div>
+              <div class="p-4 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px]">
+                <span class="text-[10px] text-slate-400 font-semibold uppercase block tracking-wider">DOĞRULAMA</span>
+                <span class="text-xl font-bold text-[#2A9D38] leading-tight block mt-1">%100 Tam Katılım</span>
+              </div>
+              <div class="p-4 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px]">
+                <span class="text-[10px] text-slate-400 font-semibold uppercase block tracking-wider">BÖLGE</span>
+                <span class="text-lg font-bold text-[#01214A] leading-tight truncate block mt-1">${rpt.villageName || 'Sinan Köyü'}</span>
+              </div>
+              <div class="p-4 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px]">
+                <span class="text-[10px] text-slate-400 font-semibold uppercase block tracking-wider">DURUM</span>
+                <span class="text-base font-bold text-emerald-800 leading-tight block mt-1">Hazır / Kaydedildi</span>
+              </div>
+            </div>
+
+            <!-- EMBEDDED QUESTION GRAPHIC VISUALIZERS -->
+            <div class="space-y-4">
+              <h3 class="text-base font-semibold text-[#01214A]">Öne Çıkan Saha Bulguları & Soru Bazlı Analiz Grafikleri</h3>
+              ${renderSurveyDetailedCharts(rpt, state)}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    `;
+  }
+
   if (!state.activeModal) return '';
 
   if (state.activeModal.type === 'add_section') {
@@ -433,13 +812,18 @@ export function renderCustomModals(state) {
               Vazgeç
             </button>
 
-            <div class="flex items-center gap-2">
-              <button type="button" data-survey-id="${survey.id}" class="btn-submit-survey-revision h-11 px-4 bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center gap-1.5">
+            <div class="flex items-center flex-wrap gap-2">
+              <button type="button" data-survey-id="${survey.id}" class="btn-reject-admin-survey h-11 px-4 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center gap-1.5 active:scale-95">
+                ${iconSvg('block', 'w-4 h-4 text-white')}
+                <span>Anketi Reddet</span>
+              </button>
+
+              <button type="button" data-survey-id="${survey.id}" class="btn-submit-survey-revision h-11 px-4 bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center gap-1.5 active:scale-95">
                 ${iconSvg('edit', 'w-4 h-4 text-white')}
                 <span>Revizyon Talebi Gönder</span>
               </button>
 
-              <button type="button" data-survey-id="${survey.id}" class="btn-approve-admin-survey h-11 px-5 bg-[#2A9D38] hover:bg-[#22822e] text-white font-extrabold text-xs rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-1.5">
+              <button type="button" data-survey-id="${survey.id}" class="btn-approve-admin-survey h-11 px-5 bg-[#2A9D38] hover:bg-[#22822e] text-white font-extrabold text-xs rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-1.5 active:scale-95">
                 ${iconSvg('checkCircle', 'w-4 h-4 text-white')}
                 <span>Anketi Onayla & Yayınla</span>
               </button>
@@ -451,8 +835,206 @@ export function renderCustomModals(state) {
     `;
   }
 
+  if (state.activeModal.type === 'view_report') {
+    const report = state.activeModal.report || (state.reports || [])[0];
+    const survey = state.activeModal.survey || (state.allSurveys || []).find(s => s.id === report?.surveyId) || (state.allSurveys || [])[0];
+
+    return `
+      <div class="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-white border-none rounded-3xl p-6 sm:p-8 max-w-3xl w-full shadow-2xl space-y-6 max-h-[92vh] overflow-y-auto animate-in zoom-in-95 duration-150 font-sans">
+          
+          <!-- HEADER -->
+          <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-black shrink-0 border border-emerald-300">
+                ${iconSvg('assessment', 'w-6 h-6 text-emerald-700')}
+              </div>
+              <div class="space-y-0.5">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-[#01214A] text-white uppercase tracking-wider">T.C. ŞEHİTKAMİL BELEDİYESİ</span>
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">%100 SAHA KATILIMI • ONAYLI RAPOR</span>
+                </div>
+                <h3 class="text-lg font-black text-[#01214A] leading-snug tracking-tight">${survey ? survey.title : (report ? report.surveyTitle : 'Şehitkamil Tarımsal İhtiyaç Anketi')}</h3>
+              </div>
+            </div>
+            <button type="button" id="btn-close-custom-modal" class="p-2 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition-colors">
+              ${iconSvg('close', 'w-5 h-5')}
+            </button>
+          </div>
+
+          <!-- DETAILED CHARTS & METRICS CONTENT -->
+          ${renderSurveyDetailedCharts(survey || report, state)}
+
+          <!-- ACTION BUTTONS FOOTER -->
+          <div class="flex flex-wrap items-center gap-3 pt-4 border-t border-slate-100">
+            <button type="button" id="btn-close-custom-modal" class="px-5 h-11 border border-slate-200 text-slate-700 font-bold text-xs rounded-2xl hover:bg-slate-100 transition-all">
+              Kapat
+            </button>
+
+            <button id="btn-reports-tab-print" onclick="window.print()" class="h-11 px-5 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-2xl transition-all shadow-sm flex items-center gap-2 cursor-pointer">
+              ${iconSvg('fileText', 'w-4 h-4 text-slate-300')}
+              <span>Raporu Yazdır / Yazıcıya Gönder</span>
+            </button>
+
+            <div class="flex items-center gap-2 ml-auto">
+              <button id="btn-reports-tab-excel" class="h-11 px-5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-2xl transition-all shadow-sm flex items-center gap-2 cursor-pointer">
+                ${iconSvg('download', 'w-4 h-4')}
+                <span>Excel Rapor (.xlsx)</span>
+              </button>
+
+              <button id="btn-reports-tab-pdf" class="h-11 px-5 bg-red-700 hover:bg-red-800 text-white font-bold text-xs rounded-2xl transition-all shadow-sm flex items-center gap-2 cursor-pointer">
+                ${iconSvg('fileText', 'w-4 h-4')}
+                <span>PDF Rapor (.pdf)</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    `;
+  }
+
+  if (state.activeModal.type === 'assign_survey') {
+    const survey = state.activeModal.survey;
+    return `
+      <div class="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white border-none rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-5 animate-in zoom-in-95 duration-150">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div class="flex items-center gap-2">
+              ${iconSvg('assignment', 'w-5 h-5 text-[#2A9D38]')}
+              <h3 class="text-base font-extrabold text-[#01214A]">Saha Personeline Görev Ata & Gönder</h3>
+            </div>
+            <button type="button" id="btn-close-custom-modal" class="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg">
+              ${iconSvg('close', 'w-5 h-5')}
+            </button>
+          </div>
+
+          <form id="form-custom-assign-survey" data-survey-id="${survey.id}" class="space-y-4">
+            <div class="p-3 bg-[#2A9D38]/10 border border-[#2A9D38]/20 rounded-xl space-y-1">
+              <span class="text-[10px] font-bold text-[#2A9D38] uppercase tracking-wider block">Atanacak Anket:</span>
+              <h4 class="text-sm font-extrabold text-[#01214A]">${survey.title}</h4>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-[#01214A] mb-1">Hedef Köy / Bölge *</label>
+                <input type="text" id="modal-assign-village" required value="Sinan Köyü / Merkez" placeholder="Örn: Sinan Köyü" class="w-full h-11 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#2A9D38]"/>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-[#01214A] mb-1">Hedef Yanıt Sayısı *</label>
+                <input type="number" id="modal-assign-target-count" required value="50" placeholder="50" class="w-full h-11 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#2A9D38]"/>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-[#01214A] mb-1">Son Teslim Tarihi *</label>
+              <input type="date" id="modal-assign-end-date" required value="${new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]}" class="w-full h-11 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#2A9D38]"/>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-[#01214A] mb-1">Yönetici Özel Talimatı / Notu</label>
+              <textarea id="modal-assign-note" rows="2" placeholder="Saha ekibinin dikkat edeceği noktalar..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-[#2A9D38]">Saha verilerini eksiksiz doldurunuz ve fotoğrafları ekleyiniz.</textarea>
+            </div>
+
+            <!-- DOWNWARD COLLAPSIBLE PERSONNEL SELECTION DROPDOWN WITH LIVE SEARCH -->
+            <div class="relative">
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-xs font-bold text-[#01214A]">Görev Atanacak Saha Personelleri *</label>
+                <span id="label-modal-assign-badge" class="text-[10px]">
+                  <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md font-extrabold">Tüm Ekip Seçili (${state.allPersonnel.length}/${state.allPersonnel.length})</span>
+                </span>
+              </div>
+
+              <button type="button" id="btn-toggle-modal-assign-dropdown" class="w-full h-11 px-4 bg-white border border-slate-200 rounded-xl text-xs font-bold text-[#01214A] flex items-center justify-between shadow-2xs hover:border-[#2A9D38] transition-all cursor-pointer group">
+                <div class="flex items-center gap-2.5 truncate" id="label-modal-assign-count">
+                  <div class="w-6 h-6 rounded-md bg-[#2A9D38]/10 text-[#2A9D38] flex items-center justify-center shrink-0">
+                    ${iconSvg('users', 'w-3.5 h-3.5 text-[#2A9D38]')}
+                  </div>
+                  <span class="font-extrabold text-xs text-[#01214A] truncate">Tüm Ekip Seçili (${state.allPersonnel.length} Personel)</span>
+                </div>
+                ${iconSvg('chevronDown', 'w-4 h-4 text-slate-400 group-hover:text-[#2A9D38] transition-transform')}
+              </button>
+
+              <div id="dropdown-modal-assign-menu" class="hidden absolute bottom-full left-0 right-0 mb-2 bg-white border border-slate-200 rounded-2xl shadow-xl p-4 z-40 space-y-3">
+                <div class="relative">
+                  <input type="text" id="input-search-modal-assign" placeholder="Personel ismi veya telefon ara (Örn: b)..." class="w-full h-9 pl-8 pr-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#2A9D38]"/>
+                  <span class="absolute left-2.5 top-2.5 text-slate-400">
+                    ${iconSvg('search', 'w-3.5 h-3.5')}
+                  </span>
+                </div>
+
+                <div class="flex items-center justify-between border-b border-slate-100 pb-1 text-[11px] font-bold">
+                  <div class="flex items-center gap-2">
+                    <button type="button" id="btn-modal-assign-select-all" class="text-[#2A9D38] hover:underline flex items-center gap-1">
+                      ${iconSvg('check', 'w-3 h-3')} Tümünü Seç
+                    </button>
+                    <span class="text-slate-300">|</span>
+                    <button type="button" id="btn-modal-assign-clear-all" class="text-slate-500 hover:text-red-600 hover:underline">
+                      Temizle
+                    </button>
+                  </div>
+                  <span class="text-slate-400 text-[10px]" id="info-modal-assign-visible-count">${(Array.isArray(state.allPersonnel) ? state.allPersonnel : []).length} gösteriliyor</span>
+                </div>
+
+                <div class="max-h-40 overflow-y-auto space-y-1 pr-1">
+                  ${(Array.isArray(state.allPersonnel) ? state.allPersonnel : []).map(p => `
+                    <label data-search-text="${(p.fullName + ' ' + (p.phone || '')).toLowerCase()}" class="modal-assign-item flex items-center justify-between p-2 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer">
+                      <div class="flex items-center gap-2.5">
+                        <input type="checkbox" name="modal-assign-personnel" value="${p.id}" checked class="cb-modal-assign-personnel rounded text-[#2A9D38] focus:ring-[#2A9D38] w-4 h-4 cursor-pointer"/>
+                        <span class="font-extrabold text-xs text-[#01214A]">${p.fullName}</span>
+                      </div>
+                      <span class="text-[10px] text-slate-400 font-medium">${p.phone || p.email}</span>
+                    </label>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+              <button type="button" id="btn-close-custom-modal" class="flex-1 h-11 border border-slate-200 text-slate-700 font-bold text-xs rounded-xl hover:bg-slate-100 transition-all">
+                Vazgeç
+              </button>
+              <button type="submit" class="flex-1 h-11 bg-[#2A9D38] hover:bg-[#22822e] text-white font-extrabold text-xs rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-1.5">
+                ${iconSvg('send', 'w-4 h-4')}
+                <span>Görevi İlet & Yayınla</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+  }
+
+
+  if (state.activeModal.type === 'logout_confirm') {
+    return `
+      <div class="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-[20px] p-6 max-w-sm w-full shadow-2xl space-y-5 animate-in zoom-in-95 duration-150 text-center">
+          <div class="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center mx-auto">
+            ${iconSvg('logOut', 'w-6 h-6 text-red-500')}
+          </div>
+          <div class="space-y-1.5">
+            <h3 class="text-base font-bold text-[#01214A]">Çıkış yapmak istiyor musunuz?</h3>
+            <p class="text-xs text-slate-400 font-normal">Tüm yerel verileriniz korunacaktır. Tekrar giriş yaparak kaldığınız yerden devam edebilirsiniz.</p>
+          </div>
+          <div class="flex gap-3 pt-1">
+            <button type="button" id="btn-close-custom-modal" class="flex-1 h-11 border border-[#E9EDF2] text-slate-700 font-semibold text-xs rounded-[12px] hover:bg-slate-50 transition-all cursor-pointer">
+              İptal
+            </button>
+            <button type="button" id="btn-global-logout" class="flex-1 h-11 bg-red-600 hover:bg-red-700 text-white font-semibold text-xs rounded-[12px] shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+              ${iconSvg('logOut', 'w-4 h-4 text-white')}
+              <span>Çıkış Yap</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   return '';
 }
+
 
 export function renderToastNotification(state) {
   if (!state.toast) return '';
@@ -470,66 +1052,96 @@ export function renderToastNotification(state) {
 // System Top Bar (Role Switcher & Network Status)
 export function renderSystemBar() {
   const state = store.getState();
+  // Admin view has its own single unified top header (Section 1-3)
+  if (state.currentRole === 'admin') {
+    return '';
+  }
+
+  const user = state.auth?.user || {};
+  const isLoggedIn = state.auth?.isLoggedIn;
+
   return `
-    <div class="bg-slate-900 text-white text-xs px-4 py-2 flex flex-wrap justify-between items-center shadow-md border-b border-slate-800 sticky top-0 z-50">
+    <header class="w-full h-14 bg-white border-b border-[#E9EDF2] flex items-center justify-between px-4 sticky top-0 z-50">
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-bold text-[#01214A]">Şehitkamil Strateji Merkezi</span>
+      </div>
+
       <div class="flex items-center gap-3">
-        <div class="flex items-center gap-1.5 font-bold tracking-wider uppercase text-indigo-400">
-          <span class="w-2 h-2 rounded-full bg-primary"></span>
-          <span>Saha Anket Yönetim Sistemi</span>
-        </div>
-        <span class="text-slate-700">|</span>
-        <div class="inline-flex bg-slate-800 p-0.5 rounded-lg border border-slate-700">
-          <button id="btn-role-pwa" class="px-3 py-1 rounded-md text-xs font-semibold transition-all ${state.currentRole === 'pwa' ? 'bg-primary text-white' : 'text-slate-400 hover:text-white'}">
-            Saha Personeli PWA
-          </button>
-          <button id="btn-role-admin" class="px-3 py-1 rounded-md text-xs font-semibold transition-all ${state.currentRole === 'admin' ? 'bg-primary text-white' : 'text-slate-400 hover:text-white'}">
-            Yönetici Web Paneli
-          </button>
-        </div>
+        ${renderNotificationCenter(state)}
+        ${isLoggedIn ? `
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-full bg-[#01214A] text-white flex items-center justify-center font-bold text-xs">
+              ${user.fullName ? user.fullName.charAt(0).toUpperCase() : 'S'}
+            </div>
+          </div>
+        ` : ''}
       </div>
-
-      <div class="flex items-center gap-3 mt-1 sm:mt-0">
-        <button id="btn-toggle-network" class="flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium border transition-all ${state.isOnline ? 'bg-emerald-950/60 text-emerald-400 border-emerald-700/50' : 'bg-amber-950/60 text-amber-400 border-amber-700/50'}" title="Ağ Durumu">
-          <span class="w-2.5 h-2.5 rounded-full ${state.isOnline ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}"></span>
-          ${state.offlineQueueCount > 0 ? `<span class="bg-amber-500 text-slate-950 text-[10px] font-bold px-1.5 py-0.2 rounded-full">${state.offlineQueueCount} Bekliyor</span>` : ''}
-        </button>
-
-        <button id="btn-reset-demo" class="text-slate-400 hover:text-white transition-colors text-xs flex items-center gap-1">
-          <span>Sıfırla</span>
-        </button>
-      </div>
-    </div>
+    </header>
   `;
 }
 
-// 1. LOGIN EKRANI
+// 1. STANDALONE EXECUTIVE LOGIN EKRANI (MASTERWORK DESIGN)
 export function renderLoginScreen() {
   return `
-    <div class="min-h-[calc(100vh-41px)] bg-background flex flex-col justify-center items-center px-6 py-12">
-      <div class="w-full max-w-sm space-y-6">
-        <div class="text-center space-y-2">
-          <div class="w-14 h-14 bg-primary text-white rounded-2xl mx-auto flex items-center justify-center shadow-md">
-            ${iconSvg('clipboard', 'w-8 h-8')}
+    <div class="min-h-screen bg-gradient-to-b from-[#041F3D] to-[#062C57] flex flex-col justify-center items-center p-4 sm:p-6 font-sans relative overflow-hidden">
+      
+      <!-- SUBTLE BACKGROUND GEOMETRIC AMBIENT GLOW -->
+      <div class="absolute -top-40 -left-40 w-96 h-96 bg-[#00A0DF]/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-[#2A9D38]/10 rounded-full blur-3xl pointer-events-none"></div>
+
+      <!-- MAIN CONTAINER (-mt-6 FOR PERFECT MONITOR CENTERING) -->
+      <div class="w-full max-w-[430px] z-10 -mt-6 sm:-mt-10 animate-in fade-in zoom-in-95 duration-300">
+        
+        <!-- STANDALONE LOGO (DIRECT DISPLAY, NO DOUBLE BOX CLUTTER) -->
+        <div class="flex justify-center mb-6">
+          <div class="p-3 bg-white/95 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl transition-transform hover:scale-105 duration-200">
+            <img src="./logo_sehitkamil.png" alt="Şehitkamil Logo" class="h-16 sm:h-20 w-auto max-w-[280px] object-contain">
           </div>
-          <h1 class="text-xl font-bold text-on-surface tracking-tight">Saha Anket Sistemi</h1>
-          <p class="text-xs text-text-secondary">Güvenli Veri Toplama Platformu</p>
         </div>
 
-        <form id="form-login" class="bg-surface p-6 rounded-2xl border border-border shadow-sm space-y-4">
-          <div>
-            <label class="block text-xs font-semibold text-on-surface mb-1.5">E-Posta Adresi</label>
-            <input type="email" id="login-email" value="ahmet@sahaanket.gov.tr" required placeholder="Örn: ahmet@sahaanket.gov.tr" class="w-full h-12 px-4 bg-surface-container-low border border-border rounded-xl text-sm focus:outline-none focus:border-primary transition-all"/>
+        <!-- EXECUTIVE LOGIN CARD -->
+        <div class="bg-white rounded-[24px] shadow-[0_20px_60px_rgba(0,0,0,0.25)] border border-slate-100 p-8 sm:p-9 space-y-6">
+          
+          <!-- TITLE -->
+          <div class="text-center pb-1">
+            <h1 class="text-lg sm:text-xl font-bold text-[#0B315D] tracking-tight leading-snug">Şehitkamil Strateji Geliştirme Merkezi</h1>
           </div>
 
-          <div>
-            <label class="block text-xs font-semibold text-on-surface mb-1.5">Giriş Şifresi</label>
-            <input type="password" id="login-password" value="Saha123!" required placeholder="Şifrenizi giriniz" class="w-full h-12 px-4 bg-surface-container-low border border-border rounded-xl text-sm focus:outline-none focus:border-primary transition-all"/>
-          </div>
+          <!-- FORM -->
+          <form id="form-login" class="space-y-5">
+            
+            <!-- EMAIL FIELD -->
+            <div class="space-y-1.5">
+              <label for="login-email" class="block text-xs font-semibold text-[#1F2937]">E-posta adresi</label>
+              <div class="relative">
+                <input type="email" id="login-email" value="ahmet@sahaanket.gov.tr" required placeholder="ahmet@sahaanket.gov.tr" class="w-full h-[50px] pl-11 pr-4 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-xs sm:text-sm font-medium text-slate-900 focus:outline-none focus:bg-white focus:border-[#0B315D] focus:ring-4 focus:ring-[#0B315D]/10 transition-all placeholder:text-slate-400"/>
+                <span class="absolute left-3.5 top-3.5 text-slate-400 pointer-events-none">
+                  ${iconSvg('mail', 'w-5 h-5 text-slate-400')}
+                </span>
+              </div>
+            </div>
 
-          <button type="submit" class="w-full h-12 bg-primary text-white font-semibold rounded-xl text-sm hover:bg-primary-dark transition-all active:scale-[0.98] shadow-sm">
-            Giriş Yap
-          </button>
-        </form>
+            <!-- PASSWORD FIELD WITH EYE TOGGLE -->
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <label for="login-password" class="block text-xs font-semibold text-[#1F2937]">Şifre</label>
+              </div>
+              <div class="relative">
+                <input type="password" id="login-password" value="Saha123!" required placeholder="••••••••" class="w-full h-[50px] pl-4 pr-11 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-xs sm:text-sm font-medium text-slate-900 focus:outline-none focus:bg-white focus:border-[#0B315D] focus:ring-4 focus:ring-[#0B315D]/10 transition-all placeholder:text-slate-400"/>
+                <button type="button" id="btn-toggle-password" title="Şifreyi Göster / Gizle" class="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer focus:outline-none">
+                  <span id="pwd-eye-icon">${iconSvg('eye', 'w-5 h-5 text-slate-400')}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- SUBMIT BUTTON (NO PLAY ▶ TRIANGLE) -->
+            <button type="submit" class="w-full h-[52px] bg-[#0B315D] hover:bg-[#072446] text-white font-semibold text-sm rounded-[14px] shadow-md hover:shadow-lg transition-all active:scale-[0.99] flex items-center justify-center cursor-pointer mt-3">
+              Giriş Yap
+            </button>
+          </form>
+
+        </div>
+
       </div>
     </div>
   `;
@@ -539,134 +1151,321 @@ export function renderLoginScreen() {
 export function renderBottomNav() {
   const state = store.getState();
   const screen = state.pwaScreen;
-  const unreadCount = state.messages.filter(m => m.isUnread).length;
+  const unreadMsgCount = (state.messages || []).filter(m => m.isUnread).length;
 
   return `
-    <nav class="fixed bottom-0 left-0 w-full z-40 bg-surface border-t border-border pb-safe">
+    <!-- SAFE-AREA COMPLIANT FIXED BOTTOM NAVIGATION (SECTION 10) -->
+    <nav class="fixed bottom-0 left-0 w-full z-40 bg-white border-t border-[#E9EDF2] pb-safe">
       <div class="flex justify-around items-center h-16 max-w-md mx-auto px-2">
-        <button id="nav-home" class="flex flex-col items-center justify-center flex-1 h-full gap-1 ${['home', 'task_detail', 'survey_success'].includes(screen) ? 'text-primary font-bold' : 'text-text-secondary hover:text-on-surface'} transition-all active:scale-90">
-          ${iconSvg('home', 'w-5 h-5')}
-          <span class="text-[11px] font-medium">Ana Sayfa</span>
+        <button id="nav-home" type="button" class="flex flex-col items-center justify-center flex-1 h-full gap-1 ${['home', 'task_detail', 'survey_success'].includes(screen) ? 'text-[#2A9D38] font-semibold' : 'text-slate-400 hover:text-[#01214A]'} transition-all cursor-pointer">
+          ${iconSvg('home', `w-5 h-5 ${['home', 'task_detail', 'survey_success'].includes(screen) ? 'text-[#2A9D38]' : 'text-slate-400'}`)}
+          <span class="text-[11px]">Ana Sayfa</span>
         </button>
 
-        <button id="nav-surveys" class="flex flex-col items-center justify-center flex-1 h-full gap-1 ${screen === 'my_surveys' || screen === 'quick_builder' ? 'text-primary font-bold' : 'text-text-secondary hover:text-on-surface'} transition-all active:scale-90">
-          ${iconSvg('clipboard', 'w-5 h-5')}
-          <span class="text-[11px] font-medium">Anketlerim</span>
+        <button id="nav-surveys" type="button" class="flex flex-col items-center justify-center flex-1 h-full gap-1 ${screen === 'my_surveys' || screen === 'quick_builder' ? 'text-[#2A9D38] font-semibold' : 'text-slate-400 hover:text-[#01214A]'} transition-all cursor-pointer">
+          ${iconSvg('poll', `w-5 h-5 ${screen === 'my_surveys' || screen === 'quick_builder' ? 'text-[#2A9D38]' : 'text-slate-400'}`)}
+          <span class="text-[11px]">Anketlerim</span>
         </button>
 
-        <button id="nav-messages" class="flex flex-col items-center justify-center flex-1 h-full gap-1 ${screen === 'messages' || screen === 'message_detail' ? 'text-primary font-bold' : 'text-text-secondary hover:text-on-surface'} transition-all active:scale-90 relative">
+        <button id="nav-messages" type="button" class="flex flex-col items-center justify-center flex-1 h-full gap-1 ${screen === 'messages' || screen === 'message_detail' ? 'text-[#2A9D38] font-semibold' : 'text-slate-400 hover:text-[#01214A]'} transition-all cursor-pointer relative">
           <div class="relative">
-            ${iconSvg('message', 'w-5 h-5')}
-            ${unreadCount > 0 ? `<span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full ring-2 ring-surface"></span>` : ''}
+            ${iconSvg('mail', `w-5 h-5 ${screen === 'messages' || screen === 'message_detail' ? 'text-[#2A9D38]' : 'text-slate-400'}`)}
+            ${unreadMsgCount > 0 ? `<span class="absolute -top-1 -right-1 w-2 h-2 bg-[#2A9D38] rounded-full ring-2 ring-white"></span>` : ''}
           </div>
-          <span class="text-[11px] font-medium">Mesajlar</span>
+          <span class="text-[11px]">Mesajlar</span>
         </button>
 
-        <button id="nav-profile" class="flex flex-col items-center justify-center flex-1 h-full gap-1 ${screen === 'profile' ? 'text-primary font-bold' : 'text-text-secondary hover:text-on-surface'} transition-all active:scale-90">
-          ${iconSvg('user', 'w-5 h-5')}
-          <span class="text-[11px] font-medium">Profil</span>
+        <button id="nav-profile" type="button" class="flex flex-col items-center justify-center flex-1 h-full gap-1 ${screen === 'profile' ? 'text-[#2A9D38] font-semibold' : 'text-slate-400 hover:text-[#01214A]'} transition-all cursor-pointer">
+          ${iconSvg('user', `w-5 h-5 ${screen === 'profile' ? 'text-[#2A9D38]' : 'text-slate-400'}`)}
+          <span class="text-[11px]">Profil</span>
         </button>
       </div>
     </nav>
   `;
 }
 
-// 2. SAHA PERSONELİ PWA ANA SAYFA
+// PWA BİLDİRİM ZİLİ BUTONU (State-driven, Section 13)
+export function renderPwaNotificationBell(state) {
+  const notifications = Array.isArray(state.notifications) ? state.notifications : [];
+  // PWA-relevant notifications: type ALL or PWA
+  const pwaNotifs = notifications.filter(n => !n.targetRole || n.targetRole === 'ALL' || n.targetRole === 'PWA');
+  const unreadCount = pwaNotifs.filter(n => !n.isRead).length;
+  const isOpen = state.showPwaNotifications === true;
+
+  return `
+    <button type="button" id="btn-toggle-pwa-notifications" class="relative p-2 text-slate-400 hover:text-[#01214A] transition-colors rounded-full hover:bg-slate-50 cursor-pointer ${isOpen ? 'bg-slate-50 text-[#01214A]' : ''}" title="Bildirimler">
+      ${iconSvg('bell', `w-5 h-5 ${isOpen ? 'text-[#01214A]' : 'text-slate-500'}`)}
+      ${unreadCount > 0 ? `<span class="absolute top-1.5 right-1.5 flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span></span>` : ''}
+    </button>
+  `;
+}
+
+// PWA BİLDİRİM PANELİ (State-driven, re-render safe)
+export function renderPwaNotificationsPanel(state) {
+  if (!state.showPwaNotifications) return '';
+
+  const notifications = Array.isArray(state.notifications) ? state.notifications : [];
+  const pwaNotifs = notifications.filter(n => !n.targetRole || n.targetRole === 'ALL' || n.targetRole === 'PWA');
+  const unreadCount = pwaNotifs.filter(n => !n.isRead).length;
+
+  const typeIcon = {
+    NEW_SURVEY: 'poll',
+    NEW_MESSAGE: 'mail',
+    NEW_ASSIGNMENT: 'assignment',
+    SYSTEM: 'bell'
+  };
+
+  return `
+    <div class="bg-white border-b border-[#E9EDF2] shadow-lg animate-in slide-in-from-top-2 duration-200">
+      <!-- Panel Header -->
+      <div class="flex items-center justify-between px-4 py-3 bg-[#01214A]">
+        <div class="flex items-center gap-2">
+          ${iconSvg('bell', 'w-4 h-4 text-[#2A9D38]')}
+          <span class="text-xs font-bold text-white">Bildirimler</span>
+          ${unreadCount > 0 ? `<span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[#2A9D38] text-white">${unreadCount}</span>` : ''}
+        </div>
+        <div class="flex items-center gap-3">
+          ${unreadCount > 0 ? `<button type="button" id="btn-pwa-mark-all-read" class="text-[10px] font-semibold text-slate-300 hover:text-white transition-colors cursor-pointer">Tümünü okundu işaretle</button>` : ''}
+          <button type="button" id="btn-close-pwa-notifications" class="p-1 text-slate-400 hover:text-white transition-colors cursor-pointer">
+            ${iconSvg('close', 'w-4 h-4')}
+          </button>
+        </div>
+      </div>
+
+      <!-- Panel Items -->
+      <div class="max-h-72 overflow-y-auto divide-y divide-[#F1F5F9]">
+        ${pwaNotifs.length === 0 ? `
+          <div class="p-6 text-center space-y-2">
+            ${iconSvg('checkCircle', 'w-8 h-8 text-slate-300 mx-auto')}
+            <p class="text-xs text-slate-400 font-normal">Henüz bildiriminiz bulunmuyor.</p>
+          </div>
+        ` : pwaNotifs.map(notif => `
+          <div data-notif-id="${notif.id}" class="pwa-notif-item flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50 transition-colors ${!notif.isRead ? 'bg-emerald-50/40' : ''}">
+            <div class="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 mt-0.5">
+              ${iconSvg(typeIcon[notif.type] || 'bell', 'w-4 h-4 text-[#01214A]')}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-baseline justify-between gap-1">
+                <h5 class="text-xs font-semibold text-[#01214A] truncate">${notif.title}</h5>
+                <span class="text-[9px] text-slate-400 font-normal shrink-0">${notif.createdAt}</span>
+              </div>
+              <p class="text-[11px] text-slate-500 leading-snug mt-0.5 line-clamp-2">${notif.message}</p>
+            </div>
+            ${!notif.isRead ? '<span class="w-2 h-2 rounded-full bg-[#2A9D38] shrink-0 mt-1.5"></span>' : ''}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+export function renderNotificationCenter(state) {
+  const allNotifs = Array.isArray(state.notifications) ? state.notifications : [];
+  // Admin sadece ADMIN veya ALL hedefli bildirimleri görür
+  const adminNotifs = allNotifs.filter(n => !n.targetRole || n.targetRole === 'ADMIN' || n.targetRole === 'ALL');
+  const unreadCount = adminNotifs.filter(n => !n.isRead).length;
+  const isOpen = state.showAdminNotifications === true;
+
+  const typeIcon = { NEW_SURVEY: 'poll', NEW_MESSAGE: 'mail', NEW_ASSIGNMENT: 'assignment', SURVEY_APPROVED: 'checkCircle', SURVEY_REVISED: 'edit', SYSTEM: 'bell' };
+
+  return `
+    <div class="relative">
+      <!-- ZİL BUTONU -->
+      <button type="button" id="btn-toggle-notifications-dropdown"
+        class="relative p-2 transition-colors rounded-full cursor-pointer ${isOpen ? 'bg-slate-100 text-[#01214A]' : 'text-slate-400 hover:text-[#01214A] hover:bg-slate-50'}"
+        title="Bildirim Merkezi">
+        ${iconSvg('bell', `w-5 h-5 ${isOpen ? 'text-[#01214A]' : 'text-slate-500'}`)}
+        ${unreadCount > 0 ? `
+          <span class="absolute top-1.5 right-1.5 flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+          </span>
+        ` : ''}
+      </button>
+
+      <!-- BİLDİRİM PANELİ (state-driven, re-render safe) -->
+      ${isOpen ? `
+        <div id="dropdown-notifications-menu" class="absolute right-0 mt-3 w-80 sm:w-96 bg-white border border-[#E9EDF2] rounded-[14px] shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150 text-left">
+          <!-- Header -->
+          <div class="px-4 py-3 bg-[#01214A] flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              ${iconSvg('bell', 'w-4 h-4 text-[#2A9D38]')}
+              <h4 class="font-bold text-xs text-white tracking-tight">Bildirim Merkezi</h4>
+              ${unreadCount > 0 ? `<span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[#2A9D38] text-white">${unreadCount} Yeni</span>` : ''}
+            </div>
+            <div class="flex items-center gap-3">
+              ${unreadCount > 0 ? `<button type="button" id="btn-mark-all-notifications-read" class="text-[10px] font-semibold text-slate-300 hover:text-white transition-colors cursor-pointer">Tümünü okundu</button>` : ''}
+              <button type="button" id="btn-close-admin-notifications" class="p-0.5 text-slate-400 hover:text-white transition-colors cursor-pointer">
+                ${iconSvg('close', 'w-3.5 h-3.5')}
+              </button>
+            </div>
+          </div>
+
+          <!-- Bildirim listesi -->
+          <div class="max-h-80 overflow-y-auto divide-y divide-[#F1F5F9]">
+            ${adminNotifs.length === 0 ? `
+              <div class="p-8 text-center text-slate-400 text-xs font-normal space-y-1.5">
+                ${iconSvg('checkCircle', 'w-8 h-8 text-slate-300 mx-auto mb-2')}
+                <span class="block">Henüz bildiriminiz bulunmuyor.</span>
+              </div>
+            ` : adminNotifs.map(notif => `
+              <div data-notif-id="${notif.id}" class="notif-item p-3.5 hover:bg-slate-50 transition-colors flex items-start gap-3 cursor-pointer ${!notif.isRead ? 'bg-emerald-50/40' : ''}">
+                <div class="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 mt-0.5">
+                  ${iconSvg(typeIcon[notif.type] || 'bell', 'w-4 h-4 text-[#01214A]')}
+                </div>
+                <div class="flex-1 space-y-0.5 min-w-0">
+                  <div class="flex items-center justify-between gap-1">
+                    <h5 class="text-xs font-semibold text-[#01214A] truncate">${notif.title}</h5>
+                    <span class="text-[9px] text-slate-400 font-normal shrink-0">${notif.createdAt}</span>
+                  </div>
+                  <p class="text-[11px] text-slate-500 leading-snug line-clamp-2">${notif.message}</p>
+                </div>
+                ${!notif.isRead ? '<span class="w-2 h-2 rounded-full bg-[#2A9D38] shrink-0 mt-1.5"></span>' : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+
+
+// 2. SAHA PERSONELİ PWA ANA SAYFA (SECTIONS 12-20 & 57)
 export function renderPwaHome() {
   const state = store.getState();
-  const unreadMsg = state.messages.find(m => m.isUnread) || state.messages[0];
-  const mainTask = state.assignedSurveys[0] || {
+  const user = state.auth?.user || {};
+  const unreadMsg = (state.messages || []).find(m => m.isUnread) || (state.messages || [])[0];
+  
+  const mainTask = (state.assignedSurveys || [])[0] || {
     id: '77777777-7777-7777-7777-777777777771',
     title: 'Üretici İhtiyaç Anketi',
     village: 'Sinan Köyü',
-    completed: 18,
-    target: 50,
+    completed: 180,
+    target: 500,
     priority: 'Yüksek Öncelik'
   };
 
-  const progressPct = Math.round((mainTask.completed / (mainTask.target || 1)) * 100);
+  const progressPct = Math.round(((mainTask.completed || 180) / (mainTask.target || 500)) * 100);
+  const currentDateStr = new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' });
+
+  // Sync status
+  const queueCount = state.offlineQueueCount || 0;
+  const isOnline = state.isOnline !== false;
 
   return `
-    <div class="min-h-[calc(100vh-41px)] bg-background text-on-surface flex flex-col pb-24">
-      <main class="flex-1 px-4 py-6 max-w-md mx-auto w-full space-y-6">
-        
-        <div class="flex justify-between items-center">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-[#64B352] text-white flex items-center justify-center font-bold text-base shadow-sm">
-              ${state.auth.user?.fullName?.charAt(0) || 'A'}
-            </div>
-            <div>
-              <h1 class="text-lg font-bold text-on-surface leading-tight">Saha Anket Portalı</h1>
-              <span class="text-xs text-text-secondary">Saha Personeli Uygulaması</span>
-            </div>
-          </div>
-
-          <div class="flex items-center gap-1 text-primary">
-            ${iconSvg('wifi', 'w-5 h-5')}
+    <div class="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col pb-24 font-sans">
+      
+      <!-- TOP PWA BRANDING HEADER (SECTIONS 4 & 13) -->
+      <header class="bg-white border-b border-[#E9EDF2] px-4 py-3 sticky top-0 z-30 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <img src="./logo_sehitkamil.png" alt="Şehitkamil Logo" class="h-9 w-auto object-contain shrink-0">
+          <div class="flex flex-col min-w-0">
+            <span class="text-xs font-bold text-[#01214A] leading-tight tracking-tight truncate">Şehitkamil Strateji Merkezi</span>
+            <span class="text-[10px] font-normal text-slate-400 mt-0.5">Saha Uygulaması</span>
           </div>
         </div>
 
-        <section class="space-y-1">
-          <h2 class="text-2xl font-bold text-on-surface">Merhaba, ${state.auth.user?.fullName || 'Ahmet'}</h2>
-          <p class="text-xs text-text-secondary">${new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' })}</p>
+        <div class="flex items-center gap-3">
+          <!-- PWA BİLDİRİM ZILI (State-driven) -->
+          ${renderPwaNotificationBell(state)}
+          <!-- BAĞLANTI DURUMU -->
+          <div class="flex items-center gap-1 text-slate-400">
+            ${iconSvg('wifi', `w-4 h-4 ${isOnline ? 'text-[#2A9D38]' : 'text-amber-500'}`)}
+          </div>
+        </div>
+      </header>
 
-          <div class="inline-flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-full mt-2 border border-emerald-200">
-            <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
-            <span class="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">Tüm kayıtlar güncel</span>
+      <!-- PWA BİLDİRİM PANELİ (State-driven, re-render safe) -->
+      ${renderPwaNotificationsPanel(state)}
+
+
+      <main class="flex-1 px-4 py-5 max-w-md mx-auto w-full space-y-5">
+        
+        <!-- MERHABA & SENKRONİZASYON DURUMU (SECTIONS 14-16) -->
+        <section class="space-y-1">
+          <h1 class="text-2xl font-bold text-[#01214A] tracking-tight">Merhaba, ${user.fullName || 'Ahmet Yılmaz'}</h1>
+          <p class="text-xs text-slate-400 font-normal">${currentDateStr}</p>
+
+          <div class="pt-2">
+            ${queueCount > 0 ? `
+              <div class="inline-flex items-center gap-1.5 bg-amber-50 px-3 py-1 rounded-full border border-amber-200 text-amber-900 text-[11px] font-medium">
+                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                <span>${queueCount} kayıt gönderilmeyi bekliyor</span>
+              </div>
+            ` : !isOnline ? `
+              <div class="inline-flex items-center gap-1.5 bg-amber-50 px-3 py-1 rounded-full border border-amber-200 text-amber-900 text-[11px] font-medium">
+                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                <span>Çevrimdışı · Cihaza kaydediliyor</span>
+              </div>
+            ` : `
+              <div class="inline-flex items-center gap-1.5 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 text-emerald-800 text-[11px] font-semibold">
+                <span class="w-2 h-2 rounded-full bg-[#2A9D38]"></span>
+                <span>Tüm kayıtlar güncel</span>
+              </div>
+            `}
           </div>
         </section>
 
+        <!-- GÖREVLERİM CARD (SECTIONS 17-19) -->
         <section class="space-y-3">
-          <h3 class="text-lg font-bold text-on-surface">Görevlerim</h3>
+          <div class="flex items-center justify-between">
+            <h2 class="text-base font-semibold text-[#01214A]">Görevlerim</h2>
+          </div>
 
-          <div class="bg-surface rounded-2xl p-5 border border-border shadow-sm space-y-4 hover:border-primary/40 transition-all">
-            <div class="flex justify-between items-start">
-              <div>
-                <div class="flex items-center gap-1 text-text-secondary text-xs mb-1">
-                  ${iconSvg('mapPin', 'w-3.5 h-3.5 text-primary')}
-                  <span class="font-medium">${mainTask.village}</span>
+          <div class="bg-white rounded-[14px] p-5 border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-4">
+            <div class="flex justify-between items-start gap-2">
+              <div class="space-y-1">
+                <div class="inline-flex items-center gap-1 text-slate-500 text-xs font-normal">
+                  ${iconSvg('mapPin', 'w-3.5 h-3.5 text-[#2A9D38]')}
+                  <span>${mainTask.village || 'Sinan Köyü'}</span>
                 </div>
-                <h4 class="font-bold text-on-surface text-base">${mainTask.title}</h4>
+                <h3 class="font-bold text-[#01214A] text-base leading-snug">${mainTask.title || 'Üretici İhtiyaç Anketi'}</h3>
               </div>
-              <span class="bg-primary/10 text-primary text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap">
-                ${mainTask.priority}
+              <span class="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-semibold px-2.5 py-0.5 rounded-[6px] shrink-0">
+                ${mainTask.priority || 'Yüksek Öncelik'}
               </span>
             </div>
 
-            <div class="space-y-1.5">
-              <div class="flex justify-between text-xs font-semibold">
-                <span class="text-text-secondary">İlerleme</span>
-                <span class="text-on-surface font-bold">%${progressPct}</span>
+            <!-- PROGRESS AREA (SECTION 18) -->
+            <div class="space-y-1.5 pt-1">
+              <div class="flex justify-between text-xs text-slate-500 font-normal">
+                <span>İlerleme</span>
+                <span class="font-semibold text-[#01214A]">${mainTask.completed || 180} / ${mainTask.target || 500} · %${progressPct}</span>
               </div>
-              <div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
-                <div class="bg-[#64B352] h-full rounded-full transition-all duration-500" style="width: ${progressPct}%"></div>
+              <div class="w-full bg-[#F1F5F9] h-1.5 rounded-full overflow-hidden">
+                <div class="bg-[#2A9D38] h-full rounded-full transition-all duration-500" style="width: ${progressPct}%"></div>
               </div>
             </div>
 
-            <button data-task-id="${mainTask.id}" class="btn-start-survey-direct w-full bg-[#64B352] text-white font-bold text-sm py-3.5 rounded-full flex items-center justify-center gap-2 active:scale-95 transition-all shadow-sm hover:bg-[#4e953f]">
-              ${iconSvg('play', 'w-4 h-4')}
-              Ankete Başla
+            <!-- PRIMARY BUTTON CTA (SECTION 9 & 17) -->
+            <button data-task-id="${mainTask.id}" class="btn-start-survey-direct h-12 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-sm rounded-[12px] w-full flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98">
+              ${iconSvg('play', 'w-4 h-4 text-white')}
+              <span>${(mainTask.completed || 0) > 0 ? 'Devam Et' : 'Ankete Başla'}</span>
             </button>
           </div>
 
-          <button id="btn-home-quick-builder" class="w-full bg-transparent border border-slate-300 text-slate-700 hover:bg-surface-container-low font-bold py-3.5 rounded-full flex items-center justify-center gap-2 text-sm transition-all active:scale-95">
-            ${iconSvg('plus', 'w-4 h-4')}
-            Hızlı Anket Oluştur
+          <!-- SECONDARY ACTION BUTTON (SECTION 20) -->
+          <button id="btn-home-quick-builder" class="h-12 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 font-semibold text-sm rounded-[12px] w-full flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98">
+            ${iconSvg('plus', 'w-4 h-4 text-slate-500')}
+            <span>Hızlı Anket Oluştur</span>
           </button>
         </section>
 
+        <!-- RECENT MESSAGES PREVIEW (IF ANY) -->
         ${unreadMsg ? `
-          <section class="space-y-3 pt-2">
-            <h3 class="text-lg font-bold text-on-surface">Son Mesajlar</h3>
-            <div id="btn-home-msg-preview" class="bg-surface rounded-2xl p-4 border border-border shadow-sm flex items-center justify-between cursor-pointer hover:border-primary/40 transition-all">
+          <section class="space-y-2 pt-1">
+            <h2 class="text-base font-semibold text-[#01214A]">Son Mesajlar</h2>
+            <div id="btn-home-msg-preview" class="bg-white rounded-[14px] p-4 border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex items-center justify-between cursor-pointer hover:border-[#D0D5DD] transition-all">
               <div class="flex items-center gap-3 min-w-0">
-                <div class="w-2.5 h-2.5 rounded-full bg-primary shrink-0"></div>
+                <div class="w-2.5 h-2.5 rounded-full bg-[#2A9D38] shrink-0"></div>
                 <div class="min-w-0">
-                  <div class="text-xs font-bold text-on-surface truncate">${unreadMsg.title}</div>
-                  <p class="text-[11px] text-text-secondary truncate mt-0.5">${unreadMsg.content}</p>
+                  <div class="text-xs font-semibold text-[#01214A] truncate">${unreadMsg.title}</div>
+                  <p class="text-[11px] text-slate-400 truncate mt-0.5 font-normal">${unreadMsg.content}</p>
                 </div>
               </div>
-              <span class="text-xs font-bold text-primary shrink-0 flex items-center gap-0.5 ml-2">
+              <span class="text-xs font-semibold text-[#2A9D38] shrink-0 flex items-center gap-0.5 ml-2">
                 Gör ${iconSvg('chevronRight', 'w-4 h-4')}
               </span>
             </div>
@@ -683,66 +1482,74 @@ export function renderPwaHome() {
 // GÖREV DETAYI
 export function renderTaskDetail() {
   const state = store.getState();
-  const task = state.assignedSurveys.find(t => t.id === state.selectedTaskId) || state.assignedSurveys[0];
+  const task = (state.assignedSurveys || []).find(t => t.id === state.selectedTaskId) || (state.assignedSurveys || [])[0] || {
+    id: '77777777-7777-7777-7777-777777777771',
+    title: 'Üretici İhtiyaç Anketi',
+    village: 'Sinan Köyü',
+    completed: 180,
+    target: 500,
+    priority: 'Yüksek Öncelik',
+    endDate: '20 Ağustos 2026'
+  };
 
   return `
-    <div class="min-h-[calc(100vh-41px)] bg-background text-on-surface flex flex-col pb-24">
-      <header class="h-14 bg-surface border-b border-border px-4 flex items-center justify-between sticky top-10 z-30">
-        <button id="btn-back-to-home" class="p-2 -ml-2 text-on-surface hover:bg-surface-container rounded-full flex items-center gap-1 text-xs font-semibold">
-          ${iconSvg('arrowLeft', 'w-5 h-5')}
+    <div class="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col pb-24 font-sans">
+      <header class="h-14 bg-white border-b border-[#E9EDF2] px-4 flex items-center justify-between sticky top-0 z-30">
+        <button id="btn-back-to-home" class="p-2 -ml-2 text-slate-700 hover:bg-slate-50 rounded-lg flex items-center gap-1 text-xs font-semibold">
+          ${iconSvg('arrowLeft', 'w-5 h-5 text-slate-700')}
           <span>Geri</span>
         </button>
-        <span class="text-xs font-bold text-on-surface">Görev Detayı</span>
+        <span class="text-sm font-semibold text-[#01214A]">Görev Detayı</span>
         <div class="w-8"></div>
       </header>
 
-      <main class="flex-1 px-4 py-6 max-w-md mx-auto w-full space-y-6">
-        <div class="bg-surface rounded-2xl p-6 border border-border shadow-sm space-y-6">
+      <main class="flex-1 px-4 py-5 max-w-md mx-auto w-full space-y-5">
+        <div class="bg-white rounded-[14px] p-6 border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-5">
           <div class="space-y-2">
-            <span class="bg-primary/10 text-primary text-[10px] font-bold px-2.5 py-1 rounded-full">
-              ${task?.priority || 'Yüksek'}
+            <span class="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-semibold px-2.5 py-0.5 rounded-[6px]">
+              ${task?.priority || 'Yüksek Öncelik'}
             </span>
-            <h1 class="text-xl font-bold text-on-surface leading-tight">${task?.title}</h1>
-            <div class="flex items-center gap-1 text-text-secondary text-xs">
-              ${iconSvg('mapPin', 'w-4 h-4')}
+            <h1 class="text-lg font-bold text-[#01214A] leading-snug">${task?.title}</h1>
+            <div class="flex items-center gap-1 text-slate-500 text-xs font-normal">
+              ${iconSvg('mapPin', 'w-4 h-4 text-[#2A9D38]')}
               <span>${task?.village}</span>
             </div>
           </div>
 
-          <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-1.5">
-            <div class="flex items-center gap-2 text-amber-900 font-bold text-xs">
+          <div class="bg-amber-50 border border-amber-200 rounded-[10px] p-4 space-y-1">
+            <div class="flex items-center gap-2 text-amber-900 font-semibold text-xs">
               ${iconSvg('note', 'w-4 h-4 text-amber-700')}
-              <span>Yönetici Notu</span>
+              <span>Yönetici Talimatı</span>
             </div>
-            <p class="text-xs text-amber-800 leading-relaxed font-medium">
+            <p class="text-xs text-amber-800 leading-relaxed font-normal">
               ${task?.note || 'Sinan Köyü üreticileriyle görüşürken gübre ve ekipman ihtiyaçlarını detaylı olarak not alınız.'}
             </p>
           </div>
 
-          <div class="grid grid-cols-2 gap-4 p-4 bg-surface-container-low rounded-xl text-xs">
+          <div class="grid grid-cols-2 gap-3 p-4 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs">
             <div>
-              <span class="text-text-secondary block mb-0.5">Hedef Anket</span>
-              <span class="font-bold text-on-surface text-sm">${task?.target}</span>
+              <span class="text-slate-400 block text-[11px]">Hedef Anket</span>
+              <span class="font-bold text-[#01214A] text-sm">${task?.target || 500}</span>
             </div>
             <div>
-              <span class="text-text-secondary block mb-0.5">Tamamlanan</span>
-              <span class="font-bold text-primary text-sm">${task?.completed}</span>
+              <span class="text-slate-400 block text-[11px]">Tamamlanan</span>
+              <span class="font-bold text-[#2A9D38] text-sm">${task?.completed || 180}</span>
             </div>
             <div>
-              <span class="text-text-secondary block mb-0.5">Son Tarih</span>
-              <span class="font-bold text-on-surface">${task?.endDate}</span>
+              <span class="text-slate-400 block text-[11px]">Son Tarih</span>
+              <span class="font-semibold text-slate-700">${task?.endDate || '20 Ağustos 2026'}</span>
             </div>
             <div>
-              <span class="text-text-secondary block mb-0.5">Saha Takibi</span>
-              <span class="font-bold text-success flex items-center gap-1">
-                <span class="w-1.5 h-1.5 rounded-full bg-success"></span> Görüldü
+              <span class="text-slate-400 block text-[11px]">Durum</span>
+              <span class="font-semibold text-emerald-800 flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#2A9D38]"></span> Aktif
               </span>
             </div>
           </div>
 
-          <button id="btn-detail-start-survey" class="w-full h-12 bg-primary text-white font-bold rounded-xl text-sm hover:bg-primary-dark transition-all flex items-center justify-center gap-2 active:scale-[0.98] shadow-sm">
-            ${iconSvg('plus', 'w-5 h-5')}
-            Yeni Anket Başlat
+          <button id="btn-detail-start-survey" class="h-12 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-sm rounded-[12px] w-full flex items-center justify-center gap-2 transition-all cursor-pointer">
+            ${iconSvg('play', 'w-4 h-4 text-white')}
+            <span>Ankete Başla</span>
           </button>
         </div>
       </main>
@@ -752,12 +1559,12 @@ export function renderTaskDetail() {
   `;
 }
 
-// 3. ANKET DOLDURMA SİHİRBAZI
+// 3. ANKET DOLDURMA SİHİRBAZI (SECTIONS 40-47)
 export function renderSurveyRunner() {
   const state = store.getState();
-  const task = state.assignedSurveys.find(t => t.id === state.selectedTaskId) || state.assignedSurveys[0];
+  const task = (state.assignedSurveys || []).find(t => t.id === state.selectedTaskId) || (state.assignedSurveys || [])[0];
   const secIndex = state.activeSectionIndex || 0;
-  const answers = state.activeFormAnswers;
+  const answers = state.activeFormAnswers || {};
   const yesNoVal = answers['q4'] || 'evet';
   const tractorVal = answers['q6'] || 'evet';
   const fertVal = answers['q7'] || 'evet';
@@ -769,80 +1576,81 @@ export function renderSurveyRunner() {
     'Saha Kanıtı & Konum'
   ];
 
+  const isOnline = state.isOnline !== false;
+
   return `
-    <div class="min-h-screen bg-[#f8f9fa] text-slate-900 flex flex-col pb-28 font-sans">
-      <header class="h-14 bg-white border-b border-[#dadce0] px-4 flex items-center justify-between sticky top-0 z-30 shadow-2xs">
-        <button id="btn-cancel-runner" class="p-2 -ml-2 text-slate-700 hover:bg-slate-100 rounded-full transition-all">
-          ${iconSvg('arrowLeft', 'w-5 h-5 text-slate-800')}
+    <div class="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col pb-28 font-sans">
+      <header class="h-14 bg-white border-b border-[#E9EDF2] px-4 flex items-center justify-between sticky top-0 z-30">
+        <button id="btn-cancel-runner" class="p-2 -ml-2 text-slate-700 hover:bg-slate-50 rounded-lg transition-all cursor-pointer">
+          ${iconSvg('arrowLeft', 'w-5 h-5 text-slate-700')}
         </button>
-        <h2 class="text-base font-bold text-slate-900 tracking-tight">${task?.title || 'Üretici İhtiyaç Anketi'}</h2>
-        <div class="bg-[#e6f4ea] text-[#137333] px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 border border-[#ceead6]">
-          ${iconSvg('cloudCheck', 'w-4 h-4 text-[#137333]')}
-          <span>Kaydedildi</span>
+        <h2 class="text-sm font-semibold text-[#01214A] truncate max-w-[200px]">${task?.title || 'Üretici İhtiyaç Anketi'}</h2>
+        <div class="bg-emerald-50 text-emerald-800 px-2.5 py-1 rounded-[6px] text-[11px] font-semibold border border-emerald-200 flex items-center gap-1.5">
+          ${iconSvg('cloudCheck', 'w-3.5 h-3.5 text-[#2A9D38]')}
+          <span>${isOnline ? 'Senkronize' : 'Cihaza Kaydedildi'}</span>
         </div>
       </header>
 
-      <main class="flex-1 px-4 py-6 max-w-md mx-auto w-full space-y-6">
-        <div class="space-y-2">
+      <main class="flex-1 px-4 py-5 max-w-md mx-auto w-full space-y-5">
+        <div class="space-y-1.5">
           <div class="flex justify-between items-baseline">
-            <h3 class="text-xl font-bold text-[#64B352] tracking-tight">${stepTitles[secIndex] || 'Kişisel Bilgiler'}</h3>
-            <span class="text-xs text-slate-500 font-semibold">Adım ${secIndex + 1} / 4</span>
+            <h3 class="text-base font-bold text-[#01214A]">${stepTitles[secIndex] || 'Kişisel Bilgiler'}</h3>
+            <span class="text-xs text-slate-400 font-normal">Soru ${secIndex + 1} / 4</span>
           </div>
-          <div class="w-full bg-[#e8eaed] h-1.5 rounded-full overflow-hidden">
-            <div class="bg-[#64B352] h-full rounded-full transition-all duration-300" style="width: ${((secIndex + 1) / 4) * 100}%"></div>
+          <div class="w-full bg-[#F1F5F9] h-1.5 rounded-full overflow-hidden">
+            <div class="bg-[#2A9D38] h-full rounded-full transition-all duration-300" style="width: ${((secIndex + 1) / 4) * 100}%"></div>
           </div>
         </div>
 
-        <div class="bg-white rounded-3xl border border-[#dadce0] p-6 shadow-xs space-y-8">
+        <div class="bg-white rounded-[14px] border border-[#E9EDF2] p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-6">
           ${secIndex === 0 ? `
-            <div class="space-y-2.5 pb-6 border-b border-[#f1f3f4]">
-              <label class="block text-base font-bold text-slate-900">1. Ad Soyad</label>
-              <input type="text" data-q-id="q1" value="${answers['q1'] || ''}" placeholder="Adınızı yazın" class="runner-input w-full h-13 px-4 bg-[#f1f3f4] border border-[#dadce0] rounded-xl text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:border-[#64B352] focus:bg-white transition-all"/>
+            <div class="space-y-2 pb-5 border-b border-[#F1F5F9]">
+              <label class="block text-sm font-semibold text-[#01214A]">1. Vatandaş Ad Soyad *</label>
+              <input type="text" data-q-id="q1" value="${answers['q1'] || ''}" placeholder="Ad Soyad giriniz..." class="runner-input w-full h-11 px-3.5 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2A9D38] focus:bg-white transition-all"/>
             </div>
 
-            <div class="space-y-3 pb-6 border-b border-[#f1f3f4]">
-              <label class="block text-base font-bold text-slate-900">2. Araziniz var mı?</label>
-              <div class="grid grid-cols-2 gap-4">
-                <button type="button" data-q-id="q4" data-val="evet" class="btn-runner-yesno h-36 border-2 ${yesNoVal === 'evet' ? 'border-[#64B352] bg-[#f0f7ee] text-[#64B352]' : 'border-[#dadce0] bg-white text-slate-700'} rounded-2xl flex flex-col items-center justify-center gap-3 font-bold text-base transition-all active:scale-95 shadow-2xs">
-                  ${iconSvg('land', `w-8 h-8 ${yesNoVal === 'evet' ? 'text-[#64B352]' : 'text-slate-600'}`)}
+            <div class="space-y-2 pb-5 border-b border-[#F1F5F9]">
+              <label class="block text-sm font-semibold text-[#01214A]">2. Tarımsal Arazi Sahibisiniz mi? *</label>
+              <div class="grid grid-cols-2 gap-3">
+                <button type="button" data-q-id="q4" data-val="evet" class="btn-runner-yesno h-28 border ${yesNoVal === 'evet' ? 'border-[#2A9D38] bg-emerald-50 text-[#2A9D38]' : 'border-[#E9EDF2] bg-white text-slate-700'} rounded-[12px] flex flex-col items-center justify-center gap-2 font-semibold text-sm transition-all cursor-pointer">
+                  ${iconSvg('land', `w-6 h-6 ${yesNoVal === 'evet' ? 'text-[#2A9D38]' : 'text-slate-500'}`)}
                   <span>Evet</span>
                 </button>
 
-                <button type="button" data-q-id="q4" data-val="hayir" class="btn-runner-yesno h-36 border-2 ${yesNoVal === 'hayir' ? 'border-[#64B352] bg-[#f0f7ee] text-[#64B352]' : 'border-[#dadce0] bg-white text-slate-700'} rounded-2xl flex flex-col items-center justify-center gap-3 font-bold text-base transition-all active:scale-95 shadow-2xs">
-                  ${iconSvg('block', `w-8 h-8 ${yesNoVal === 'hayir' ? 'text-[#64B352]' : 'text-slate-600'}`)}
+                <button type="button" data-q-id="q4" data-val="hayir" class="btn-runner-yesno h-28 border ${yesNoVal === 'hayir' ? 'border-[#2A9D38] bg-emerald-50 text-[#2A9D38]' : 'border-[#E9EDF2] bg-white text-slate-700'} rounded-[12px] flex flex-col items-center justify-center gap-2 font-semibold text-sm transition-all cursor-pointer">
+                  ${iconSvg('block', `w-6 h-6 ${yesNoVal === 'hayir' ? 'text-[#2A9D38]' : 'text-slate-500'}`)}
                   <span>Hayır</span>
                 </button>
               </div>
             </div>
 
             <div class="space-y-2">
-              <label class="block text-base font-bold text-slate-900">3. Fotoğraf Ekle</label>
-              <p class="text-xs text-slate-500 leading-relaxed">Arazi veya üretim alanınızı gösteren bir fotoğraf ekleyebilirsiniz.</p>
+              <label class="block text-sm font-semibold text-[#01214A]">3. Saha / Arazi Fotoğrafı</label>
+              <p class="text-xs text-slate-400 font-normal">Üretim alanını gösteren bir fotoğraf ekleyebilirsiniz.</p>
               
-              <div id="btn-runner-photo" class="border-2 border-dashed ${state.activePhotoUploaded ? 'border-emerald-600 bg-emerald-50/50' : 'border-[#dadce0] hover:border-[#64B352]'} rounded-2xl p-6 text-center cursor-pointer hover:bg-slate-50/60 transition-all space-y-2">
-                <div class="w-14 h-14 rounded-full ${state.activePhotoUploaded ? 'bg-emerald-100 text-emerald-700' : 'bg-[#f1f3f4] text-slate-700'} mx-auto flex items-center justify-center">
-                  ${iconSvg(state.activePhotoUploaded ? 'checkCircle' : 'cameraPlus', `w-7 h-7 ${state.activePhotoUploaded ? 'text-emerald-700' : 'text-slate-700'}`)}
+              <div id="btn-runner-photo" class="border border-dashed ${state.activePhotoUploaded ? 'border-[#2A9D38] bg-emerald-50' : 'border-[#E9EDF2] hover:border-[#2A9D38]'} rounded-[12px] p-5 text-center cursor-pointer transition-all space-y-1.5">
+                <div class="w-10 h-10 rounded-full ${state.activePhotoUploaded ? 'bg-emerald-100 text-[#2A9D38]' : 'bg-[#F8FAFC] text-slate-500'} mx-auto flex items-center justify-center">
+                  ${iconSvg(state.activePhotoUploaded ? 'checkCircle' : 'cameraPlus', `w-5 h-5 ${state.activePhotoUploaded ? 'text-[#2A9D38]' : 'text-slate-500'}`)}
                 </div>
-                <div class="text-sm font-bold text-[#64B352]">${state.activePhotoUploaded ? 'Fotoğraf Yüklendi (1 Adet)' : 'Kamera ile Çek'}</div>
-                <div class="text-xs text-slate-500">${state.activePhotoUploaded ? 'Fotoğrafı değiştirmek için tıklayın' : 'veya galeriden seç'}</div>
+                <div class="text-xs font-semibold text-[#2A9D38]">${state.activePhotoUploaded ? 'Fotoğraf Yüklendi (1 Adet)' : 'Kamera / Galeriden Fotoğraf Seç'}</div>
               </div>
             </div>
           ` : ''}
 
           ${secIndex === 1 ? `
-            <div class="space-y-2.5 pb-6 border-b border-[#f1f3f4]">
-              <label class="block text-base font-bold text-slate-900">4. Kaç Dönüm Araziniz Var?</label>
-              <input type="number" inputmode="numeric" data-q-id="q5" value="${answers['q5'] || ''}" placeholder="Örn: 35" class="runner-input w-full h-13 px-4 bg-[#f1f3f4] border border-[#dadce0] rounded-xl text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:border-[#64B352] focus:bg-white transition-all"/>
+            <div class="space-y-2 pb-5 border-b border-[#F1F5F9]">
+              <label class="block text-sm font-semibold text-[#01214A]">4. Arazi Büyüklüğü (Dönüm)</label>
+              <input type="number" inputmode="numeric" data-q-id="q5" value="${answers['q5'] || ''}" placeholder="Örn: 35" class="runner-input w-full h-11 px-3.5 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2A9D38] focus:bg-white transition-all"/>
             </div>
 
-            <div class="space-y-3">
-              <label class="block text-base font-bold text-slate-900">5. Ana Ürün Türü</label>
-              <div class="space-y-2.5">
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-[#01214A]">5. Ana Ürün Türü</label>
+              <div class="space-y-2">
                 ${['Buğday / Arpa', 'Antep Fıstığı', 'Zeytin', 'Mısır / Pamuk'].map(opt => `
-                  <label data-q-id="q6" data-opt="${opt}" class="runner-radio-row flex items-center justify-between p-4 border ${answers['q6'] === opt ? 'border-[#64B352] bg-[#f0f7ee]' : 'border-[#dadce0] bg-white'} rounded-xl cursor-pointer transition-all">
-                    <span class="text-sm font-medium text-slate-900">${opt}</span>
-                    <span class="w-5 h-5 rounded-full border-2 ${answers['q6'] === opt ? 'border-[#64B352] bg-[#64B352]' : 'border-[#dadce0]'} flex items-center justify-center">
-                      ${answers['q6'] === opt ? '<span class="w-2 h-2 bg-white rounded-full"></span>' : ''}
+                  <label data-q-id="q6" data-opt="${opt}" class="runner-radio-row flex items-center justify-between p-3.5 border ${answers['q6'] === opt ? 'border-[#2A9D38] bg-emerald-50' : 'border-[#E9EDF2] bg-white'} rounded-[10px] cursor-pointer transition-all">
+                    <span class="text-xs font-medium text-slate-800">${opt}</span>
+                    <span class="w-4 h-4 rounded-full border ${answers['q6'] === opt ? 'border-[#2A9D38] bg-[#2A9D38]' : 'border-slate-300'} flex items-center justify-center">
+                      ${answers['q6'] === opt ? '<span class="w-1.5 h-1.5 bg-white rounded-full"></span>' : ''}
                     </span>
                   </label>
                 `).join('')}
@@ -851,25 +1659,25 @@ export function renderSurveyRunner() {
           ` : ''}
 
           ${secIndex === 2 ? `
-            <div class="space-y-3 pb-6 border-b border-[#f1f3f4]">
-              <label class="block text-base font-bold text-slate-900">6. Traktör veya Ekipmanınız Var Mı?</label>
-              <div class="grid grid-cols-2 gap-4">
-                <button type="button" data-q-id="q6" data-val="evet" class="btn-runner-yesno h-32 border-2 ${tractorVal === 'evet' ? 'border-[#64B352] bg-[#f0f7ee] text-[#64B352]' : 'border-[#dadce0] bg-white text-slate-700'} rounded-2xl flex flex-col items-center justify-center gap-2 font-bold text-base transition-all">
+            <div class="space-y-2 pb-5 border-b border-[#F1F5F9]">
+              <label class="block text-sm font-semibold text-[#01214A]">6. Traktör veya Ekipmanınız Var Mı?</label>
+              <div class="grid grid-cols-2 gap-3">
+                <button type="button" data-q-id="q6" data-val="evet" class="btn-runner-yesno h-24 border ${tractorVal === 'evet' ? 'border-[#2A9D38] bg-emerald-50 text-[#2A9D38]' : 'border-[#E9EDF2] bg-white text-slate-700'} rounded-[12px] flex flex-col items-center justify-center gap-1.5 font-semibold text-xs transition-all cursor-pointer">
                   <span>Evet var</span>
                 </button>
-                <button type="button" data-q-id="q6" data-val="hayir" class="btn-runner-yesno h-32 border-2 ${tractorVal === 'hayir' ? 'border-[#64B352] bg-[#f0f7ee] text-[#64B352]' : 'border-[#dadce0] bg-white text-slate-700'} rounded-2xl flex flex-col items-center justify-center gap-2 font-bold text-base transition-all">
+                <button type="button" data-q-id="q6" data-val="hayir" class="btn-runner-yesno h-24 border ${tractorVal === 'hayir' ? 'border-[#2A9D38] bg-emerald-50 text-[#2A9D38]' : 'border-[#E9EDF2] bg-white text-slate-700'} rounded-[12px] flex flex-col items-center justify-center gap-1.5 font-semibold text-xs transition-all cursor-pointer">
                   <span>Hayır yok</span>
                 </button>
               </div>
             </div>
 
-            <div class="space-y-3">
-              <label class="block text-base font-bold text-slate-900">7. Gübre & Tohum Desteği İhtiyacınız Var Mı?</label>
-              <div class="grid grid-cols-2 gap-4">
-                <button type="button" data-q-id="q7" data-val="evet" class="btn-runner-yesno h-32 border-2 ${fertVal === 'evet' ? 'border-[#64B352] bg-[#f0f7ee] text-[#64B352]' : 'border-[#dadce0] bg-white text-slate-700'} rounded-2xl flex flex-col items-center justify-center gap-2 font-bold text-base transition-all">
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-[#01214A]">7. Gübre & Tohum Desteği İhtiyacınız Var Mı?</label>
+              <div class="grid grid-cols-2 gap-3">
+                <button type="button" data-q-id="q7" data-val="evet" class="btn-runner-yesno h-24 border ${fertVal === 'evet' ? 'border-[#2A9D38] bg-emerald-50 text-[#2A9D38]' : 'border-[#E9EDF2] bg-white text-slate-700'} rounded-[12px] flex flex-col items-center justify-center gap-1.5 font-semibold text-xs transition-all cursor-pointer">
                   <span>Evet var</span>
                 </button>
-                <button type="button" data-q-id="q7" data-val="hayir" class="btn-runner-yesno h-32 border-2 ${fertVal === 'hayir' ? 'border-[#64B352] bg-[#f0f7ee] text-[#64B352]' : 'border-[#dadce0] bg-white text-slate-700'} rounded-2xl flex flex-col items-center justify-center gap-2 font-bold text-base transition-all">
+                <button type="button" data-q-id="q7" data-val="hayir" class="btn-runner-yesno h-24 border ${fertVal === 'hayir' ? 'border-[#2A9D38] bg-emerald-50 text-[#2A9D38]' : 'border-[#E9EDF2] bg-white text-slate-700'} rounded-[12px] flex flex-col items-center justify-center gap-1.5 font-semibold text-xs transition-all cursor-pointer">
                   <span>İhtiyaç yok</span>
                 </button>
               </div>
@@ -877,38 +1685,38 @@ export function renderSurveyRunner() {
           ` : ''}
 
           ${secIndex === 3 ? `
-            <div class="space-y-3 pb-6 border-b border-[#f1f3f4]">
-              <label class="block text-base font-bold text-slate-900">8. GPS Konumu Al</label>
-              <button type="button" id="btn-runner-location" class="w-full h-14 border ${state.activeLocationAcquired ? 'border-emerald-600 bg-emerald-50 text-emerald-800' : 'border-[#dadce0] bg-[#f1f3f4] text-slate-900'} rounded-xl flex items-center justify-between px-4 text-sm font-bold transition-all">
+            <div class="space-y-2 pb-5 border-b border-[#F1F5F9]">
+              <label class="block text-sm font-semibold text-[#01214A]">8. GPS Konumu Al</label>
+              <button type="button" id="btn-runner-location" class="w-full h-11 border ${state.activeLocationAcquired ? 'border-[#2A9D38] bg-emerald-50 text-emerald-900' : 'border-[#E9EDF2] bg-[#F8FAFC] text-slate-700'} rounded-[10px] flex items-center justify-between px-3.5 text-xs font-semibold transition-all cursor-pointer">
                 <span class="flex items-center gap-2">
-                  ${iconSvg('mapPin', 'w-5 h-5 text-[#64B352]')}
+                  ${iconSvg('mapPin', 'w-4 h-4 text-[#2A9D38]')}
                   ${state.activeLocationAcquired ? 'Konum Alındı (Hassasiyet: 8m)' : 'GPS Konumunu Al'}
                 </span>
-                ${state.activeLocationAcquired ? iconSvg('checkCircle', 'w-5 h-5 text-emerald-700') : ''}
+                ${state.activeLocationAcquired ? iconSvg('checkCircle', 'w-4 h-4 text-[#2A9D38]') : ''}
               </button>
             </div>
 
             <div class="space-y-2">
-              <label class="block text-base font-bold text-slate-900">9. Saha Notları</label>
-              <textarea data-q-id="q9" rows="3" placeholder="Üretici talepleri veya ek açıklamalar..." class="runner-input w-full p-4 bg-[#f1f3f4] border border-[#dadce0] rounded-xl text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:border-[#64B352] focus:bg-white transition-all">${answers['q9'] || ''}</textarea>
+              <label class="block text-sm font-semibold text-[#01214A]">9. Saha Notları</label>
+              <textarea data-q-id="q9" rows="3" placeholder="Üretici talepleri veya açıklamalar..." class="runner-input w-full p-3 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2A9D38] focus:bg-white transition-all">${answers['q9'] || ''}</textarea>
             </div>
           ` : ''}
         </div>
 
-        <div class="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-md border-t border-[#dadce0] p-4 z-40">
-          <div class="max-w-md mx-auto flex items-center gap-4">
-            <button id="btn-runner-prev" class="w-1/2 h-13 border border-[#dadce0] bg-white rounded-full font-bold text-slate-800 text-sm hover:bg-slate-50 active:scale-95 transition-all shadow-2xs">
+        <div class="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-[#E9EDF2] p-4 z-40">
+          <div class="max-w-md mx-auto flex items-center gap-3">
+            <button id="btn-runner-prev" class="w-1/2 h-11 border border-[#E9EDF2] bg-white hover:bg-slate-50 rounded-[10px] font-semibold text-slate-700 text-xs transition-all cursor-pointer">
               Geri
             </button>
 
             ${secIndex < 3 ? `
-              <button id="btn-runner-next" class="w-1/2 h-13 bg-[#64B352] text-white font-bold rounded-full text-sm hover:bg-[#4e953f] active:scale-95 transition-all flex items-center justify-center gap-2 shadow-sm">
-                Devam Et ${iconSvg('arrowRight', 'w-4 h-4')}
+              <button id="btn-runner-next" class="w-1/2 h-11 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold rounded-[10px] text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                <span>Devam Et</span> ${iconSvg('arrowRight', 'w-4 h-4 text-white')}
               </button>
             ` : `
-              <button id="btn-runner-submit" class="w-1/2 h-13 bg-[#64B352] text-white font-bold rounded-full text-sm hover:bg-[#4e953f] active:scale-95 transition-all flex items-center justify-center gap-2 shadow-sm">
-                ${iconSvg('send', 'w-4 h-4')}
-                Anketi Tamamla
+              <button id="btn-runner-submit" class="w-1/2 h-11 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold rounded-[10px] text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                ${iconSvg('send', 'w-4 h-4 text-white')}
+                <span>Anketi Tamamla</span>
               </button>
             `}
           </div>
@@ -921,31 +1729,31 @@ export function renderSurveyRunner() {
 // ANKET TAMAMLAMA
 export function renderSurveySuccess() {
   const state = store.getState();
-  const isOnline = state.isOnline;
+  const isOnline = state.isOnline !== false;
 
   return `
-    <div class="min-h-[calc(100vh-41px)] bg-background flex flex-col items-center justify-center p-6 text-center">
-      <div class="w-full max-w-sm bg-surface p-8 rounded-2xl border border-border shadow-sm space-y-6">
-        <div class="w-16 h-16 rounded-full ${isOnline ? 'bg-success/10 text-success' : 'bg-amber-500/10 text-amber-700'} mx-auto flex items-center justify-center">
-          ${iconSvg('checkCircle', 'w-10 h-10')}
+    <div class="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-4 text-center font-sans">
+      <div class="w-full max-w-sm bg-white p-8 rounded-[16px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-5">
+        <div class="w-16 h-16 rounded-full ${isOnline ? 'bg-emerald-50 text-[#2A9D38]' : 'bg-amber-50 text-amber-700'} mx-auto flex items-center justify-center">
+          ${iconSvg('checkCircle', 'w-8 h-8')}
         </div>
 
-        <div class="space-y-2">
-          <h1 class="text-xl font-bold text-on-surface">
+        <div class="space-y-1.5">
+          <h1 class="text-lg font-bold text-[#01214A]">
             ${isOnline ? 'Anket Sunucuya İletildi' : 'Anket Cihazda Güvenle Kaydedildi'}
           </h1>
-          <p class="text-xs text-text-secondary leading-relaxed">
+          <p class="text-xs text-slate-500 font-normal leading-relaxed">
             ${isOnline 
-              ? 'Anket verileri başarıyla merkeze ulaştırıldı.' 
-              : 'İnternet bağlantısı geldiğinde otomatik olarak merkeze gönderilecek.'}
+              ? 'Anket verileri merkeze ulaştırıldı.' 
+              : 'İnternet bağlantısı sağlandığında otomatik olarak merkeze gönderilecek.'}
           </p>
         </div>
 
-        <div class="space-y-2.5 pt-2">
-          <button id="btn-success-new-survey" class="w-full h-12 bg-primary text-white font-bold rounded-xl text-xs hover:bg-primary-dark transition-all shadow-sm">
+        <div class="space-y-2 pt-2">
+          <button id="btn-success-new-survey" class="w-full h-11 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold rounded-[10px] text-xs transition-all cursor-pointer">
             Yeni Anket Başlat
           </button>
-          <button id="btn-success-back-home" class="w-full h-12 bg-surface-container-low border border-border text-on-surface font-semibold rounded-xl text-xs hover:bg-surface-container transition-all">
+          <button id="btn-success-back-home" class="w-full h-11 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 font-semibold rounded-[10px] text-xs transition-all cursor-pointer">
             Ana Sayfaya Dön
           </button>
         </div>
@@ -954,60 +1762,104 @@ export function renderSurveySuccess() {
   `;
 }
 
-// ANKETLERİM
+// 4. ANKETLERİM SAYFASI (SECTIONS 21-27 & 58)
 export function renderMySurveys() {
   const state = store.getState();
   const currentTab = state.surveysTab || 'assigned';
+  const assignedSurveys = Array.isArray(state.assignedSurveys) ? state.assignedSurveys : [];
+  const myQuickSurveys = Array.isArray(state.myQuickSurveys) ? state.myQuickSurveys : [];
 
   return `
-    <div class="min-h-[calc(100vh-41px)] bg-background text-on-surface flex flex-col pb-24">
-      <header class="h-14 bg-surface border-b border-border px-4 flex items-center justify-between sticky top-10 z-30">
-        <h1 class="text-base font-bold text-on-surface">Anketlerim</h1>
-        <button id="btn-surveys-quick-builder" class="text-xs font-bold text-primary flex items-center gap-1">
-          ${iconSvg('plus', 'w-4 h-4')}
-          <span>Hızlı Anket</span>
-        </button>
+    <div class="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col pb-24 font-sans">
+      
+      <!-- PAGE HEADER (SECTION 11 & 21) -->
+      <header class="bg-white border-b border-[#E9EDF2] px-4 py-4 sticky top-0 z-30">
+        <h1 class="text-lg font-bold text-[#01214A] leading-tight">Anketlerim</h1>
+        <p class="text-xs text-slate-400 font-normal mt-0.5">Saha görevlerinizi ve oluşturduğunuz anketleri yönetin.</p>
       </header>
 
-      <main class="flex-1 px-4 py-6 max-w-md mx-auto w-full space-y-4">
-        <div class="bg-surface-container p-1 rounded-xl flex text-xs font-semibold">
-          <button id="tab-assigned" class="flex-1 py-2 rounded-lg transition-all ${currentTab === 'assigned' ? 'bg-surface text-primary shadow-sm' : 'text-text-secondary'}">
-            Görev Anketleri
+      <main class="flex-1 px-4 py-5 max-w-md mx-auto w-full space-y-4">
+        
+        <!-- PREMIUM SEGMENTED CONTROL (SECTION 22-23) -->
+        <div class="bg-[#F1F5F9] p-1 rounded-[12px] border border-[#E9EDF2] flex text-xs font-medium">
+          <button id="tab-assigned" type="button" class="flex-1 py-2.5 rounded-[10px] transition-all cursor-pointer ${currentTab === 'assigned' ? 'bg-white text-[#01214A] font-semibold shadow-xs' : 'text-slate-500 hover:text-slate-800'}">
+            Görevlerim
           </button>
-          <button id="tab-my-quick" class="flex-1 py-2 rounded-lg transition-all ${currentTab === 'my_quick' ? 'bg-surface text-primary shadow-sm' : 'text-text-secondary'}">
-            Benim Anketlerim
+          <button id="tab-my-quick" type="button" class="flex-1 py-2.5 rounded-[10px] transition-all cursor-pointer ${currentTab === 'my_quick' ? 'bg-white text-[#2A9D38] font-semibold shadow-xs' : 'text-slate-500 hover:text-slate-800'}">
+            Oluşturduklarım
           </button>
         </div>
 
+        <!-- TAB CONTENT: GÖREVLERİM -->
         ${currentTab === 'assigned' ? `
           <div class="space-y-3">
-            ${state.assignedSurveys.map(task => `
-              <div class="bg-surface p-4 rounded-xl border border-border shadow-sm flex items-center justify-between">
-                <div>
-                  <h3 class="text-xs font-bold text-on-surface">${task.title}</h3>
-                  <span class="text-[11px] text-text-secondary flex items-center gap-1 mt-0.5">
-                    ${iconSvg('mapPin', 'w-3 h-3')} ${task.village} • ${task.completed}/${task.target}
-                  </span>
-                </div>
-                <button data-task-id="${task.id}" class="btn-start-survey-direct px-3 py-2 bg-primary text-white font-semibold text-xs rounded-lg active:scale-95">
-                  Başlat
-                </button>
+            ${assignedSurveys.length === 0 ? `
+              <!-- EMPTY STATE: GÖREVLERİM (SECTION 26-27) -->
+              <div class="bg-white rounded-[14px] p-8 border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] text-center space-y-2">
+                ${iconSvg('poll', 'w-10 h-10 text-slate-300 mx-auto')}
+                <h3 class="font-bold text-[#01214A] text-sm">Henüz atanmış göreviniz yok</h3>
+                <p class="text-xs text-slate-400 font-normal">Yeni bir saha görevi atandığında burada görüntülenecek.</p>
               </div>
-            `).join('')}
+            ` : assignedSurveys.map(task => {
+              const pct = Math.round(((task.completed || 0) / (task.target || 1)) * 100);
+              return `
+                <div class="bg-white p-5 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-3">
+                  <div class="flex justify-between items-start">
+                    <div>
+                      <h3 class="text-sm font-bold text-[#01214A] leading-snug">${task.title}</h3>
+                      <span class="text-xs text-slate-500 flex items-center gap-1 mt-1 font-normal">
+                        ${iconSvg('mapPin', 'w-3.5 h-3.5 text-[#2A9D38]')} ${task.village || 'Sinan Köyü'}
+                      </span>
+                    </div>
+                    <span class="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-semibold px-2 py-0.5 rounded-[4px]">
+                      Aktif
+                    </span>
+                  </div>
+
+                  <div class="space-y-1">
+                    <div class="flex justify-between text-[11px] text-slate-500 font-normal">
+                      <span>İlerleme</span>
+                      <span class="font-semibold text-[#01214A]">${task.completed || 0} / ${task.target || 50} · %${pct}</span>
+                    </div>
+                    <div class="w-full bg-[#F1F5F9] h-1.5 rounded-full overflow-hidden">
+                      <div class="bg-[#2A9D38] h-full rounded-full" style="width: ${pct}%"></div>
+                    </div>
+                  </div>
+
+                  <button data-task-id="${task.id}" class="btn-start-survey-direct h-10 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[10px] w-full flex items-center justify-center gap-1.5 cursor-pointer">
+                    <span>Devam Et</span>
+                  </button>
+                </div>
+              `;
+            }).join('')}
           </div>
         ` : `
+          <!-- TAB CONTENT: OLUŞTURDUKLARIM -->
           <div class="space-y-3">
-            ${state.myQuickSurveys.map(qs => `
-              <div class="bg-surface p-4 rounded-xl border border-border shadow-sm flex items-center justify-between">
+            ${myQuickSurveys.length === 0 ? `
+              <!-- EMPTY STATE: OLUŞTURDUKLARIM (SECTION 26-27) -->
+              <div class="bg-white rounded-[14px] p-8 border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] text-center space-y-3">
+                ${iconSvg('plus', 'w-10 h-10 text-slate-300 mx-auto')}
+                <div class="space-y-1">
+                  <h3 class="font-bold text-[#01214A] text-sm">Henüz oluşturduğunuz bir anket yok</h3>
+                  <p class="text-xs text-slate-400 font-normal">Oluşturduğunuz hızlı anketler burada görüntülenecek.</p>
+                </div>
+                <button id="btn-surveys-quick-builder" type="button" class="h-10 px-4 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 font-semibold text-xs rounded-[10px] inline-flex items-center gap-1.5 cursor-pointer">
+                  ${iconSvg('plus', 'w-4 h-4 text-[#2A9D38]')}
+                  <span>Hızlı Anket Oluştur</span>
+                </button>
+              </div>
+            ` : myQuickSurveys.map(qs => `
+              <div class="bg-white p-4 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex items-center justify-between">
                 <div>
                   <div class="flex items-center gap-2">
-                    <h3 class="text-xs font-bold text-on-surface">${qs.title}</h3>
-                    <span class="bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-md">Benim Anketim</span>
+                    <h3 class="text-xs font-bold text-[#01214A]">${qs.title}</h3>
+                    <span class="bg-emerald-50 text-[#2A9D38] border border-emerald-200 text-[10px] font-semibold px-2 py-0.5 rounded-[4px]">Hızlı Anket</span>
                   </div>
-                  <span class="text-[11px] text-text-secondary block mt-1">${qs.responseCount} cevap • ${qs.createdAt}</span>
+                  <span class="text-[11px] text-slate-400 block mt-1 font-normal">${qs.responseCount || 0} cevap · ${qs.createdAt || 'Bugün'}</span>
                 </div>
-                <button class="px-3 py-2 bg-surface-container-low border border-border text-on-surface font-semibold text-xs rounded-lg hover:bg-surface-container">
-                  Ankete Başla →
+                <button class="h-9 px-3 bg-[#F8FAFC] border border-[#E9EDF2] hover:bg-slate-100 text-[#01214A] font-semibold text-xs rounded-[8px] cursor-pointer">
+                  Başlat →
                 </button>
               </div>
             `).join('')}
@@ -1023,20 +1875,20 @@ export function renderMySurveys() {
 // PWA FULL 4-STEP SURVEY BUILDER CONTAINER FOR FIELD MANAGERS
 export function renderPwaSurveyBuilderContainer(state) {
   return `
-    <div class="min-h-[calc(100vh-41px)] bg-background text-on-surface flex flex-col pb-24">
-      <header class="h-14 bg-white border-b border-slate-200 px-4 flex items-center justify-between sticky top-10 z-30 shadow-2xs">
-        <button id="btn-cancel-builder" class="p-2 -ml-2 text-slate-700 hover:bg-slate-100 rounded-xl flex items-center gap-1.5 text-xs font-bold">
-          ${iconSvg('arrowLeft', 'w-5 h-5 text-slate-800')}
+    <div class="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col pb-24 font-sans">
+      <header class="h-14 bg-white border-b border-[#E9EDF2] px-4 flex items-center justify-between sticky top-0 z-30">
+        <button id="btn-cancel-builder" class="p-2 -ml-2 text-slate-700 hover:bg-slate-50 rounded-lg flex items-center gap-1.5 text-xs font-semibold">
+          ${iconSvg('arrowLeft', 'w-5 h-5 text-slate-700')}
           <span>Çık</span>
         </button>
         <div class="text-center">
-          <h1 class="text-xs font-extrabold text-[#01214A]">Saha Anket Oluşturucu</h1>
-          <span class="text-[9px] text-[#00A0DF] font-bold uppercase tracking-wider block">Şehitkamil SGM</span>
+          <h1 class="text-xs font-bold text-[#01214A]">Saha Anket Oluşturucu</h1>
+          <span class="text-[10px] text-[#2A9D38] font-semibold">Şehitkamil Strateji Merkezi</span>
         </div>
         <div class="w-8"></div>
       </header>
 
-      <main class="flex-1 px-3 py-4 max-w-3xl mx-auto w-full space-y-4">
+      <main class="flex-1 px-4 py-5 max-w-3xl mx-auto w-full space-y-4">
         ${render4StepSurveyBuilder(state)}
       </main>
 
@@ -1048,23 +1900,23 @@ export function renderPwaSurveyBuilderContainer(state) {
 // HIZLI ANKET OLUŞTURUCU
 export function renderQuickBuilder() {
   return `
-    <div class="min-h-[calc(100vh-41px)] bg-background text-on-surface flex flex-col pb-24">
-      <header class="h-14 bg-surface border-b border-border px-4 flex items-center justify-between sticky top-10 z-30">
-        <button id="btn-cancel-builder" class="p-2 -ml-2 text-on-surface hover:bg-surface-container rounded-full flex items-center gap-1 text-xs">
-          ${iconSvg('arrowLeft', 'w-5 h-5')}
+    <div class="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col pb-24 font-sans">
+      <header class="h-14 bg-white border-b border-[#E9EDF2] px-4 flex items-center justify-between sticky top-0 z-30">
+        <button id="btn-cancel-builder" class="p-2 -ml-2 text-slate-700 hover:bg-slate-50 rounded-lg flex items-center gap-1 text-xs font-semibold">
+          ${iconSvg('arrowLeft', 'w-5 h-5 text-slate-700')}
         </button>
-        <h1 class="text-xs font-bold text-on-surface">Hızlı Anket Oluştur</h1>
+        <h1 class="text-sm font-semibold text-[#01214A]">Hızlı Anket Oluştur</h1>
         <div class="w-8"></div>
       </header>
 
-      <main class="flex-1 px-4 py-6 max-w-md mx-auto w-full space-y-4">
-        <form id="form-quick-builder" class="bg-surface p-5 rounded-2xl border border-border shadow-sm space-y-4">
+      <main class="flex-1 px-4 py-5 max-w-md mx-auto w-full space-y-4">
+        <form id="form-quick-builder" class="bg-white p-6 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-4">
           <div>
-            <label class="block text-xs font-bold text-on-surface mb-1">Anket Adı *</label>
-            <input type="text" id="qb-title" required placeholder="Örn: Yol Problemleri Tespiti" class="w-full h-11 px-4 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary"/>
+            <label class="block text-xs font-semibold text-[#01214A] mb-1.5">Anket Adı *</label>
+            <input type="text" id="qb-title" required placeholder="Örn: Yol Problemleri Tespiti" class="w-full h-11 px-3.5 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs focus:outline-none focus:border-[#2A9D38] font-normal"/>
           </div>
 
-          <button type="submit" class="w-full h-12 bg-primary text-white font-bold rounded-xl text-xs hover:bg-primary-dark transition-all flex items-center justify-center gap-2 active:scale-[0.98] shadow-sm">
+          <button type="submit" class="w-full h-12 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold rounded-[12px] text-xs transition-all flex items-center justify-center gap-2 cursor-pointer">
             Anketi Oluştur & Yöneticinin Onayına Gönder
           </button>
         </form>
@@ -1075,43 +1927,56 @@ export function renderQuickBuilder() {
   `;
 }
 
-// MESAJLAR EKRANI
+// MESAJLAR EKRANI (SECTIONS 28-33 & 59)
 export function renderMessages() {
   const state = store.getState();
   const messages = Array.isArray(state.messages) ? state.messages : [];
 
   return `
-    <div class="min-h-[calc(100vh-41px)] bg-background text-on-surface flex flex-col pb-24">
-      <header class="h-14 bg-white border-b border-slate-200 px-4 flex items-center justify-between sticky top-10 z-30 shadow-2xs">
-        <h1 class="text-base font-extrabold text-[#01214A]">Mesaj Kutusu</h1>
-        <button id="btn-open-compose-msg-modal" class="px-3.5 py-2 bg-[#2A9D38] hover:bg-[#22822e] text-white font-extrabold text-xs rounded-xl flex items-center gap-1.5 shadow-sm active:scale-95 transition-all">
-          ${iconSvg('plus', 'w-4 h-4')}
-          <span>Admine Mesaj Yaz</span>
+    <div class="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col pb-24 font-sans">
+      
+      <!-- PAGE HEADER WITH RIGHT CTA (SECTION 28-29) -->
+      <header class="bg-white border-b border-[#E9EDF2] px-4 py-4 sticky top-0 z-30 flex items-center justify-between">
+        <div>
+          <h1 class="text-lg font-bold text-[#01214A] leading-tight">Mesajlar</h1>
+          <p class="text-xs text-slate-400 font-normal mt-0.5">Yönetici ve saha iletişimi</p>
+        </div>
+        <button id="btn-open-compose-msg-modal" type="button" class="h-9 px-3 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[10px] flex items-center gap-1.5 cursor-pointer">
+          ${iconSvg('plus', 'w-3.5 h-3.5 text-white')}
+          <span>Yeni Mesaj</span>
         </button>
       </header>
 
       <main class="flex-1 px-4 py-5 max-w-md mx-auto w-full space-y-3">
         ${messages.length === 0 ? `
-          <div class="text-center py-12 space-y-3 bg-white rounded-2xl border border-slate-200 p-6 shadow-card">
+          <!-- EMPTY STATE: MESAJLAR (SECTION 30) -->
+          <div class="text-center py-10 px-6 bg-white rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-3">
             ${iconSvg('mail', 'w-10 h-10 text-slate-300 mx-auto')}
-            <h3 class="text-sm font-bold text-slate-700">Henüz mesajınız yok</h3>
-            <p class="text-xs text-slate-400">Yukarıdaki butonla yöneticiye doğrudan mesaj iletebilirsiniz.</p>
+            <div class="space-y-1">
+              <h3 class="text-sm font-bold text-[#01214A]">Henüz mesajınız yok</h3>
+              <p class="text-xs text-slate-400 font-normal">Yönetici tarafından gönderilen mesajlar burada görüntülenecek.</p>
+            </div>
+            <button id="btn-open-compose-msg-modal" type="button" class="h-9 px-4 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 font-semibold text-xs rounded-[10px] inline-flex items-center gap-1.5 cursor-pointer">
+              ${iconSvg('plus', 'w-3.5 h-3.5 text-[#2A9D38]')}
+              <span>Yöneticiye Mesaj Gönder</span>
+            </button>
           </div>
         ` : messages.map(msg => `
-          <div data-msg-id="${msg.id}" class="btn-open-msg-detail bg-white p-4 rounded-2xl border border-slate-200 shadow-card flex items-start gap-3 cursor-pointer hover:border-[#00A0DF] transition-all">
-            ${msg.isUnread ? `<div class="w-2.5 h-2.5 rounded-full bg-[#00A0DF] shrink-0 mt-1"></div>` : `<div class="w-2.5 h-2.5"></div>`}
+          <!-- COMPACT MESSAGE ITEM (SECTION 31) -->
+          <div data-msg-id="${msg.id}" class="btn-open-msg-detail bg-white p-4 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex items-start gap-3 cursor-pointer hover:border-[#D0D5DD] transition-all">
+            ${msg.isUnread ? `<div class="w-2 h-2 rounded-full bg-[#2A9D38] shrink-0 mt-1.5"></div>` : `<div class="w-2 h-2"></div>`}
             <div class="flex-1 min-w-0">
               <div class="flex justify-between items-baseline gap-2">
-                <h3 class="text-xs font-extrabold text-[#01214A] truncate">${msg.title}</h3>
-                <span class="text-[10px] text-slate-400 shrink-0 font-medium">${msg.date}</span>
+                <h3 class="text-xs font-semibold text-[#01214A] truncate">${msg.title}</h3>
+                <span class="text-[10px] text-slate-400 shrink-0 font-normal">${msg.date}</span>
               </div>
               <div class="flex items-center gap-2 mt-1">
-                <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-md ${msg.senderRole === 'FIELD_USER' ? 'bg-cyan-50 text-cyan-800 border border-cyan-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}">
+                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-[4px] ${msg.senderRole === 'FIELD_USER' ? 'bg-slate-100 text-slate-700' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}">
                   ${msg.senderRole === 'FIELD_USER' ? 'YÖNETİCİYE GÖNDERİLDİ' : 'YÖNETİCİ BİLDİRİMİ'}
                 </span>
-                <span class="text-[11px] text-slate-500 font-semibold truncate">${msg.sender}</span>
+                <span class="text-[11px] text-slate-500 font-normal truncate">${msg.sender}</span>
               </div>
-              <p class="text-xs text-slate-600 line-clamp-2 mt-1 font-medium">${msg.content}</p>
+              <p class="text-xs text-slate-500 line-clamp-2 mt-1 font-normal">${msg.content}</p>
             </div>
           </div>
         `).join('')}
@@ -1122,39 +1987,39 @@ export function renderMessages() {
   `;
 }
 
-// MESAJ DETAYI EKRANI
+// MESAJ DETAYI EKRANI (SECTION 32)
 export function renderMessageDetail() {
   const state = store.getState();
-  const msg = state.messages.find(m => m.id === state.selectedMessageId) || state.messages[0];
+  const msg = (state.messages || []).find(m => m.id === state.selectedMessageId) || (state.messages || [])[0];
 
   return `
-    <div class="min-h-[calc(100vh-41px)] bg-background text-on-surface flex flex-col pb-24">
-      <header class="h-14 bg-surface border-b border-border px-4 flex items-center justify-between sticky top-10 z-30">
-        <button id="btn-back-to-messages" class="p-2 -ml-2 text-on-surface hover:bg-surface-container rounded-full flex items-center gap-1 text-xs font-semibold">
-          ${iconSvg('arrowLeft', 'w-5 h-5')}
+    <div class="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col pb-24 font-sans">
+      <header class="h-14 bg-white border-b border-[#E9EDF2] px-4 flex items-center justify-between sticky top-0 z-30">
+        <button id="btn-back-to-messages" class="p-2 -ml-2 text-slate-700 hover:bg-slate-50 rounded-lg flex items-center gap-1 text-xs font-semibold">
+          ${iconSvg('arrowLeft', 'w-5 h-5 text-slate-700')}
           <span>Mesajlar</span>
         </button>
-        <span class="text-xs font-bold text-on-surface">Mesaj Detayı</span>
+        <span class="text-sm font-semibold text-[#01214A]">Mesaj Detayı</span>
         <div class="w-8"></div>
       </header>
 
-      <main class="flex-1 px-4 py-6 max-w-md mx-auto w-full space-y-4">
-        <div class="bg-surface rounded-2xl p-6 border border-border shadow-sm space-y-4">
-          <div class="border-b border-border pb-3">
-            <h1 class="text-base font-bold text-on-surface">${msg?.title}</h1>
-            <div class="flex justify-between items-center text-xs text-text-secondary mt-1">
-              <span>Gönderen: <strong>${msg?.sender}</strong></span>
+      <main class="flex-1 px-4 py-5 max-w-md mx-auto w-full space-y-4">
+        <div class="bg-white rounded-[14px] p-6 border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-4">
+          <div class="border-b border-[#F1F5F9] pb-3 space-y-1">
+            <h1 class="text-base font-bold text-[#01214A]">${msg?.title}</h1>
+            <div class="flex justify-between items-center text-xs text-slate-400 font-normal">
+              <span>Gönderen: <strong class="text-slate-700 font-medium">${msg?.sender}</strong></span>
               <span>${msg?.date}</span>
             </div>
           </div>
 
-          <p class="text-xs text-on-surface leading-relaxed whitespace-pre-line">
+          <p class="text-xs text-slate-700 leading-relaxed whitespace-pre-line font-normal">
             ${msg?.content}
           </p>
 
-          <div class="pt-2 text-[10px] text-text-muted border-t border-border flex items-center gap-1">
-            ${iconSvg('checkCircle', 'w-3.5 h-3.5 text-success')}
-            <span>Görüldü Bilgisi İşlendi (${new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })})</span>
+          <div class="pt-2 text-[11px] text-slate-400 border-t border-[#F1F5F9] flex items-center gap-1">
+            ${iconSvg('checkCircle', 'w-3.5 h-3.5 text-[#2A9D38]')}
+            <span>Görüldü Bilgisi İşlendi</span>
           </div>
         </div>
       </main>
@@ -1164,35 +2029,71 @@ export function renderMessageDetail() {
   `;
 }
 
-// PROFİL EKRANI
+// PROFİL EKRANI (SECTIONS 34-37 & 60)
 export function renderProfile() {
   const state = store.getState();
-  const user = state.auth.user;
+  const user = state.auth.user || {};
+  const queueCount = state.offlineQueueCount || 0;
 
   return `
-    <div class="min-h-[calc(100vh-41px)] bg-background text-on-surface flex flex-col pb-24">
-      <header class="h-14 bg-surface border-b border-border px-4 flex items-center justify-between sticky top-10 z-30">
-        <h1 class="text-base font-bold text-on-surface">Profil</h1>
+    <div class="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col pb-24 font-sans">
+      
+      <!-- PAGE HEADER (SECTION 11 & 34) -->
+      <header class="bg-white border-b border-[#E9EDF2] px-4 py-4 sticky top-0 z-30">
+        <h1 class="text-lg font-bold text-[#01214A] leading-tight">Profil</h1>
+        <p class="text-xs text-slate-400 font-normal mt-0.5">Hesap ve uygulama bilgileri</p>
       </header>
 
-      <main class="flex-1 px-4 py-6 max-w-md mx-auto w-full space-y-6">
-        <div class="bg-surface rounded-2xl p-6 border border-border shadow-sm text-center space-y-4">
-          <div class="w-20 h-20 bg-primary text-white rounded-full mx-auto flex items-center justify-center font-bold text-2xl shadow-md">
+      <main class="flex-1 px-4 py-5 max-w-md mx-auto w-full space-y-4">
+        
+        <!-- PROFİL KARTI (AVATAR 48-56px, NO TECHNICAL ROLE NAME - SECTION 35) -->
+        <div class="bg-white rounded-[14px] p-5 border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex items-center gap-4">
+          <div class="w-13 h-13 rounded-full bg-[#01214A] text-white flex items-center justify-center font-bold text-lg shrink-0">
             ${user?.fullName?.charAt(0) || 'A'}
           </div>
 
-          <div>
-            <h2 class="text-lg font-bold text-on-surface">${user?.fullName || 'Ahmet Yılmaz'}</h2>
-            <p class="text-xs text-text-secondary">${user?.role || 'Saha Personeli'} • ${user?.phone || '0532 555 43 21'}</p>
-          </div>
-
-          <div class="pt-2 border-t border-border">
-            <button id="btn-logout" class="w-full h-11 border border-red-200 text-red-600 hover:bg-red-50 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2">
-              ${iconSvg('logOut', 'w-4 h-4')}
-              Çıkış Yap
-            </button>
+          <div class="min-w-0">
+            <h2 class="text-base font-bold text-[#01214A] truncate">${user?.fullName || 'Ahmet Yılmaz'}</h2>
+            <p class="text-xs text-slate-500 font-normal mt-0.5">${user?.role === 'ADMIN' ? 'Yönetici' : 'Saha Personeli'}</p>
+            <p class="text-[11px] text-slate-400 font-normal">${user?.phone || '0532 100 20 30'}</p>
           </div>
         </div>
+
+        <!-- PROFİL ALT BİLGİ GRUPLARI (SECTION 36) -->
+        <div class="bg-white rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] divide-y divide-[#F1F5F9] text-xs">
+          
+          <div class="p-4 flex items-center justify-between">
+            <span class="text-slate-500 font-normal">Telefon Numarası</span>
+            <span class="font-semibold text-[#01214A]">${user?.phone || '0532 100 20 30'}</span>
+          </div>
+
+          <div class="p-4 flex items-center justify-between">
+            <span class="text-slate-500 font-normal">Sistem Rolü</span>
+            <span class="font-semibold text-[#01214A]">${user?.role === 'ADMIN' ? 'Yönetici' : 'Saha Personeli'}</span>
+          </div>
+
+          <div class="p-4 flex items-center justify-between">
+            <span class="text-slate-500 font-normal">Senkronizasyon Durumu</span>
+            <span class="font-semibold ${queueCount > 0 ? 'text-amber-600' : 'text-[#2A9D38]'}">
+              ${queueCount > 0 ? `${queueCount} Kayıt Bekliyor` : 'Tüm Kayıtlar Güncel'}
+            </span>
+          </div>
+
+          <div class="p-4 flex items-center justify-between">
+            <span class="text-slate-500 font-normal">Uygulama Sürümü</span>
+            <span class="font-semibold text-slate-700">v1.0.0 (PWA Premium)</span>
+          </div>
+
+        </div>
+
+        <!-- SMALL DESTRUCTIVE OUTLINE LOGOUT BUTTON AT BOTTOM (SECTION 37) -->
+        <div class="pt-2">
+          <button id="btn-open-logout-modal" type="button" class="w-full h-10 border border-red-200 hover:bg-red-50 text-red-600 font-semibold text-xs rounded-[10px] transition-colors flex items-center justify-center gap-2 cursor-pointer">
+            ${iconSvg('logOut', 'w-4 h-4 text-red-600')}
+            <span>Çıkış Yap</span>
+          </button>
+        </div>
+
       </main>
 
       ${renderBottomNav()}
@@ -1218,57 +2119,134 @@ export function formatQuestionType(type) {
 export function renderAdminView() {
   const state = store.getState();
   const activeTab = state.adminTab || 'dashboard';
+  const user = state.auth?.user || {};
 
   const navItems = [
-    { id: 'dashboard', label: 'ANA SAYFA', icon: 'dashboard' },
-    { id: 'surveys', label: 'ANKETLER', icon: 'poll' },
-    { id: 'assignments', label: 'ATAMALAR', icon: 'assignment' },
-    { id: 'responses', label: 'CEVAPLAR', icon: 'chatBubble' },
-    { id: 'reports', label: 'RAPORLAR', icon: 'assessment' },
-    { id: 'personnel', label: 'PERSONELLER', icon: 'group' },
-    { id: 'messages', label: 'MESAJLAR', icon: 'mail' }
+    { id: 'dashboard', label: 'Ana Sayfa', icon: 'dashboard', subtitle: 'Saha operasyonlarının güncel durumu' },
+    { id: 'surveys', label: 'Anketler', icon: 'poll', subtitle: 'Sistemdeki tüm anket operasyonları ve onay durumları' },
+    { id: 'assignments', label: 'Atamalar', icon: 'assignment', subtitle: 'Saha ekiplerine görev ve hedef atama yönetimi' },
+    { id: 'responses', label: 'Cevaplar', icon: 'chatBubble', subtitle: 'Saha kayıtlarını inceleyin ve geçerlilik durumlarını yönetin' },
+    { id: 'reports', label: 'Raporlar', icon: 'assessment', subtitle: 'Tamamlanan saha çalışmalarını inceleyin ve kurumsal çıktıları yönetin' },
+    { id: 'personnel', label: 'Personeller', icon: 'group', subtitle: 'Saha ekibi ve sistem yöneticileri yönetimi' },
+    { id: 'messages', label: 'Mesajlar', icon: 'mail', subtitle: 'Saha ekiplerine direkt talimat ve duyuru iletimi' }
   ];
 
+  const currentNavItem = navItems.find(i => i.id === activeTab) || navItems[0];
+  const currentDateStr = new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' });
+
   return `
-    <div class="flex min-h-[calc(100vh-41px)] bg-[#F4F7F9] relative">
+    <div class="flex min-h-screen bg-[#F8FAFC] relative font-sans">
       ${renderCustomModals(state)}
 
-      <aside class="hidden md:flex flex-col w-64 border-r border-slate-100 bg-white z-30 shrink-0 sticky top-10 h-[calc(100vh-41px)] shadow-sm">
-        <!-- LOGO YERLEŞİMİ: ŞEHİTKAMİL STRATEJİ GELİŞTİRME MERKEZİ (GERÇEK KURUMSAL İMAJ) -->
-        <div class="p-5 border-b border-slate-100/80 flex items-center justify-center bg-white shrink-0">
-          <img src="./logo_sehitkamil.png" alt="Şehitkamil Strateji Geliştirme Merkezi Logo" class="h-20 w-auto object-contain mx-auto transition-transform hover:scale-105 duration-200" />
-        </div>
-
-        <nav class="flex-1 p-3 space-y-1.5 overflow-y-auto">
-          ${navItems.map(item => `
-            <button data-admin-tab="${item.id}" class="btn-admin-tab w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-left text-xs font-semibold transition-all relative ${activeTab === item.id || (activeTab === 'builder' && item.id === 'surveys') ? 'text-[#01214A] bg-[#2A9D38]/10 font-bold before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-6 before:w-1.5 before:bg-[#2A9D38] before:rounded-r-full' : 'text-slate-500 hover:text-[#01214A] hover:bg-slate-50'}">
-              ${iconSvg(item.icon, `w-5 h-5 ${activeTab === item.id ? 'text-[#2A9D38]' : 'text-slate-400'}`)}
-              <span>${item.label}</span>
-            </button>
-          `).join('')}
-        </nav>
-
-        <div class="p-3 border-t border-slate-100 mt-auto">
-          <div class="flex items-center gap-3 px-3 py-2.5 text-xs font-semibold text-slate-600 bg-slate-50/80 rounded-xl">
-            <div class="w-8 h-8 rounded-full bg-[#01214A] text-white flex items-center justify-center font-bold text-xs shrink-0">
-              SK
-            </div>
-            <div class="truncate">
-              <div class="text-[#01214A] font-bold text-xs truncate">${state.auth.user?.fullName || 'Saha Koordinatörü'}</div>
-              <div class="text-[10px] text-[#00A0DF] font-semibold">Sistem Yöneticisi</div>
-            </div>
+      <!-- LEFT SIDEBAR WITH TOP BRANDING (72px BRANDING HEIGHT, 32-36px LOGO, 10-12px GAP) -->
+      <aside class="hidden md:flex flex-col w-64 border-r border-[#E9EDF2] bg-white z-30 shrink-0 sticky top-0 h-screen">
+        
+        <!-- SIDEBAR TOP BRANDING BLOCK -->
+        <div class="h-[72px] px-4 border-b border-[#E9EDF2] flex items-center gap-3 shrink-0">
+          <img src="./logo_sehitkamil.png" alt="Şehitkamil Logo" class="h-9 w-auto object-contain shrink-0">
+          <div class="flex flex-col min-w-0">
+            <span class="text-[13px] sm:text-[14px] font-semibold text-[#01214A] leading-snug tracking-tight truncate">Şehitkamil Strateji Merkezi</span>
+            <span class="text-[11px] font-normal text-slate-400 mt-0.5">Yönetim Paneli</span>
           </div>
         </div>
+
+        <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
+          ${navItems.map(item => {
+            const isActive = activeTab === item.id || (activeTab === 'builder' && item.id === 'surveys');
+            return `
+              <button data-admin-tab="${item.id}" class="btn-admin-tab w-full flex items-center gap-3 px-3.5 py-2.5 rounded-[10px] text-left text-xs transition-all duration-150 relative cursor-pointer ${isActive ? 'text-[#01214A] bg-[#2A9D38]/10 font-semibold border-l-3 border-[#2A9D38]' : 'text-slate-400 hover:text-[#01214A] hover:bg-slate-50 font-normal'}">
+                ${iconSvg(item.icon, `w-4 h-4 ${isActive ? 'text-[#2A9D38]' : 'text-slate-400'}`)}
+                <span>${item.label}</span>
+              </button>
+            `;
+          }).join('')}
+        </nav>
+
       </aside>
 
-      <div class="flex-1 flex flex-col min-w-0">
-        <header class="h-16 border-b border-slate-100 bg-white px-6 flex items-center justify-between sticky top-10 z-20 shadow-header">
-          <div class="flex items-center gap-3">
-            <h2 class="font-extrabold text-[#01214A] text-lg uppercase tracking-tight">${activeTab === 'builder' ? 'ANKET OLUŞTUR' : (navItems.find(i => i.id === activeTab)?.label || 'ANA SAYFA')}</h2>
+      <!-- MAIN CONTENT WRAPPER -->
+      <div class="flex-1 flex flex-col min-w-0 min-h-screen">
+        
+        <!-- SINGLE UNIFIED TOP HEADER BAR (72px HEIGHT MATCHING BRANDING BLOCK) -->
+        <header class="h-[72px] border-b border-[#E9EDF2] bg-white px-6 sm:px-8 flex items-center justify-between sticky top-0 z-30 shrink-0">
+          
+          <!-- LEFT: PAGE TITLE & SUBTITLE / DATE -->
+          <div class="space-y-0.5 min-w-0">
+            <h1 class="text-[24px] sm:text-[26px] font-bold text-[#01214A] tracking-tight leading-tight truncate">
+              ${activeTab === 'builder' ? 'Anket Oluştur' : currentNavItem.label}
+            </h1>
+            <p class="text-[13px] text-slate-400 font-normal truncate">
+              ${currentDateStr} · ${activeTab === 'builder' ? 'Yeni saha araştırması hazırlama sihirbazı' : currentNavItem.subtitle}
+            </p>
+          </div>
+
+          <!-- RIGHT: CONTEXTUAL CTA, NOTIFICATIONS & PROFILE DROPDOWN (NO SISTEM ÇEVRİMİÇİ, NO STANDALONE LOGOUT) -->
+          <div class="flex items-center gap-3.5 shrink-0">
+            
+            <!-- CONTEXTUAL PRIMARY CTA -->
+            ${activeTab === 'dashboard' || activeTab === 'surveys' ? `
+              <button id="btn-admin-create-survey-dashboard" class="h-[38px] px-4 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[10px] shadow-none transition-all duration-150 flex items-center gap-2 cursor-pointer active:scale-98">
+                ${iconSvg('plus', 'w-4 h-4 text-white')}
+                <span>Yeni Anket</span>
+              </button>
+            ` : activeTab === 'assignments' ? `
+              <button id="btn-admin-create-assignment-header" class="h-[38px] px-4 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[10px] shadow-none transition-all duration-150 flex items-center gap-2 cursor-pointer active:scale-98">
+                ${iconSvg('plus', 'w-4 h-4 text-white')}
+                <span>Yeni Atama</span>
+              </button>
+            ` : activeTab === 'personnel' ? `
+              <button id="btn-admin-create-personnel-header" class="h-[38px] px-4 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[10px] shadow-none transition-all duration-150 flex items-center gap-2 cursor-pointer active:scale-98">
+                ${iconSvg('plus', 'w-4 h-4 text-white')}
+                <span>Yeni Personel</span>
+              </button>
+            ` : ''}
+
+            <!-- NOTIFICATION CENTER -->
+            ${renderNotificationCenter(state)}
+
+            <!-- USER PROFILE PILL WITH DROPDOWN MENU -->
+            <div class="relative">
+              <button id="btn-toggle-profile-dropdown" type="button" class="flex items-center gap-2 px-2.5 py-1.5 rounded-[10px] hover:bg-slate-50 border border-transparent hover:border-[#E9EDF2] transition-all duration-150 cursor-pointer">
+                <div class="w-8 h-8 rounded-full bg-[#01214A] text-white flex items-center justify-center font-bold text-xs shrink-0">
+                  ${user.fullName ? user.fullName.charAt(0).toUpperCase() : 'S'}
+                </div>
+                <span class="hidden sm:inline-block text-xs font-semibold text-[#01214A] truncate max-w-[140px]">
+                  ${user.fullName || 'Saha Koordinatörü'}
+                </span>
+                ${iconSvg('moveDown', 'w-3.5 h-3.5 text-slate-400')}
+              </button>
+
+              <!-- ELEGANT FLOATING DROPDOWN MENU -->
+              <div id="dropdown-user-profile-menu" class="hidden absolute right-0 mt-2 w-48 bg-white border border-[#E9EDF2] rounded-[12px] shadow-xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+                <div class="px-3.5 py-2 border-b border-[#F1F5F9] mb-1">
+                  <p class="text-xs font-semibold text-[#01214A] truncate">${user.fullName || 'Saha Koordinatörü'}</p>
+                  <p class="text-[11px] text-slate-400 truncate">${user.role === 'ADMIN' ? 'Yönetici / Koordinatör' : 'Saha Personeli'}</p>
+                </div>
+
+                <button type="button" id="btn-dropdown-profile" class="w-full px-3.5 py-2 text-left text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 transition-colors cursor-pointer font-medium">
+                  ${iconSvg('user', 'w-4 h-4 text-slate-400')}
+                  <span>Profil</span>
+                </button>
+
+                <button type="button" id="btn-dropdown-account" class="w-full px-3.5 py-2 text-left text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 transition-colors cursor-pointer font-medium">
+                  ${iconSvg('dashboard', 'w-4 h-4 text-slate-400')}
+                  <span>Hesap Ayarları</span>
+                </button>
+
+                <div class="border-t border-[#F1F5F9] my-1"></div>
+
+                <button type="button" id="btn-global-logout" class="w-full px-3.5 py-2 text-left text-xs text-red-600 hover:bg-red-50 flex items-center gap-2.5 transition-colors cursor-pointer font-semibold">
+                  ${iconSvg('logOut', 'w-4 h-4 text-red-600')}
+                  <span>Çıkış Yap</span>
+                </button>
+              </div>
+            </div>
+
           </div>
         </header>
 
-        <main class="p-6 max-w-[1400px] w-full mx-auto space-y-6">
+        <!-- MAIN CONTENT (STARTS DIRECTLY BELOW UNIFIED HEADER) -->
+        <main class="p-6 sm:p-8 max-w-[1520px] w-full mx-auto space-y-6 flex-1">
           ${activeTab === 'builder' ? render4StepSurveyBuilder(state) : renderAdminTabContent(activeTab, state)}
         </main>
       </div>
@@ -1414,29 +2392,34 @@ function render4StepSurveyBuilder(state) {
           </div>
 
           <!-- ANKET BÖLÜMLERİ VE YENİ BÖLÜM EKLE BUTTONU -->
-          <div class="bg-white p-4 rounded-2xl shadow-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-none">
+          <div class="bg-white px-4 py-3 rounded-2xl shadow-card border-none space-y-2.5">
+            <!-- ROW 1: Mevcut bölümler -->
             <div class="flex items-center gap-2 flex-wrap">
-              <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Bölümler (${(survey.sections || []).length}):</span>
-              ${(survey.sections || []).map(sec => `
-                <span class="px-3 py-1 bg-[#01214A]/10 text-[#01214A] rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-2xs">
-                  ${iconSvg('poll', 'w-3.5 h-3.5 text-[#00A0DF]')}
-                  <span>${sec.title}</span>
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0">Bölümler (${(survey.sections || []).length}):</span>
+              ${(survey.sections || []).map((sec, idx) => `
+                <span class="px-2.5 py-1 bg-[#01214A]/8 text-[#01214A] rounded-lg text-xs font-semibold flex items-center gap-1.5 border border-[#01214A]/10">
+                  ${iconSvg('poll', 'w-3 h-3 text-[#00A0DF]')}
+                  <span>${idx + 1}. ${sec.title}</span>
                   ${(survey.sections || []).length > 1 ? `
-                    <button type="button" data-sec-id="${sec.id}" class="btn-delete-section text-slate-400 hover:text-red-600 p-0.5 ml-1 transition-colors">
-                      ${iconSvg('close', 'w-3.5 h-3.5')}
+                    <button type="button" data-sec-id="${sec.id}" class="btn-delete-section text-slate-300 hover:text-red-500 transition-colors ml-0.5 cursor-pointer">
+                      ${iconSvg('close', 'w-3 h-3')}
                     </button>
                   ` : ''}
                 </span>
               `).join('')}
             </div>
 
-            <form id="form-inline-add-section" class="flex items-center gap-2 w-full sm:w-auto">
-              <input type="text" id="inline-sec-title" placeholder="Yeni Bölüm Adı..." class="h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#01214A] w-full sm:w-48"/>
-              <button type="submit" class="h-9 px-4 bg-[#01214A] hover:bg-[#011633] text-white font-extrabold text-xs rounded-xl transition-all shadow-xs flex items-center justify-center shrink-0 active:scale-95">
+            <!-- ROW 2: Yeni bölüm ekle -->
+            <form id="form-inline-add-section" class="flex items-center gap-2">
+              <input type="text" id="inline-sec-title" placeholder="Yeni Bölüm Adı..." class="h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#01214A] flex-1 min-w-0 max-w-xs"/>
+              <button type="submit" class="h-9 px-4 bg-[#01214A] hover:bg-[#011633] text-white font-bold text-xs rounded-xl transition-all shadow-xs flex items-center justify-center shrink-0 gap-1.5 active:scale-95 cursor-pointer">
+                ${iconSvg('plus', 'w-3.5 h-3.5 text-white')}
                 <span>Bölüm Ekle</span>
               </button>
             </form>
           </div>
+
+
 
           <!-- SORU TÜRÜ SEÇİM KARTLARI PANELİ (FULL RESPONSIVE) -->
           <div class="bg-white p-5 rounded-2xl shadow-card space-y-3 border-none">
@@ -1499,103 +2482,81 @@ function render4StepSurveyBuilder(state) {
                 <p class="text-xs text-text-secondary">Yukarıdaki panelden soru türü seçerek hemen başlayabilirsiniz.</p>
               </div>
             ` : survey.questions.map((q, idx) => `
-              <div data-q-id="${q.id}" class="builder-question-card bg-surface rounded-2xl border border-border shadow-xs hover:border-slate-300 transition-all overflow-hidden">
+              <div data-q-id="${q.id}" class="builder-question-card bg-white rounded-2xl border border-slate-200 shadow-card hover:border-[#2A9D38]/50 transition-all p-5 space-y-4">
                 
-                <!-- QUESTION HEADER (ALWAYS CLEAN & STABLE) -->
-                <div class="p-4 flex items-center justify-between bg-slate-50/80 border-b border-border">
-                  <div class="flex items-center gap-3">
-                    <span class="text-slate-400 font-mono text-xs font-bold text-[#01214A] w-6">${String(idx + 1).padStart(2, '0')}</span>
-                    <span class="font-bold text-[#01214A] text-sm">${q.title}</span>
+                <!-- TOP HEADER & QUICK ACTIONS BAR -->
+                <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                  <div class="flex items-center gap-2.5">
+                    <span class="w-7 h-7 rounded-lg bg-[#01214A]/10 text-[#01214A] font-extrabold text-xs flex items-center justify-center font-mono shrink-0">${String(idx + 1).padStart(2, '0')}</span>
+                    <span class="px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 font-bold text-[11px] flex items-center gap-1">
+                      ${formatQuestionType(q.type)}
+                    </span>
+                    ${q.isRequired 
+                      ? `<span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 font-extrabold text-[10px] uppercase tracking-wider">Zorunlu</span>`
+                      : `<span class="px-2.5 py-1 rounded-lg bg-slate-50 text-slate-400 border border-slate-200 font-bold text-[10px]">İsteğe Bağlı</span>`}
                   </div>
 
-                  <div class="flex items-center gap-2">
-                    <span class="text-[11px] text-slate-600 font-bold px-2.5 py-1 rounded-lg bg-white border border-slate-200">${formatQuestionType(q.type)}</span>
-                    ${q.isRequired ? `<span class="text-[10px] font-extrabold text-emerald-800 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200">Zorunlu</span>` : ''}
-                    ${q.condition ? `<span class="text-[10px] font-extrabold text-indigo-800 bg-indigo-50 px-2 py-1 rounded-lg border border-indigo-200">Koşullu</span>` : ''}
+                  <!-- ACTIONS BAR (UP/DOWN, COPY, DELETE) -->
+                  <div class="flex items-center gap-1.5">
+                    <button data-q-id="${q.id}" class="btn-move-q-up p-1.5 text-slate-500 hover:text-[#2A9D38] hover:bg-slate-100 rounded-lg transition-colors" title="Yukarı Taşı">
+                      ${iconSvg('moveUp', 'w-4 h-4')}
+                    </button>
+                    <button data-q-id="${q.id}" class="btn-move-q-down p-1.5 text-slate-500 hover:text-[#2A9D38] hover:bg-slate-100 rounded-lg transition-colors" title="Aşağı Taşı">
+                      ${iconSvg('moveDown', 'w-4 h-4')}
+                    </button>
+                    <span class="text-slate-200">|</span>
+                    <button data-q-id="${q.id}" type="button" class="btn-duplicate-question text-xs font-bold text-slate-600 hover:text-[#01214A] hover:bg-slate-100 px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1">
+                      ${iconSvg('copy', 'w-3.5 h-3.5')}
+                      <span>Kopyala</span>
+                    </button>
+                    <button data-q-id="${q.id}" type="button" class="btn-direct-delete-q text-xs font-bold text-red-600 hover:text-red-700 hover:bg-red-50 px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1">
+                      ${iconSvg('trash', 'w-3.5 h-3.5 text-red-600')}
+                      <span>Sil</span>
+                    </button>
                   </div>
                 </div>
 
-                <!-- ALWAYS FULLY EXPANDED EDIT BODY -->
-                <div class="p-5 bg-white space-y-5">
-                    <div class="space-y-1">
-                      <label class="block text-xs font-bold text-on-surface">Soru Başlığı *</label>
-                      <input type="text" data-q-id="${q.id}" value="${q.title}" class="input-builder-q-title w-full h-11 px-4 bg-white border border-border rounded-xl text-sm focus:outline-none focus:border-primary font-medium"/>
-                    </div>
+                <!-- QUESTION TITLE INPUT FIELD -->
+                <div class="space-y-1.5">
+                  <label class="block text-xs font-extrabold text-[#01214A]">Soru Başlığı *</label>
+                  <input type="text" data-q-id="${q.id}" value="${q.title}" placeholder="Soru metnini buraya yazınız..." class="input-builder-q-title w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-[#01214A] focus:outline-none focus:border-[#2A9D38] focus:bg-white transition-all"/>
+                </div>
 
-                    <!-- REAL-TIME EDITABLE OPTIONS BUILDER (NO PROMPT MODAL) -->
-                    ${(q.type === 'single' || q.type === 'multi') ? `
-                      <div class="space-y-2">
-                        <label class="block text-xs font-bold text-on-surface">Seçenekler</label>
-                        <div class="space-y-2">
-                          ${q.options.map(opt => `
-                            <div class="flex items-center gap-2">
-                              <input type="text" data-q-id="${q.id}" data-opt-id="${opt.id}" value="${opt.label}" placeholder="Seçenek adını yazın..." class="input-option-edit flex-1 h-10 px-3 bg-white border border-border rounded-lg text-xs font-medium focus:outline-none focus:border-primary"/>
-                              <button data-q-id="${q.id}" data-opt-id="${opt.id}" class="btn-remove-option text-slate-400 hover:text-red-600 p-2 transition-colors">
-                                ${iconSvg('trash', 'w-4 h-4')}
-                              </button>
-                            </div>
-                          `).join('')}
+                <!-- REAL-TIME EDITABLE OPTIONS BUILDER (FOR SINGLE / MULTI) -->
+                ${(q.type === 'single' || q.type === 'multi') ? `
+                  <div class="space-y-2.5 bg-slate-50/80 p-4 rounded-xl border border-slate-200/80">
+                    <div class="flex items-center justify-between">
+                      <label class="block text-xs font-extrabold text-[#01214A]">Seçenekler</label>
+                      <span class="text-[10px] text-slate-400 font-semibold">${q.options.length} Seçenek Tanımlı</span>
+                    </div>
+                    <div class="space-y-2">
+                      ${q.options.map((opt, oIdx) => `
+                        <div class="flex items-center gap-2">
+                          <span class="w-6 h-6 rounded-md bg-white border border-slate-200 text-slate-500 font-bold text-[10px] flex items-center justify-center shrink-0 font-mono">${oIdx + 1}</span>
+                          <input type="text" data-q-id="${q.id}" data-opt-id="${opt.id}" value="${opt.label}" placeholder="Seçenek adını yazın..." class="input-option-edit flex-1 h-10 px-3 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-900 focus:outline-none focus:border-[#2A9D38]"/>
+                          <button type="button" data-q-id="${q.id}" data-opt-id="${opt.id}" class="btn-remove-option text-slate-400 hover:text-red-600 p-2 hover:bg-white rounded-lg transition-all" title="Seçeneği Sil">
+                            ${iconSvg('trash', 'w-4 h-4')}
+                          </button>
                         </div>
-                        <button data-q-id="${q.id}" class="btn-add-option-direct text-xs font-bold text-primary hover:underline flex items-center gap-1 pt-1">
-                          ${iconSvg('plus', 'w-3.5 h-3.5')}
-                          Seçenek Ekle
-                        </button>
-                      </div>
-                    ` : ''}
-
-                    <div class="flex items-center justify-between pt-2 border-t border-border/60">
-                      <span class="text-xs font-bold text-on-surface">Zorunlu Soru</span>
-                      <button data-q-id="${q.id}" class="btn-toggle-required relative w-11 h-6 rounded-full transition-colors ${q.isRequired ? 'bg-primary' : 'bg-slate-300'}">
-                        <span class="absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${q.isRequired ? 'translate-x-5' : ''}"></span>
-                      </button>
+                      `).join('')}
                     </div>
-
-                    <div class="space-y-2 pt-2 border-t border-border/60">
-                      <span class="block text-xs font-bold text-on-surface">Koşul Ayarları</span>
-                      
-                      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        <select data-q-id="${q.id}" class="select-condition-source h-10 px-3 bg-white border border-border rounded-lg text-xs font-medium">
-                          <option value="">-- Koşul Yok --</option>
-                          ${survey.questions.filter(x => x.id !== q.id).map(x => `<option value="${x.id}" ${q.condition?.sourceQuestionId === x.id ? 'selected' : ''}>${x.title}</option>`).join('')}
-                        </select>
-
-                        <select data-q-id="${q.id}" class="select-condition-op h-10 px-3 bg-white border border-border rounded-lg text-xs font-medium">
-                          <option value="esittir" ${(!q.condition?.operator || q.condition?.operator === 'esittir' || q.condition?.operator === 'equals') ? 'selected' : ''}>Eşittir (==)</option>
-                          <option value="esit_degildir" ${q.condition?.operator === 'esit_degildir' ? 'selected' : ''}>Eşit Değildir (!=)</option>
-                        </select>
-
-                        <input type="text" data-q-id="${q.id}" value="${q.condition?.value || 'evet'}" placeholder="Değer (örn: evet)" class="input-condition-val h-10 px-3 bg-white border border-border rounded-lg text-xs font-medium"/>
-                      </div>
-
-                      ${q.condition ? `
-                        <div class="p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-xs text-indigo-900 font-medium leading-relaxed flex items-center gap-2">
-                          ${iconSvg('note', 'w-4 h-4 text-indigo-600 shrink-0')}
-                          <span><strong>İnsan Dili Önizleme:</strong> Bu soru yalnızca '<strong>${survey.questions.find(x => x.id === q.condition.sourceQuestionId)?.title || 'Önceki Soru'}</strong>' = '<strong>${q.condition.value}</strong>' olduğunda gösterilecek.</span>
-                        </div>
-                      ` : ''}
-                    </div>
-
-                    <div class="flex justify-between items-center pt-3 border-t border-border/60">
-                      <div class="flex items-center gap-1">
-                        <button data-q-id="${q.id}" class="btn-move-q-up p-1.5 text-slate-500 hover:text-primary rounded hover:bg-slate-100">
-                          ${iconSvg('moveUp', 'w-4 h-4')}
-                        </button>
-                        <button data-q-id="${q.id}" class="btn-move-q-down p-1.5 text-slate-500 hover:text-primary rounded hover:bg-slate-100">
-                          ${iconSvg('moveDown', 'w-4 h-4')}
-                        </button>
-                      </div>
-
-                      <div class="flex items-center gap-3">
-                        <button data-q-id="${q.id}" class="btn-duplicate-question text-xs font-semibold text-slate-700 hover:text-primary flex items-center gap-1">
-                          ${iconSvg('copy', 'w-4 h-4')}
-                          Kopyala
-                        </button>
-                        <button data-q-id="${q.id}" type="button" class="btn-direct-delete-q text-xs font-semibold text-red-600 hover:text-red-700 p-1.5 rounded hover:bg-red-50 flex items-center gap-1 transition-colors">
-                          ${iconSvg('trash', 'w-4 h-4 text-red-600')}
-                          <span>Soruyu Sil</span>
-                        </button>
-                      </div>
+                    <button type="button" data-q-id="${q.id}" class="btn-add-option-direct text-xs font-extrabold text-[#2A9D38] hover:underline flex items-center gap-1 pt-1">
+                      ${iconSvg('plus', 'w-3.5 h-3.5')}
+                      Yeni Seçenek Ekle
+                    </button>
                   </div>
+                ` : ''}
+
+                <!-- FOOTER CONTROL BAR (REQUIRED TOGGLE SWITCH) -->
+                <div class="flex items-center justify-between pt-3 border-t border-slate-100">
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-extrabold text-[#01214A]">Zorunlu Cevaplanması Gereksin Mi?</span>
+                    <span class="text-[11px] text-slate-400 font-medium">(Sahada boş bırakılamaz)</span>
+                  </div>
+                  <button type="button" data-q-id="${q.id}" class="btn-toggle-required relative w-12 h-6.5 rounded-full transition-colors ${q.isRequired ? 'bg-[#2A9D38]' : 'bg-slate-300'}">
+                    <span class="absolute top-1 left-1 w-4.5 h-4.5 rounded-full bg-white transition-transform shadow-xs ${q.isRequired ? 'translate-x-5.5' : ''}"></span>
+                  </button>
+                </div>
               </div>
             `).join('')}
           </div>
@@ -1822,14 +2783,21 @@ function render4StepSurveyBuilder(state) {
           </div>
 
           <div class="flex flex-col sm:flex-row gap-3 pt-2">
-            <button id="btn-builder-goto-assign" class="flex-1 h-12 bg-primary text-white font-bold rounded-xl text-xs hover:bg-primary-dark transition-all flex items-center justify-center gap-2 shadow-sm">
-              ${iconSvg('assignment', 'w-4 h-4')}
-              Saha Personeline Ata
-            </button>
+            ${survey.status === 'PENDING_APPROVAL' ? `
+              <button id="btn-builder-goto-surveys" class="w-full h-12 bg-[#01214A] hover:bg-[#082d5e] text-white font-extrabold rounded-xl text-xs transition-all shadow-md flex items-center justify-center gap-2">
+                ${iconSvg('checkCircle', 'w-4 h-4 text-emerald-400')}
+                <span>Yöneticinin Onayına İlet & Anketler Listesine Git</span>
+              </button>
+            ` : `
+              <button data-survey-id="${survey.id}" class="btn-open-assign-survey-modal flex-1 h-12 bg-[#2A9D38] hover:bg-[#22822e] text-white font-extrabold rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-95">
+                ${iconSvg('send', 'w-4 h-4 text-white')}
+                <span>Hemen Personellere Gönder / Ata</span>
+              </button>
 
-            <button id="btn-builder-goto-surveys" class="flex-1 h-12 bg-surface-container-low border border-border text-on-surface font-bold rounded-xl text-xs hover:bg-surface-container transition-all">
-              Anketlere Dön
-            </button>
+              <button id="btn-builder-goto-surveys" class="flex-1 h-12 bg-white border border-slate-200 text-[#01214A] font-extrabold rounded-xl text-xs hover:bg-slate-100 transition-all shadow-2xs">
+                Anketler Listesine Git
+              </button>
+            `}
           </div>
         </div>
       ` : ''}
@@ -1843,322 +2811,505 @@ function renderAdminTabContent(tab, state) {
   switch (tab) {
     case 'dashboard':
       return `
-        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-2">
-          <div>
-            <div class="flex items-center gap-3 mb-1">
-              <h2 class="text-2xl font-extrabold text-[#01214A] tracking-tight">Genel Bakış</h2>
+        <!-- 4 POWERFUL REFINED KPI SCORECARDS (24px padding, 14px radius, #667085 text) -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          
+          <!-- Card 1: Aktif Anketler -->
+          <div class="bg-white p-6 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-col justify-between h-[128px] transition-colors duration-150 hover:border-[#D0D5DD]">
+            <div>
+              <span class="text-[11px] font-semibold text-[#667085] uppercase tracking-wider block">AKTİF ANKETLER</span>
             </div>
-            <p class="text-xs text-slate-500 font-medium">Anlık saha hareketleri ve operasyonel veriler özet paneli.</p>
+            <div>
+              <div class="text-[30px] font-bold text-[#01214A] leading-none">${state.adminKpis.activeSurveysCount || '8'}</div>
+              <span class="text-xs text-[#667085] font-normal mt-1 block">6 mahallede devam ediyor</span>
+            </div>
           </div>
 
-          <button id="btn-admin-create-survey-dashboard" class="h-11 px-5 bg-[#2A9D38] hover:bg-[#22822e] text-white rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg hover:-translate-y-0.5">
-            ${iconSvg('plus', 'w-4 h-4 text-white')}
-            <span>Yeni Anket Oluştur</span>
-          </button>
-        </div>
-
-        <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <div class="bg-white p-5 rounded-2xl shadow-card hover-lift flex flex-col justify-between h-36 border-none">
-            <span class="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">TOPLAM TAMAMLANAN</span>
-            <div class="text-3xl font-extrabold text-[#01214A] tracking-tight mt-auto">${state.adminKpis.totalCompleted || '12.480'}</div>
+          <!-- Card 2: Bugünkü Yanıtlar -->
+          <div class="bg-white p-6 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-col justify-between h-[128px] transition-colors duration-150 hover:border-[#D0D5DD]">
+            <div>
+              <span class="text-[11px] font-semibold text-[#667085] uppercase tracking-wider block">BUGÜNKÜ YANITLAR</span>
+            </div>
+            <div>
+              <div class="text-[30px] font-bold text-[#01214A] leading-none">${state.adminKpis.todayCompleted || '142'}</div>
+              <span class="text-xs text-[#667085] font-normal mt-1 block">+18 yanıt bugün eklendi</span>
+            </div>
           </div>
 
-          <div class="bg-white p-5 rounded-2xl shadow-card hover-lift flex flex-col justify-between h-36 border-none">
-            <span class="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">BUGÜN TAMAMLANAN</span>
-            <div class="text-3xl font-extrabold text-[#01214A] tracking-tight mt-auto">${state.adminKpis.todayCompleted || '142'}</div>
+          <!-- Card 3: Aktif Görev Atamaları -->
+          <div class="bg-white p-6 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-col justify-between h-[128px] transition-colors duration-150 hover:border-[#D0D5DD]">
+            <div>
+              <span class="text-[11px] font-semibold text-[#667085] uppercase tracking-wider block">AKTİF GÖREV ATAMALARI</span>
+            </div>
+            <div>
+              <div class="text-[30px] font-bold text-[#01214A] leading-none">${state.adminKpis.activeAssignmentsCount || '24'}</div>
+              <span class="text-xs text-[#667085] font-normal mt-1 block">4 sahada çalışma sürüyor</span>
+            </div>
           </div>
 
-          <div class="bg-white p-5 rounded-2xl shadow-card hover-lift flex flex-col justify-between h-36 border-none ring-2 ring-[#2A9D38]/20 bg-[#2A9D38]/5">
-            <span class="text-[10px] text-[#2A9D38] uppercase font-bold tracking-wider mb-1">AKTİF ANKET</span>
-            <div class="text-3xl font-extrabold text-[#2A9D38] tracking-tight mt-auto">${state.adminKpis.activeSurveysCount || '8'}</div>
-          </div>
-
-          <div class="bg-white p-5 rounded-2xl shadow-card hover-lift flex flex-col justify-between h-36 border-none">
-            <span class="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">AKTİF ATAMA</span>
-            <div class="text-3xl font-extrabold text-[#01214A] tracking-tight mt-auto">${state.adminKpis.activeAssignmentsCount || '24'}</div>
-          </div>
-
-          <div class="bg-white p-5 rounded-2xl shadow-card hover-lift flex flex-col justify-between h-36 border-none">
-            <span class="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">SAHADA PERSONEL</span>
-            <div class="text-3xl font-extrabold text-[#01214A] tracking-tight mt-auto">${state.adminKpis.fieldStaffCount || '12'}</div>
-          </div>
-
-          <div class="bg-white p-5 rounded-2xl shadow-card hover-lift flex flex-col justify-between h-36 border-none bg-amber-50/40">
-            <span class="text-[10px] text-amber-800 uppercase font-bold tracking-wider mb-1">OFFLINE KAYITLAR</span>
-            <div class="text-3xl font-extrabold text-amber-700 tracking-tight mt-auto">${state.offlineQueueCount || '3'}</div>
+          <!-- Card 4: Sahadaki Personel -->
+          <div class="bg-white p-6 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-col justify-between h-[128px] transition-colors duration-150 hover:border-[#D0D5DD]">
+            <div>
+              <span class="text-[11px] font-semibold text-[#667085] uppercase tracking-wider block">SAHADAKİ PERSONEL</span>
+            </div>
+            <div>
+              <div class="text-[30px] font-bold text-[#01214A] leading-none">${state.adminKpis.fieldStaffCount || '12'} / 14</div>
+              <span class="text-xs text-[#667085] font-normal mt-1 block">2 personel çevrimdışı</span>
+            </div>
           </div>
         </section>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <section class="lg:col-span-2 bg-white rounded-2xl shadow-card overflow-hidden flex flex-col border-none">
-            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-white">
-              <h3 class="font-extrabold text-[#01214A] text-base">Aktif Anketler</h3>
-              <span class="text-xs font-bold text-[#00A0DF] hover:underline cursor-pointer">Tümünü Gör</span>
+        <!-- SECONDARY QUIET STATUS ROW -->
+        <div class="flex flex-wrap items-center justify-between gap-4 py-2.5 px-4 bg-white rounded-[12px] border border-[#E9EDF2] text-xs text-[#667085] font-normal shadow-none">
+          <div class="flex items-center gap-2">
+            <span class="text-[#667085]">Toplam Tamamlanan:</span>
+            <span class="font-semibold text-[#01214A]">${state.adminKpis.totalCompleted || '12.480'} yanıt</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+            <span class="text-slate-600 font-normal">${state.offlineQueueCount || '3'} çevrimdışı kayıt senkronizasyon bekliyor</span>
+          </div>
+        </div>
+
+        <!-- 68% / 32% GRID SPLIT -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          <!-- LEFT 68% (8 COLS): MAIN HERO TABLE -->
+          <section class="lg:col-span-8 bg-white rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden flex flex-col">
+            <div class="p-6 border-b border-[#E9EDF2] flex items-center justify-between">
+              <div>
+                <h2 class="text-[18px] font-semibold text-[#01214A]">Aktif Anketler ve Saha İlerlemesi</h2>
+                <p class="text-[13px] text-slate-400 font-normal mt-0.5">Sahadaki görevlerin canlı hedef ve yüzde tamamlanma durumları</p>
+              </div>
+              <button type="button" class="btn-admin-tab text-xs font-semibold text-[#2A9D38] hover:underline cursor-pointer" data-admin-tab="surveys">
+                Tümünü Gör →
+              </button>
             </div>
 
             <div class="overflow-x-auto">
               <table class="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr class="bg-slate-100/70 border-b border-slate-100 text-[#01214A] uppercase font-extrabold text-[10px] tracking-wider">
-                    <th class="p-4">Anket Adı</th>
-                    <th class="p-4">Köy / Bölge</th>
-                    <th class="p-4">İlerleme</th>
-                    <th class="p-4 text-right">Son Tarih</th>
+                  <tr class="bg-[#F8FAFC] border-b border-[#E9EDF2] text-slate-500 font-semibold text-[11px]">
+                    <th class="py-3 px-5">Anket Adı</th>
+                    <th class="py-3 px-5">Bölge</th>
+                    <th class="py-3 px-5">İlerleme Durumu</th>
+                    <th class="py-3 px-5 text-right">Son Tarih</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100/80">
-                  <tr class="hover:bg-slate-50/60 transition-all">
-                    <td class="p-4 font-bold text-[#01214A]">Tarımsal İhtiyaç Analizi</td>
-                    <td class="p-4 text-slate-500 font-medium">Sinan Köyü</td>
-                    <td class="p-4">
-                      <div class="space-y-1">
-                        <div class="flex justify-between text-[11px] font-bold">
-                          <span class="text-slate-500">320 / 500</span>
-                          <span class="text-[#00A0DF]">%64</span>
+                <tbody class="divide-y divide-[#F1F5F9]">
+                  <tr class="hover:bg-slate-50/60 transition-colors duration-150">
+                    <td class="py-4 px-5 font-semibold text-[#01214A] flex items-center gap-2">
+                      <span class="w-2 h-2 rounded-full bg-[#2A9D38]"></span>
+                      <span>Tarımsal İhtiyaç Analizi</span>
+                    </td>
+                    <td class="py-4 px-5 text-slate-600 font-normal">Sinan Köyü</td>
+                    <td class="py-4 px-5">
+                      <div class="space-y-1.5 max-w-xs">
+                        <div class="flex justify-between text-xs font-medium text-slate-700">
+                          <span>320 / 500 · %64</span>
                         </div>
-                        <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                          <div class="bg-[#00A0DF] h-full rounded-full transition-all duration-300" style="width: 64%"></div>
+                        <div class="w-full bg-[#F1F5F9] h-1 rounded-full overflow-hidden">
+                          <div class="bg-[#2A9D38] h-full rounded-full transition-all duration-500" style="width: 64%"></div>
                         </div>
                       </div>
                     </td>
-                    <td class="p-4 text-right text-slate-500 font-semibold">30.11.2026</td>
+                    <td class="py-4 px-5 text-right text-slate-400 font-normal">30.11.2026</td>
                   </tr>
 
-                  <tr class="hover:bg-slate-50/60 transition-all">
-                    <td class="p-4 font-bold text-[#01214A]">Altyapı Durum Tespiti</td>
-                    <td class="p-4 text-slate-500 font-medium">Merkez Mahalle</td>
-                    <td class="p-4">
-                      <div class="space-y-1">
-                        <div class="flex justify-between text-[11px] font-bold">
-                          <span class="text-slate-500">150 / 200</span>
-                          <span class="text-[#2A9D38]">%75</span>
+                  <tr class="hover:bg-slate-50/60 transition-colors duration-150">
+                    <td class="py-4 px-5 font-semibold text-[#01214A] flex items-center gap-2">
+                      <span class="w-2 h-2 rounded-full bg-[#2A9D38]"></span>
+                      <span>Altyapı Durum Tespiti</span>
+                    </td>
+                    <td class="py-4 px-5 text-slate-600 font-normal">Merkez Mahalle</td>
+                    <td class="py-4 px-5">
+                      <div class="space-y-1.5 max-w-xs">
+                        <div class="flex justify-between text-xs font-medium text-slate-700">
+                          <span>150 / 200 · %75</span>
                         </div>
-                        <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                          <div class="bg-[#2A9D38] h-full rounded-full transition-all duration-300" style="width: 75%"></div>
+                        <div class="w-full bg-[#F1F5F9] h-1 rounded-full overflow-hidden">
+                          <div class="bg-[#2A9D38] h-full rounded-full transition-all duration-500" style="width: 75%"></div>
                         </div>
                       </div>
                     </td>
-                    <td class="p-4 text-right text-slate-500 font-semibold">15.11.2026</td>
+                    <td class="py-4 px-5 text-right text-slate-400 font-normal">15.11.2026</td>
                   </tr>
 
-                  <tr class="hover:bg-slate-50/60 transition-all">
-                    <td class="p-4 font-bold text-[#01214A]">Eğitim Memnuniyet Anketi</td>
-                    <td class="p-4 text-slate-500 font-medium">Yeşilyurt</td>
-                    <td class="p-4">
-                      <div class="space-y-1">
-                        <div class="flex justify-between text-[11px] font-bold">
-                          <span class="text-slate-500">45 / 300</span>
-                          <span class="text-amber-600">%15</span>
+                  <tr class="hover:bg-slate-50/60 transition-colors duration-150">
+                    <td class="py-4 px-5 font-semibold text-[#01214A] flex items-center gap-2">
+                      <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                      <span>Eğitim Memnuniyet Anketi</span>
+                    </td>
+                    <td class="py-4 px-5 text-slate-600 font-normal">Yeşilyurt</td>
+                    <td class="py-4 px-5">
+                      <div class="space-y-1.5 max-w-xs">
+                        <div class="flex justify-between text-xs font-medium text-slate-700">
+                          <span>45 / 300 · %15</span>
                         </div>
-                        <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                          <div class="bg-amber-500 h-full rounded-full transition-all duration-300" style="width: 15%"></div>
+                        <div class="w-full bg-[#F1F5F9] h-1 rounded-full overflow-hidden">
+                          <div class="bg-amber-500 h-full rounded-full transition-all duration-500" style="width: 15%"></div>
                         </div>
                       </div>
                     </td>
-                    <td class="p-4 text-right text-slate-500 font-semibold">10.12.2026</td>
+                    <td class="py-4 px-5 text-right text-slate-400 font-normal">10.12.2026</td>
                   </tr>
                 </tbody>
               </table>
             </div>
           </section>
 
-          <!-- SON SAHA HAREKETLERİ: DAİRESEL AVATARLAR (AHMET YILMAZ -> AY, MEHMET DEMİR -> MD, AYŞE KAYA -> AK) -->
-          <section class="bg-white rounded-2xl p-5 shadow-card space-y-4 border-none">
-            <div class="flex justify-between items-center pb-2 border-b border-slate-100">
-              <h3 class="font-extrabold text-[#01214A] text-base">Son Saha Hareketleri</h3>
-              <span class="text-[11px] text-[#00A0DF] font-bold bg-[#00A0DF]/10 px-2.5 py-0.5 rounded-full">Canlı Akış</span>
+          <!-- RIGHT 32% (4 COLS): RECENT ACTIVITY TIMELINE -->
+          <section class="lg:col-span-4 bg-white rounded-[14px] border border-[#E9EDF2] p-6 shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-5">
+            <div class="flex items-center justify-between pb-3 border-b border-[#E9EDF2]">
+              <h3 class="text-base font-semibold text-[#01214A]">Son Saha Hareketleri</h3>
+              <span class="flex items-center gap-1.5 text-[11px] text-slate-400 font-normal">
+                <span class="w-2 h-2 rounded-full bg-[#2A9D38]"></span> Canlı
+              </span>
             </div>
 
-            <div class="space-y-5 relative pl-4 border-l-2 border-slate-100">
-              <div class="relative pl-6">
-                <div class="absolute -left-[30px] top-0 w-8 h-8 rounded-full bg-slate-100 border border-slate-200 text-[#01214A] font-extrabold text-[11px] flex items-center justify-center ring-4 ring-white shadow-xs">AY</div>
+            <div class="space-y-5 relative pl-3 border-l border-[#E9EDF2]">
+              <div class="relative pl-5">
+                <div class="absolute -left-[17px] top-0.5 w-7 h-7 rounded-full bg-[#01214A] text-white font-semibold text-[10px] flex items-center justify-center ring-2 ring-white">AY</div>
                 <div class="flex justify-between items-baseline">
-                  <span class="font-extrabold text-xs text-[#01214A]">Ahmet Yılmaz</span>
-                  <span class="text-[10px] text-slate-400 font-semibold">19:42</span>
+                  <span class="text-[13px] font-semibold text-[#01214A]">Ahmet Yılmaz</span>
+                  <span class="text-[11px] text-slate-400 font-normal">19:42</span>
                 </div>
-                <p class="text-xs text-slate-600 mt-0.5 font-medium">Sinan Köyü için 'Tarımsal İhtiyaç Analizi' yanıtını tamamladı.</p>
+                <p class="text-[12px] text-slate-600 font-normal leading-relaxed mt-0.5">Sinan Köyü için <strong class="text-[#01214A] font-semibold">'Tarımsal İhtiyaç Analizi'</strong> yanıtını tamamladı.</p>
               </div>
 
-              <div class="relative pl-6">
-                <div class="absolute -left-[30px] top-0 w-8 h-8 rounded-full bg-slate-100 border border-slate-200 text-[#01214A] font-extrabold text-[11px] flex items-center justify-center ring-4 ring-white shadow-xs">MD</div>
+              <div class="relative pl-5">
+                <div class="absolute -left-[17px] top-0.5 w-7 h-7 rounded-full bg-[#2A9D38] text-white font-semibold text-[10px] flex items-center justify-center ring-2 ring-white">MD</div>
                 <div class="flex justify-between items-baseline">
-                  <span class="font-extrabold text-xs text-[#01214A]">Mehmet Demir</span>
-                  <span class="text-[10px] text-slate-400 font-semibold">19:15</span>
+                  <span class="text-[13px] font-semibold text-[#01214A]">Mehmet Demir</span>
+                  <span class="text-[11px] text-slate-400 font-normal">19:15</span>
                 </div>
-                <p class="text-xs text-slate-600 mt-0.5 font-medium">Merkez Mahalle konumunda 1 yeni fotoğraf yükledi.</p>
+                <p class="text-[12px] text-slate-600 font-normal leading-relaxed mt-0.5">Merkez Mahalle konumunda 1 yeni saha fotoğrafı yükledi.</p>
               </div>
 
-              <div class="relative pl-6">
-                <div class="absolute -left-[30px] top-0 w-8 h-8 rounded-full bg-slate-100 border border-slate-200 text-[#01214A] font-extrabold text-[11px] flex items-center justify-center ring-4 ring-white shadow-xs">AK</div>
+              <div class="relative pl-5">
+                <div class="absolute -left-[17px] top-0.5 w-7 h-7 rounded-full bg-slate-700 text-white font-semibold text-[10px] flex items-center justify-center ring-2 ring-white">AK</div>
                 <div class="flex justify-between items-baseline">
-                  <span class="font-extrabold text-xs text-[#01214A]">Ayşe Kaya</span>
-                  <span class="text-[10px] text-slate-400 font-semibold">18:50</span>
+                  <span class="text-[13px] font-semibold text-[#01214A]">Ayşe Kaya</span>
+                  <span class="text-[11px] text-slate-400 font-normal">18:50</span>
                 </div>
-                <p class="text-xs text-slate-600 mt-0.5 font-medium">Atanan 'Altyapı Durum Tespiti' görevini görüntüledi.</p>
+                <p class="text-[12px] text-slate-600 font-normal leading-relaxed mt-0.5">Atanan 'Altyapı Durum Tespiti' görevini görüntüledi.</p>
               </div>
             </div>
           </section>
+
         </div>
       `;
 
     case 'surveys':
       const filteredSurveys = store.getFilteredSurveys();
+      const currentCategory = state.surveyCategoryFilter || 'ALL';
+      const currentStatusFilter = state.surveyStatusFilter || 'ACTIVE_ONLY';
+      const viewMode = state.surveyViewMode || 'list';
+
+      const categories = ['Tümü', 'Tarım', 'Hayvancılık', 'Altyapı', 'Eğitim', 'Sosyal Destek', 'Vatandaş Memnuniyeti', 'Saha Tespiti', 'Diğer'];
+
       return `
-        <div class="bg-surface p-4 rounded-2xl border border-border flex flex-col md:flex-row justify-between items-center gap-3">
-          <div class="flex items-center gap-3 w-full md:w-auto">
-            <h3 class="font-bold text-on-surface text-base whitespace-nowrap">Sistemdeki Anketler (${filteredSurveys.length})</h3>
-            <div class="relative flex-1 md:w-72">
-              <input type="text" id="input-search-surveys" value="${state.searchSurveysQuery || ''}" placeholder="Anket adı ile canlı ara..." class="w-full h-10 pl-9 pr-3 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary font-medium"/>
-              <span class="absolute left-3 top-2.5 text-text-muted">${iconSvg('search', 'w-4 h-4 text-text-muted')}</span>
+        <!-- SCALABLE TOOLBAR: CATEGORY FILTER, SEARCH & ARCHIVE TOGGLE (SECTIONS 4-10) -->
+        <div class="bg-white p-4 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-3">
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+            <div class="flex items-center gap-3 w-full md:w-auto">
+              <h2 class="text-base font-semibold text-[#01214A] whitespace-nowrap">Sistemdeki Anketler (${filteredSurveys.length})</h2>
+              
+              <!-- SEARCH INPUT -->
+              <div class="relative flex-1 md:w-64">
+                <input type="text" id="input-search-surveys" value="${state.searchSurveysQuery || ''}" placeholder="Anket adı, kategori veya bölge..." class="w-full h-9 pl-9 pr-3 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-[#2A9D38] font-normal placeholder:text-slate-400 transition-colors duration-150"/>
+                <span class="absolute left-3 top-2.5 text-slate-400 pointer-events-none">${iconSvg('search', 'w-4 h-4 text-slate-400')}</span>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+              <!-- ARCHIVE STATUS FILTER TOGGLE -->
+              <div class="flex items-center gap-1 bg-[#F8FAFC] p-1 border border-[#E9EDF2] rounded-[10px] text-xs">
+                <button type="button" data-status-filter="ACTIVE_ONLY" class="btn-survey-status-toggle px-3 py-1 rounded-[8px] font-medium transition-all duration-150 cursor-pointer ${currentStatusFilter === 'ACTIVE_ONLY' ? 'bg-white text-[#01214A] font-semibold shadow-xs' : 'text-slate-500 hover:text-slate-800'}">Aktif</button>
+                <button type="button" data-status-filter="ARCHIVED_ONLY" class="btn-survey-status-toggle px-3 py-1 rounded-[8px] font-medium transition-all duration-150 cursor-pointer ${currentStatusFilter === 'ARCHIVED_ONLY' ? 'bg-[#01214A] text-white font-semibold shadow-xs' : 'text-slate-500 hover:text-slate-800'}">Arşiv</button>
+                <button type="button" data-status-filter="ALL" class="btn-survey-status-toggle px-3 py-1 rounded-[8px] font-medium transition-all duration-150 cursor-pointer ${currentStatusFilter === 'ALL' ? 'bg-slate-200 text-slate-800 font-semibold shadow-xs' : 'text-slate-500 hover:text-slate-800'}">Tümü</button>
+              </div>
+
+              <!-- VIEW MODE SWITCHER (LIST VS CARD) -->
+              <div class="flex items-center gap-1 bg-[#F8FAFC] p-1 border border-[#E9EDF2] rounded-[10px] text-xs">
+                <button type="button" data-view-mode="list" class="btn-survey-view-toggle px-2.5 py-1 rounded-[8px] font-medium transition-all duration-150 cursor-pointer ${viewMode === 'list' ? 'bg-white text-[#01214A] font-semibold shadow-xs' : 'text-slate-500'}" title="Liste Görünümü">
+                  Liste
+                </button>
+                <button type="button" data-view-mode="card" class="btn-survey-view-toggle px-2.5 py-1 rounded-[8px] font-medium transition-all duration-150 cursor-pointer ${viewMode === 'card' ? 'bg-white text-[#01214A] font-semibold shadow-xs' : 'text-slate-500'}" title="Kart Görünümü">
+                  Kart
+                </button>
+              </div>
+
+              <button id="btn-admin-create-survey-modal" class="h-[38px] px-4 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold rounded-[10px] text-xs transition-all duration-150 flex items-center gap-2 cursor-pointer whitespace-nowrap">
+                ${iconSvg('plus', 'w-4 h-4 text-white')}
+                <span>Yeni Anket</span>
+              </button>
             </div>
           </div>
 
-          <button id="btn-admin-create-survey-modal" class="px-4 py-2.5 bg-primary text-white font-bold rounded-xl text-xs hover:bg-primary-dark transition-all flex items-center gap-1.5 shadow-sm w-full md:w-auto justify-center">
-            ${iconSvg('plus', 'w-4 h-4')}
-            Anket Oluştur
-          </button>
+          <!-- CATEGORY FILTER PILLS / DROPDOWN (SECTION 6) -->
+          <div class="flex items-center gap-2 overflow-x-auto pt-1 pb-0.5 scrollbar-none text-xs">
+            <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider shrink-0 mr-1">Kategori:</span>
+            ${categories.map(cat => {
+              const catKey = cat === 'Tümü' ? 'ALL' : cat;
+              const isActiveCat = currentCategory === catKey;
+              return `
+                <button type="button" data-category="${catKey}" class="btn-filter-survey-category px-3 py-1 rounded-[8px] text-xs transition-colors duration-150 whitespace-nowrap cursor-pointer ${isActiveCat ? 'bg-[#2A9D38] text-white font-semibold' : 'bg-[#F8FAFC] border border-[#E9EDF2] text-slate-600 hover:bg-slate-100 font-normal'}">
+                  ${cat}
+                </button>
+              `;
+            }).join('')}
+          </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          ${filteredSurveys.length === 0 ? `
-            <div class="col-span-2 p-8 text-center bg-surface rounded-2xl border border-dashed border-border text-text-secondary text-xs font-medium">
-              Aramanıza uygun anket bulunamadı.
-            </div>
-          ` : filteredSurveys.map(s => `
-            <div class="bg-surface p-5 rounded-2xl border border-border shadow-sm space-y-4">
-              <div class="flex justify-between items-start">
-                <div>
-                  <h4 class="font-bold text-on-surface text-base">${s.title}</h4>
-                  <p class="text-xs text-text-secondary mt-1">${s.description || 'Açıklama belirtilmedi.'}</p>
-                  <span class="text-[10px] text-slate-500 font-medium mt-1.5 block">Oluşturan: <strong>${s.createdBy || 'Yönetici'}</strong></span>
-                </div>
-                <div>
-                  ${s.status === 'ACTIVE' ? `<span class="px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 inline-flex items-center gap-1">${iconSvg('checkCircle', 'w-3 h-3 text-emerald-600')} AKTİF</span>` : ''}
-                  ${s.status === 'PENDING_APPROVAL' ? `<span class="px-3 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 animate-pulse inline-flex items-center gap-1">${iconSvg('clock', 'w-3 h-3 text-amber-700')} ONAY BEKLİYOR</span>` : ''}
-                  ${s.status === 'REVISION_REQUESTED' ? `<span class="px-3 py-1 rounded-full text-[10px] font-bold bg-orange-100 text-orange-900 border border-orange-300 animate-pulse inline-flex items-center gap-1">${iconSvg('edit', 'w-3 h-3 text-orange-700')} REVİZYON İSTENDİ</span>` : ''}
-                  ${s.status === 'DRAFT' ? `<span class="px-3 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200 inline-flex items-center gap-1">${iconSvg('edit', 'w-3 h-3 text-slate-600')} TASLAK</span>` : ''}
-                  ${s.status === 'REJECTED' ? `<span class="px-3 py-1 rounded-full text-[10px] font-bold bg-red-100 text-red-800 border border-red-200 inline-flex items-center gap-1">${iconSvg('block', 'w-3 h-3 text-red-600')} REDDEDİLDİ</span>` : ''}
-                </div>
-              </div>
+        <!-- SCALABLE SURVEY CONTENT AREA (DEFAULT: KOMPAKT LİSTE) -->
+        ${viewMode === 'list' ? `
+          <!-- COMPACT LIST VIEW (SCALABLE FOR 100+ SURVEYS - SECTION 7) -->
+          <div class="bg-white rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="bg-[#F8FAFC] border-b border-[#E9EDF2] text-slate-500 font-semibold text-[11px]">
+                    <th class="py-3 px-5">Anket Adı</th>
+                    <th class="py-3 px-5">Kategori & Bölge</th>
+                    <th class="py-3 px-5">Oluşturan</th>
+                    <th class="py-3 px-5">Durum</th>
+                    <th class="py-3 px-5">İlerleme</th>
+                    <th class="py-3 px-5 text-right">İşlem</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-[#F1F5F9]">
+                  ${filteredSurveys.length === 0 ? `
+                    <tr>
+                      <td colspan="6" class="p-12 text-center text-slate-500 text-xs font-normal space-y-2">
+                        ${iconSvg('poll', 'w-8 h-8 text-slate-300 mx-auto')}
+                        <div class="font-semibold text-[#01214A]">Aramanıza veya seçilen kategoriye uygun anket bulunamadı.</div>
+                        <p class="text-slate-400 text-xs">Filtreleri değiştirerek farklı anketleri görüntüleyebilirsiniz.</p>
+                      </td>
+                    </tr>
+                  ` : filteredSurveys.map(s => `
+                    <tr class="hover:bg-slate-50/60 transition-colors duration-150">
+                      <td class="py-4 px-5">
+                        <div class="font-semibold text-[#01214A] leading-snug">${s.title}</div>
+                        <div class="text-[11px] text-slate-400 font-normal line-clamp-1 mt-0.5">${s.description || 'Açıklama belirtilmedi.'}</div>
+                      </td>
+                      <td class="py-4 px-5 text-slate-600 font-normal">
+                        <span class="inline-flex items-center gap-1">
+                          <span class="px-2 py-0.5 rounded-[4px] bg-slate-100 text-slate-700 font-medium text-[10px]">${s.category || 'Tarım'}</span>
+                          <span>${s.villageName || 'Sinan Köyü'}</span>
+                        </span>
+                      </td>
+                      <td class="py-4 px-5 text-slate-500 font-normal">${s.createdBy || 'Yönetici'}</td>
+                      <td class="py-4 px-5">
+                        ${s.isArchived ? `<span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">Arşivlendi</span>` : ''}
+                        ${!s.isArchived && s.status === 'COMPLETED' ? `<span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">Tamamlandı</span>` : ''}
+                        ${!s.isArchived && s.status === 'ACTIVE' ? `<span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">Aktif</span>` : ''}
+                        ${!s.isArchived && s.status === 'PENDING_APPROVAL' ? `<span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold bg-amber-50 text-amber-900 border border-amber-200">Onay Bekliyor</span>` : ''}
+                        ${!s.isArchived && s.status === 'DRAFT' ? `<span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">Taslak</span>` : ''}
+                      </td>
+                      <td class="py-4 px-5">
+                        <div class="space-y-1 max-w-[140px]">
+                          <div class="text-[11px] font-semibold text-[#01214A]">${s.status === 'COMPLETED' ? '100 / 100 · %100' : '320 / 500 · %64'}</div>
+                          <div class="w-full bg-[#F1F5F9] h-1 rounded-full overflow-hidden">
+                            <div class="bg-[#2A9D38] h-full rounded-full" style="width: ${s.status === 'COMPLETED' ? 100 : 64}%"></div>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="py-4 px-5 text-right">
+                        <div class="flex items-center justify-end gap-2">
+                          ${s.status === 'COMPLETED' ? `
+                            <button data-survey-id="${s.id}" class="btn-view-survey-report h-8 px-3 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1 cursor-pointer">
+                              ${iconSvg('assessment', 'w-3.5 h-3.5 text-white')}
+                              <span>Raporu Gör</span>
+                            </button>
+                          ` : s.status === 'ACTIVE' ? `
+                            <button data-survey-id="${s.id}" class="btn-open-assign-survey-modal h-8 px-3 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1 cursor-pointer">
+                              ${iconSvg('send', 'w-3.5 h-3.5 text-white')}
+                              <span>Atama Yap</span>
+                            </button>
+                          ` : `
+                            <button data-survey-id="${s.id}" class="btn-open-review-survey-modal h-8 px-3 bg-[#01214A] hover:bg-[#082d5e] text-white font-semibold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1 cursor-pointer">
+                              <span>İncele</span>
+                            </button>
+                          `}
 
-              <div class="p-4 bg-gradient-to-br from-[#01214A]/10 via-[#01214A]/5 to-transparent border-l-4 border-l-[#01214A] rounded-2xl space-y-3 shadow-2xs">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-[#00A0DF] animate-ping"></span>
-                    <h5 class="text-xs font-extrabold text-[#01214A] tracking-tight">Yönetici Kontrolü & Soru İnceleme</h5>
+                          <button data-survey-id="${s.id}" class="btn-admin-clone-survey h-8 px-2.5 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 text-xs font-normal rounded-[8px] transition-colors cursor-pointer">
+                            Kopyala
+                          </button>
+
+                          ${s.isArchived ? `
+                            <button data-survey-id="${s.id}" class="btn-unarchive-survey h-8 px-2.5 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 text-xs font-normal rounded-[8px] transition-colors cursor-pointer">
+                              Yayına Al
+                            </button>
+                          ` : `
+                            <button data-survey-id="${s.id}" class="btn-archive-survey h-8 px-2.5 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-500 hover:text-slate-800 text-xs font-normal rounded-[8px] transition-colors cursor-pointer">
+                              Arşivle
+                            </button>
+                          `}
+                        </div>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ` : `
+          <!-- SECONDARY CARD GRID VIEW (SECTION 8) -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            ${filteredSurveys.map(s => `
+              <div class="bg-white p-6 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-4 flex flex-col justify-between hover:border-[#D0D5DD] transition-colors duration-150">
+                <div class="space-y-2">
+                  <div class="flex justify-between items-start gap-3">
+                    <div>
+                      <span class="px-2 py-0.5 rounded-[4px] bg-slate-100 text-slate-700 font-medium text-[10px] mb-1.5 inline-block">${s.category || 'Tarım'}</span>
+                      <h3 class="font-semibold text-[#01214A] text-base leading-snug">${s.title}</h3>
+                    </div>
+                    <div class="shrink-0">
+                      ${s.status === 'COMPLETED' ? `<span class="px-2.5 py-1 rounded-[6px] text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">Tamamlandı</span>` : ''}
+                      ${s.status === 'ACTIVE' ? `<span class="px-2.5 py-1 rounded-[6px] text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">Aktif</span>` : ''}
+                      ${s.status === 'PENDING_APPROVAL' ? `<span class="px-2.5 py-1 rounded-[6px] text-[11px] font-semibold bg-amber-50 text-amber-900 border border-amber-200">Onay Bekliyor</span>` : ''}
+                      ${s.status === 'DRAFT' ? `<span class="px-2.5 py-1 rounded-[6px] text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">Taslak</span>` : ''}
+                    </div>
                   </div>
-                  <span class="text-[10px] text-slate-500 font-bold bg-white/80 px-2 py-0.5 rounded-md border border-slate-200/80">${s.createdBy || 'Saha Görevlisi'}</span>
+                  <p class="text-xs text-slate-500 font-normal leading-relaxed">${s.description || 'Açıklama belirtilmedi.'}</p>
                 </div>
 
-                <div class="flex flex-wrap gap-2 pt-1">
-                  <button data-survey-id="${s.id}" class="btn-open-review-survey-modal flex-1 h-10 bg-[#01214A] hover:bg-[#0a2f5c] text-white font-extrabold text-xs rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 flex items-center justify-center gap-2">
-                    ${iconSvg('search', 'w-4 h-4 text-[#00A0DF]')}
-                    <span>Soruları İncele & Onayla/Revize Et</span>
-                  </button>
-
-                  ${s.status === 'PENDING_APPROVAL' || s.status === 'REVISION_REQUESTED' ? `
-                    <button data-survey-id="${s.id}" class="btn-approve-admin-survey px-4 h-10 bg-[#2A9D38] hover:bg-[#22822e] text-white font-extrabold text-xs rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 flex items-center justify-center gap-1.5">
-                      ${iconSvg('checkCircle', 'w-4 h-4')}
-                      <span>Hızlı Onayla</span>
-                    </button>
-                  ` : ''}
+                <div class="flex items-center justify-between gap-2 pt-3 border-t border-[#F1F5F9]">
+                  <button data-survey-id="${s.id}" class="btn-view-survey-report h-9 px-3.5 bg-[#2A9D38] text-white font-semibold text-xs rounded-[10px]">Raporu Gör</button>
+                  <button data-survey-id="${s.id}" class="btn-admin-clone-survey h-9 px-3 bg-white border border-[#E9EDF2] text-slate-700 text-xs rounded-[10px]">Kopyala</button>
                 </div>
               </div>
-
-              <div class="flex items-center gap-3 pt-3 border-t border-border">
-                <button data-survey-id="${s.id}" class="btn-admin-clone-survey px-3 py-1.5 bg-surface-container-low border border-border text-on-surface text-xs font-semibold rounded-lg hover:bg-surface-container">
-                  Klonla / Kopyala
-                </button>
-                <button data-survey-id="${s.id}" class="btn-admin-survey-excel px-3 py-1.5 bg-emerald-700 text-white text-xs font-semibold rounded-lg hover:bg-emerald-800">
-                  Excel Rapor
-                </button>
-              </div>
-            </div>
-          `).join('')}
-        </div>
+            `).join('')}
+          </div>
+        `}
       `;
 
     case 'assignments':
       return `
-        <div class="bg-surface p-6 rounded-2xl border border-border shadow-sm space-y-6">
-          <div class="flex justify-between items-center">
-            <div>
-              <h3 class="font-bold text-on-surface text-lg">Yeni Görev Ataması Yap (Not ve Personel Seçimli)</h3>
-              <p class="text-xs text-text-secondary mt-0.5">Saha personellerine hedef bölge, anket ve yönetici talimatı atayın.</p>
-            </div>
+        <!-- FORM: NEW ASSIGNMENT (SECTION 12) -->
+        <div class="bg-white p-6 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-5">
+          <div>
+            <h2 class="text-[18px] font-semibold text-[#01214A]">Yeni Görev Ataması Yap</h2>
+            <p class="text-[13px] text-slate-400 font-normal mt-0.5">Saha personellerine hedef bölge, anket ve talimat atayın.</p>
           </div>
 
           <form id="form-admin-create-assignment" class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label class="block text-xs font-bold text-on-surface mb-1">Atanacak Anket *</label>
-              <select id="assign-survey-id" required class="w-full h-11 px-3 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary">
-                ${state.allSurveys.map(s => `<option value="${s.id}">${s.title}</option>`).join('')}
+              <label class="block text-xs font-semibold text-[#667085] uppercase tracking-wider mb-1">Atanacak Anket *</label>
+              <select id="assign-survey-id" required class="w-full h-10 px-3 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-[#2A9D38] font-normal">
+                ${(Array.isArray(state.allSurveys) ? state.allSurveys : []).map(s => `<option value="${s.id}">${s.title}</option>`).join('')}
               </select>
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-on-surface mb-1">Hedef Köy / Bölge *</label>
-              <input type="text" id="assign-village-name" required value="Sinan Köyü" class="w-full h-11 px-4 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary"/>
+              <label class="block text-xs font-semibold text-[#667085] uppercase tracking-wider mb-1">Hedef Köy / Bölge *</label>
+              <input type="text" id="assign-village-name" required value="Sinan Köyü" class="w-full h-10 px-3 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-[#2A9D38] font-normal"/>
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-on-surface mb-1">Hedef Anket Sayısı *</label>
-              <input type="number" id="assign-target-count" required value="50" class="w-full h-11 px-4 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary"/>
+              <label class="block text-xs font-semibold text-[#667085] uppercase tracking-wider mb-1">Hedef Anket Sayısı *</label>
+              <input type="number" id="assign-target-count" required value="50" class="w-full h-10 px-3 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-[#2A9D38] font-normal"/>
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-on-surface mb-1">Son Tarih *</label>
-              <input type="date" id="assign-end-date" required value="${new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]}" class="w-full h-11 px-4 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary"/>
+              <label class="block text-xs font-semibold text-[#667085] uppercase tracking-wider mb-1">Son Tarih *</label>
+              <input type="date" id="assign-end-date" required value="${new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]}" class="w-full h-10 px-3 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-[#2A9D38] font-normal"/>
             </div>
 
             <div class="md:col-span-2">
-              <label class="block text-xs font-bold text-on-surface mb-1">Yönetici Özel Notu (Admin Notu) *</label>
-              <textarea id="assign-note" required rows="2" placeholder="Örn: Sinan Köyü üreticileriyle görüşürken gübre ve ekipman ihtiyaçlarını özellikle not alınız." class="w-full p-3 bg-amber-50/60 border border-amber-200 rounded-xl text-xs text-amber-900 focus:outline-none focus:border-amber-500 font-medium">Sinan Köyü üreticileriyle görüşürken gübre ve ekipman ihtiyaçlarını detaylı olarak not alınız.</textarea>
+              <label class="block text-xs font-semibold text-[#667085] uppercase tracking-wider mb-1">Yönetici Özel Notu *</label>
+              <textarea id="assign-note" required rows="2" placeholder="Örn: Sinan Köyü üreticileriyle görüşürken gübre ve ekipman ihtiyaçlarını detaylı not alınız." class="w-full p-3 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-[#2A9D38] font-normal leading-relaxed">Sinan Köyü üreticileriyle görüşürken gübre ve ekipman ihtiyaçlarını detaylı olarak not alınız.</textarea>
             </div>
 
-            <div class="md:col-span-2">
-              <label class="block text-xs font-bold text-on-surface mb-1.5">Görev Atanacak Saha Personelleri</label>
-              <div class="flex flex-wrap gap-3 p-3 bg-surface-container-low border border-border rounded-xl text-xs">
-                ${state.allPersonnel.map(p => `
-                  <label class="flex items-center gap-2 font-medium cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-border hover:border-primary transition-all">
-                    <input type="checkbox" name="assign-personnel" value="${p.id}" checked class="rounded text-primary focus:ring-primary w-4 h-4"/>
-                    <span class="font-bold text-on-surface">${p.fullName}</span>
-                  </label>
-                `).join('')}
+            <div class="md:col-span-2 relative">
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-xs font-semibold text-[#667085] uppercase tracking-wider">Görev Atanacak Saha Personelleri *</label>
+                <span id="label-assign-selected-badge" class="text-[11px] font-medium text-slate-500">
+                  <span class="bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-[6px]">Tüm Ekip Seçili (${state.allPersonnel.length}/${state.allPersonnel.length})</span>
+                </span>
+              </div>
+
+              <!-- Dropdown Header Button -->
+              <button type="button" id="btn-toggle-assign-personnel-dropdown" class="w-full h-10 px-3 bg-[#F8FAFC] border border-[#E9EDF2] hover:border-[#2A9D38] rounded-[10px] text-xs font-normal text-[#01214A] flex items-center justify-between transition-colors cursor-pointer">
+                <div class="flex items-center gap-2 truncate" id="label-assign-selected-personnel-count">
+                  ${iconSvg('group', 'w-4 h-4 text-[#2A9D38]')}
+                  <span class="font-medium text-xs text-[#01214A] truncate">Tüm Ekip Seçili (${state.allPersonnel.length} Personel)</span>
+                </div>
+                
+                <div class="flex items-center gap-1 shrink-0">
+                  <span class="text-[11px] font-medium text-slate-400">Değiştir</span>
+                  ${iconSvg('chevronDown', 'w-4 h-4 text-slate-400')}
+                </div>
+              </button>
+
+              <!-- Downward Collapsible Dropdown Menu -->
+              <div id="dropdown-assign-personnel-menu" class="hidden absolute top-full left-0 right-0 mt-2 bg-white border border-[#E9EDF2] rounded-[14px] shadow-xl p-4 z-30 space-y-3">
+                <div class="relative">
+                  <input type="text" id="input-search-assign-personnel" placeholder="Personel ara..." class="w-full h-9 pl-9 pr-3 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs font-normal text-slate-900 focus:outline-none focus:border-[#2A9D38]"/>
+                  <span class="absolute left-3 top-2.5 text-slate-400">${iconSvg('search', 'w-4 h-4 text-slate-400')}</span>
+                </div>
+
+                <div class="flex items-center justify-between pt-1 pb-1 border-b border-[#F1F5F9] text-[11px] font-medium">
+                  <div class="flex items-center gap-2">
+                    <button type="button" id="btn-assign-select-all" class="text-[#2A9D38] hover:underline cursor-pointer">Tümünü Seç</button>
+                    <span class="text-slate-300">|</span>
+                    <button type="button" id="btn-assign-clear-all" class="text-slate-500 hover:text-slate-700 hover:underline cursor-pointer">Temizle</button>
+                  </div>
+                  <span class="text-slate-400 text-[10px]" id="info-assign-visible-count">${state.allPersonnel.length} personel</span>
+                </div>
+
+                <div id="container-assign-personnel-list" class="max-h-48 overflow-y-auto space-y-1 pr-1">
+                  ${state.allPersonnel.map(p => `
+                    <label data-search-text="${(p.fullName + ' ' + (p.phone || '') + ' ' + (p.email || '')).toLowerCase()}" class="assign-personnel-item flex items-center justify-between p-2 rounded-[8px] border border-[#E9EDF2] hover:bg-slate-50 cursor-pointer transition-colors">
+                      <div class="flex items-center gap-2.5">
+                        <input type="checkbox" name="assign-personnel" value="${p.id}" checked class="cb-assign-personnel rounded text-[#2A9D38] focus:ring-[#2A9D38] w-4 h-4 cursor-pointer"/>
+                        <div>
+                          <span class="font-semibold text-xs text-[#01214A] block">${p.fullName}</span>
+                          <span class="text-[10px] text-slate-400 block">${p.phone || p.email}</span>
+                        </div>
+                      </div>
+                      <span class="text-[10px] font-medium px-2 py-0.5 rounded-[4px] ${p.role === 'ADMIN' ? 'bg-slate-100 text-[#01214A]' : 'bg-emerald-50 text-emerald-800'}">
+                        ${p.role === 'ADMIN' ? 'Yönetici' : 'Saha'}
+                      </span>
+                    </label>
+                  `).join('')}
+                </div>
               </div>
             </div>
 
-            <div class="md:col-span-2 pt-2">
-              <button type="submit" class="h-11 px-6 bg-primary text-white font-bold rounded-xl text-xs hover:bg-primary-dark transition-all flex items-center justify-center gap-2 shadow-sm">
-                ${iconSvg('send', 'w-4 h-4')}
-                Görev Atamasını Kaydet & Saha Ekibine Bildir
+            <div class="md:col-span-2 pt-1">
+              <button type="submit" class="h-[38px] px-5 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[10px] transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer">
+                ${iconSvg('send', 'w-4 h-4 text-white')}
+                <span>Görev Atamasını Kaydet</span>
               </button>
             </div>
           </form>
         </div>
 
-        <div class="bg-surface p-5 rounded-2xl border border-border shadow-sm space-y-4">
-          <h3 class="font-bold text-on-surface text-base">Aktif Görev Atamaları Listesi (${state.allAssignments.length})</h3>
+        <!-- ASSIGNMENTS TABLE -->
+        <div class="bg-white rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden space-y-3 p-6">
+          <h2 class="text-[18px] font-semibold text-[#01214A]">Aktif Görev Atamaları (${(Array.isArray(state.allAssignments) ? state.allAssignments : []).length})</h2>
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse text-xs">
               <thead>
-                <tr class="bg-surface-container border-b border-border text-text-secondary uppercase font-bold text-[10px]">
-                  <th class="p-3">Anket Adı</th>
-                  <th class="p-3">Hedef Köy / Bölge</th>
-                  <th class="p-3">Yönetici Notu</th>
-                  <th class="p-3">Hedef / Tamamlanan</th>
-                  <th class="p-3 text-right">Saha Görüldü</th>
+                <tr class="bg-[#F8FAFC] border-b border-[#E9EDF2] text-slate-500 font-semibold text-[11px]">
+                  <th class="py-3 px-5">Anket Adı</th>
+                  <th class="py-3 px-5">Hedef Köy / Bölge</th>
+                  <th class="py-3 px-5">Yönetici Notu</th>
+                  <th class="py-3 px-5">Hedef / Tamamlanan</th>
+                  <th class="py-3 px-5 text-right">Saha Görüldü</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-border">
-                ${state.allAssignments.map(a => `
-                  <tr>
-                    <td class="p-3 font-bold text-on-surface">${a.surveyTitle}</td>
-                    <td class="p-3 text-text-secondary">${a.villageName}</td>
-                    <td class="p-3 text-amber-800 font-medium max-w-xs truncate">${a.note || 'Özel not eklenmedi.'}</td>
-                    <td class="p-3 font-bold text-primary">${a.completedCount} / ${a.targetCount}</td>
-                    <td class="p-3 text-right">
-                      <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${a.viewedAt ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+              <tbody class="divide-y divide-[#F1F5F9]">
+                ${(Array.isArray(state.allAssignments) ? state.allAssignments : []).map(a => `
+                  <tr class="hover:bg-slate-50/60 transition-colors duration-150">
+                    <td class="py-4 px-5 font-semibold text-[#01214A]">${a.surveyTitle}</td>
+                    <td class="py-4 px-5 text-slate-500 font-normal">${a.villageName}</td>
+                    <td class="py-4 px-5 text-slate-600 font-normal max-w-xs truncate">${a.note || 'Özel not eklenmedi.'}</td>
+                    <td class="py-4 px-5 font-semibold text-[#2A9D38]">${a.completedCount} / ${a.targetCount}</td>
+                    <td class="py-4 px-5 text-right">
+                      <span class="px-2.5 py-1 rounded-[6px] text-[11px] font-semibold ${a.viewedAt ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-amber-50 text-amber-900 border border-amber-200'}">
                         ${a.viewedAt ? 'Görüldü' : 'Bekliyor'}
                       </span>
                     </td>
@@ -2175,61 +3326,75 @@ function renderAdminTabContent(tab, state) {
       const statusFilterSub = state.statusFilterSubmissions || 'ALL';
 
       return `
-        <div class="bg-surface p-5 rounded-2xl border border-border shadow-sm space-y-4">
-          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-            <div>
-              <h3 class="font-bold text-on-surface text-base">Gelen Cevaplar ve İptal/Geçersiz İşlemleri (${filteredSubmissions.length})</h3>
-              <p class="text-xs text-text-secondary mt-0.5">Saha verilerini arayın, inceleyin veya geçerlilik durumunu değiştirin.</p>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
-              <!-- Search Bar -->
-              <div class="relative flex-1 md:w-64">
-                <input type="text" id="input-search-submissions" value="${state.searchSubmissionsQuery || ''}" placeholder="Personel, anket veya köy ara..." class="w-full h-10 pl-9 pr-3 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary font-medium"/>
-                <span class="absolute left-3 top-2.5 text-text-muted">${iconSvg('search', 'w-4 h-4 text-text-muted')}</span>
-              </div>
-
-              <!-- Filter Pills -->
-              <div class="flex items-center gap-1 bg-surface-container-low p-1 border border-border rounded-xl text-[11px] font-bold">
-                <button type="button" data-filter="ALL" class="btn-filter-status-sub px-3 py-1.5 rounded-lg transition-all ${statusFilterSub === 'ALL' ? 'bg-primary text-white shadow-xs' : 'text-text-secondary hover:text-on-surface'}">Tümü</button>
-                <button type="button" data-filter="VALID" class="btn-filter-status-sub px-3 py-1.5 rounded-lg transition-all ${statusFilterSub === 'VALID' ? 'bg-emerald-600 text-white shadow-xs' : 'text-text-secondary hover:text-on-surface'}">Geçerli</button>
-                <button type="button" data-filter="INVALID" class="btn-filter-status-sub px-3 py-1.5 rounded-lg transition-all ${statusFilterSub === 'INVALID' ? 'bg-red-600 text-white shadow-xs' : 'text-text-secondary hover:text-on-surface'}">Geçersiz</button>
-              </div>
-            </div>
+        <!-- TOOLBAR: SEARCH & SEGMENTED FILTER (SECTION 13) -->
+        <div class="bg-white p-4 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-3 sm:space-y-0 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+          <div class="flex items-center gap-3">
+            <h2 class="text-base font-semibold text-[#01214A]">Gelen Cevaplar (${filteredSubmissions.length})</h2>
           </div>
 
+          <div class="flex flex-wrap items-center gap-3">
+            <!-- SEARCH INPUT -->
+            <div class="relative w-full sm:w-64">
+              <input type="text" id="input-search-submissions" value="${state.searchSubmissionsQuery || ''}" placeholder="Personel, anket veya bölge ara..." class="w-full h-9 pl-9 pr-3 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-[#2A9D38] font-normal placeholder:text-slate-400 transition-colors duration-150"/>
+              <span class="absolute left-3 top-2.5 text-slate-400 pointer-events-none">${iconSvg('search', 'w-4 h-4 text-slate-400')}</span>
+            </div>
+
+            <!-- SEGMENTED FILTER -->
+            <div class="flex items-center gap-1 bg-[#F8FAFC] p-1 border border-[#E9EDF2] rounded-[10px] text-xs">
+              <button type="button" data-filter="ALL" class="btn-filter-status-sub px-3 py-1 rounded-[8px] font-medium transition-all duration-150 cursor-pointer ${statusFilterSub === 'ALL' ? 'bg-white text-[#01214A] font-semibold shadow-xs' : 'text-slate-500 hover:text-slate-800'}">Tümü</button>
+              <button type="button" data-filter="VALID" class="btn-filter-status-sub px-3 py-1 rounded-[8px] font-medium transition-all duration-150 cursor-pointer ${statusFilterSub === 'VALID' ? 'bg-[#2A9D38] text-white font-semibold shadow-xs' : 'text-slate-500 hover:text-slate-800'}">Geçerli</button>
+              <button type="button" data-filter="INVALID" class="btn-filter-status-sub px-3 py-1 rounded-[8px] font-medium transition-all duration-150 cursor-pointer ${statusFilterSub === 'INVALID' ? 'bg-red-600 text-white font-semibold shadow-xs' : 'text-slate-500 hover:text-slate-800'}">Geçersiz</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- RESPONSES DATA TABLE -->
+        <div class="bg-white rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse text-xs">
               <thead>
-                <tr class="bg-surface-container border-b border-border text-text-secondary uppercase font-bold text-[10px]">
-                  <th class="p-3">Kayıt ID</th>
-                  <th class="p-3">Saha Kullanıcısı</th>
-                  <th class="p-3">Tarih</th>
-                  <th class="p-3">GPS Konum</th>
-                  <th class="p-3">Geçersizlik Durumu</th>
-                  <th class="p-3 text-right">İşlem</th>
+                <tr class="bg-[#F8FAFC] border-b border-[#E9EDF2] text-slate-500 font-semibold text-[11px]">
+                  <th class="py-3 px-5">Kayıt ID</th>
+                  <th class="py-3 px-5">Saha Kullanıcısı</th>
+                  <th class="py-3 px-5">Tarih & Saat</th>
+                  <th class="py-3 px-5">GPS Konum</th>
+                  <th class="py-3 px-5">Geçerlilik Durumu</th>
+                  <th class="py-3 px-5 text-right">İşlem</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-border">
+              <tbody class="divide-y divide-[#F1F5F9]">
                 ${filteredSubmissions.length === 0 ? `
                   <tr>
-                    <td colspan="6" class="p-8 text-center text-text-secondary text-xs font-medium">
-                      Aramanıza veya seçilen filtreye uygun kayıt bulunamadı.
+                    <td colspan="6" class="p-12 text-center text-slate-500 text-xs font-normal space-y-2">
+                      <div class="w-12 h-12 rounded-full bg-slate-50 border border-slate-200 text-slate-400 mx-auto flex items-center justify-center mb-2">
+                        ${iconSvg('chatBubble', 'w-6 h-6 text-slate-400')}
+                      </div>
+                      <div class="font-semibold text-[#01214A]">Henüz cevap bulunmuyor</div>
+                      <p class="text-slate-400 text-xs max-w-sm mx-auto">Saha personelinden gelen kayıtlar burada görüntülenecek.</p>
+                      ${statusFilterSub !== 'ALL' || state.searchSubmissionsQuery ? `
+                        <button type="button" id="btn-clear-submission-filters" class="mt-3 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-[8px] transition-colors cursor-pointer">Filtreleri Temizle</button>
+                      ` : ''}
                     </td>
                   </tr>
                 ` : filteredSubmissions.map(sub => `
-                  <tr>
-                    <td class="p-3 font-mono text-[11px] text-text-muted">${sub.clientSubmissionId || sub.id}</td>
-                    <td class="p-3 font-bold text-on-surface">${sub.fieldUserName || 'Ahmet Yılmaz'}</td>
-                    <td class="p-3 text-text-secondary">${new Date(sub.submittedAt || Date.now()).toLocaleTimeString('tr-TR')}</td>
-                    <td class="p-3 text-text-secondary">${sub.latitude ? `${sub.latitude.toFixed(2)}, ${sub.longitude?.toFixed(2)}` : 'Çevrimdışı'}</td>
-                    <td class="p-3">
-                      <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${sub.isInvalid ? 'bg-red-100 text-red-800' : 'bg-emerald-100 text-emerald-800'}">
+                  <tr class="hover:bg-slate-50/60 transition-colors duration-150">
+                    <td class="py-4 px-5 font-mono text-[11px] text-slate-400">${sub.clientSubmissionId || sub.id}</td>
+                    <td class="py-4 px-5 font-semibold text-[#01214A]">${sub.fieldUserName || 'Ahmet Yılmaz'}</td>
+                    <td class="py-4 px-5 text-slate-500 font-normal">${new Date(sub.submittedAt || Date.now()).toLocaleTimeString('tr-TR')}</td>
+                    <td class="py-4 px-5 text-slate-500 font-normal">
+                      ${sub.latitude ? `
+                        <span class="inline-flex items-center gap-1 text-[#2A9D38] font-medium">
+                          ${iconSvg('mapPin', 'w-3.5 h-3.5')} ${sub.latitude.toFixed(2)}, ${sub.longitude?.toFixed(2)}
+                        </span>
+                      ` : 'Çevrimdışı'}
+                    </td>
+                    <td class="py-4 px-5">
+                      <span class="px-2.5 py-1 rounded-[6px] text-[11px] font-semibold ${sub.isInvalid ? 'bg-red-50 text-red-800 border border-red-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}">
                         ${sub.isInvalid ? 'Geçersiz İşaretlendi' : 'Geçerli Yanıt'}
                       </span>
                     </td>
-                    <td class="p-3 text-right">
-                      <button data-sub-id="${sub.id}" class="btn-toggle-invalid-sub px-3 py-1 bg-surface-container-low border border-border text-xs font-semibold rounded-lg hover:bg-surface-container">
+                    <td class="py-4 px-5 text-right">
+                      <button data-sub-id="${sub.id}" class="btn-toggle-invalid-sub h-8 px-3 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 text-xs font-normal rounded-[8px] transition-colors duration-150 cursor-pointer">
                         ${sub.isInvalid ? 'Geçerli Yap' : 'Geçersiz Say'}
                       </button>
                     </td>
@@ -2242,31 +3407,130 @@ function renderAdminTabContent(tab, state) {
       `;
 
     case 'reports':
+      const savedReports = store.getFilteredReports();
+      const allReports = Array.isArray(state.reports) ? state.reports : [];
+      const totalCitizenCount = allReports.reduce((acc, r) => acc + (r.completedCount || 100), 0);
+      const currentReportCategory = state.reportCategoryFilter || 'ALL';
+
+      const reportCategories = ['Tümü', 'Tarım', 'Hayvancılık', 'Altyapı', 'Eğitim', 'Sosyal Destek', 'Vatandaş Memnuniyeti'];
+
       return `
-        <div class="bg-surface p-6 rounded-2xl border border-border shadow-sm space-y-6">
-          <div>
-            <h3 class="font-bold text-on-surface text-lg">Otomatik Rapor Üretim Merkezi</h3>
-            <p class="text-xs text-text-secondary mt-1">Gelişmiş Excel ve PDF rapor motoru ile anlık belgeler indirin.</p>
+        <!-- 4 CLEAN WHITE KPI SCORECARDS (SECTIONS 11-12) -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div class="bg-white p-6 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-col justify-between h-[128px]">
+            <span class="text-[11px] font-semibold text-[#667085] uppercase tracking-wider block">TOPLAM RAPOR</span>
+            <div>
+              <div class="text-[30px] font-bold text-[#01214A] leading-none">${allReports.length}</div>
+              <span class="text-xs text-[#667085] font-normal mt-1 block">Hazır kurumsal rapor</span>
+            </div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="p-5 border border-emerald-200 bg-emerald-50/50 rounded-2xl space-y-3">
-              <h4 class="font-bold text-emerald-900 text-base">Excel (.xlsx) Canlı Veri Seti</h4>
-              <p class="text-xs text-emerald-700 leading-relaxed">Tüm soruları, saha koordinatlarını ve tarihleri kolonlar halinde içeren Excel belgesi üretir.</p>
-              <button id="btn-reports-tab-excel" class="px-5 py-2.5 bg-emerald-700 text-white font-bold rounded-xl text-xs hover:bg-emerald-800 transition-all flex items-center gap-2">
-                ${iconSvg('download', 'w-4 h-4')}
-                Excel Belgesi İndir
-              </button>
+          <div class="bg-white p-6 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-col justify-between h-[128px]">
+            <span class="text-[11px] font-semibold text-[#667085] uppercase tracking-wider block">KATILIMCI SAYISI</span>
+            <div>
+              <div class="text-[30px] font-bold text-[#01214A] leading-none">${totalCitizenCount || 100}</div>
+              <span class="text-xs text-[#667085] font-normal mt-1 block">Doğrulanmış vatandaş yanıtı</span>
+            </div>
+          </div>
+
+          <div class="bg-white p-6 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-col justify-between h-[128px]">
+            <span class="text-[11px] font-semibold text-[#667085] uppercase tracking-wider block">DOĞRULAMA ORANI</span>
+            <div>
+              <div class="text-[30px] font-bold text-[#2A9D38] leading-none">%100</div>
+              <span class="text-xs text-[#667085] font-normal mt-1 block">Tam saha katılımı</span>
+            </div>
+          </div>
+
+          <div class="bg-white p-6 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-col justify-between h-[128px]">
+            <span class="text-[11px] font-semibold text-[#667085] uppercase tracking-wider block">HEDEF BÖLGE</span>
+            <div>
+              <div class="text-xl font-bold text-[#01214A] leading-none truncate">Sinan Köyü</div>
+              <span class="text-xs text-[#667085] font-normal mt-1 block">6 Mahalle genelinde</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- TOOLBAR: SEARCH & CATEGORY FILTER (SECTIONS 16-17) -->
+        <div class="bg-white p-4 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-3">
+          <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+            <div class="flex items-center gap-3">
+              <h2 class="text-base font-semibold text-[#01214A]">Rapor Kütüphanesi (${savedReports.length})</h2>
             </div>
 
-            <div class="p-5 border border-red-200 bg-red-50/50 rounded-2xl space-y-3">
-              <h4 class="font-bold text-red-900 text-base">PDF Kurumsal Analiz Raporu</h4>
-              <p class="text-xs text-red-700 leading-relaxed">A4 formatında KPI istatistikleri ve yüzde dağılım tabloları içeren PDF raporu üretir.</p>
-              <button id="btn-reports-tab-pdf" class="px-5 py-2.5 bg-red-700 text-white font-bold rounded-xl text-xs hover:bg-red-800 transition-all flex items-center gap-2">
-                ${iconSvg('fileText', 'w-4 h-4')}
-                PDF Belgesi İndir
-              </button>
+            <div class="relative w-full sm:w-72">
+              <input type="text" id="input-search-reports" value="${state.reportSearchQuery || ''}" placeholder="Rapor adı veya bölge ara..." class="w-full h-9 pl-9 pr-3 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-[#2A9D38] font-normal placeholder:text-slate-400 transition-colors duration-150"/>
+              <span class="absolute left-3 top-2.5 text-slate-400 pointer-events-none">${iconSvg('search', 'w-4 h-4 text-slate-400')}</span>
             </div>
+          </div>
+
+          <!-- CATEGORY FILTER PILLS -->
+          <div class="flex items-center gap-2 overflow-x-auto pt-1 pb-0.5 scrollbar-none text-xs">
+            <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider shrink-0 mr-1">Kategori:</span>
+            ${reportCategories.map(cat => {
+              const catKey = cat === 'Tümü' ? 'ALL' : cat;
+              const isActiveCat = currentReportCategory === catKey;
+              return `
+                <button type="button" data-report-category="${catKey}" class="btn-filter-report-category px-3 py-1 rounded-[8px] text-xs transition-colors duration-150 whitespace-nowrap cursor-pointer ${isActiveCat ? 'bg-[#2A9D38] text-white font-semibold' : 'bg-[#F8FAFC] border border-[#E9EDF2] text-slate-600 hover:bg-slate-100 font-normal'}">
+                  ${cat}
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- COMPACT REPORT LIBRARY TABLE (NO GIANT DUMP - SECTIONS 13-15) -->
+        <div class="bg-white rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-[#F8FAFC] border-b border-[#E9EDF2] text-slate-500 font-semibold text-[11px]">
+                  <th class="py-3 px-5">Rapor Adı</th>
+                  <th class="py-3 px-5">Kategori & Bölge</th>
+                  <th class="py-3 px-5">Kayıt Tarihi</th>
+                  <th class="py-3 px-5">Saha Katılımı</th>
+                  <th class="py-3 px-5">Durum</th>
+                  <th class="py-3 px-5 text-right">İşlem</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-[#F1F5F9]">
+                ${savedReports.length === 0 ? `
+                  <tr>
+                    <td colspan="6" class="p-12 text-center text-slate-500 text-xs font-normal space-y-2">
+                      ${iconSvg('assessment', 'w-10 h-10 text-slate-300 mx-auto')}
+                      <div class="font-semibold text-[#01214A] text-sm">Henüz kayıtlı rapor bulunmuyor.</div>
+                      <p class="text-slate-400 text-xs max-w-md mx-auto">Anketler sekmesinde tamamlanan (100/100) anketler için "Rapor Oluştur & Kaydet" butonuna basarak rapora dönüştürebilirsiniz.</p>
+                    </td>
+                  </tr>
+                ` : savedReports.map(rpt => `
+                  <tr class="hover:bg-slate-50/60 transition-colors duration-150">
+                    <td class="py-4 px-5">
+                      <div class="font-semibold text-[#01214A] leading-snug">${rpt.surveyTitle}</div>
+                    </td>
+                    <td class="py-4 px-5 text-slate-600 font-normal">
+                      <span class="inline-flex items-center gap-1">
+                        <span class="px-2 py-0.5 rounded-[4px] bg-slate-100 text-slate-700 font-medium text-[10px]">${rpt.category || 'Tarım'}</span>
+                        <span>${rpt.villageName || 'Sinan Köyü'}</span>
+                      </span>
+                    </td>
+                    <td class="py-4 px-5 text-slate-500 font-normal">${rpt.createdAt || '12 Ağustos 2026'}</td>
+                    <td class="py-4 px-5 font-semibold text-[#2A9D38]">${rpt.completedCount || 100} / ${rpt.targetCount || 100} Yanıt (%100)</td>
+                    <td class="py-4 px-5">
+                      <span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                        ${rpt.statusLabel || 'Hazır'}
+                      </span>
+                    </td>
+                    <td class="py-4 px-5 text-right">
+                      <div class="flex items-center justify-end gap-2">
+                        <button data-report-id="${rpt.id}" class="btn-open-report-modal h-8 px-3.5 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1.5 cursor-pointer">
+                          ${iconSvg('search', 'w-3.5 h-3.5 text-white')}
+                          <span>Raporu Gör</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
           </div>
         </div>
       `;
@@ -2276,76 +3540,82 @@ function renderAdminTabContent(tab, state) {
       const roleFilterP = state.roleFilterPersonnel || 'ALL';
 
       return `
-        <div class="bg-surface p-5 rounded-2xl border border-border shadow-sm space-y-4">
-          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-            <div>
-              <h3 class="font-bold text-on-surface text-base">Saha Ekibi ve Personeller (${filteredPersonnel.length})</h3>
-              <p class="text-xs text-text-secondary mt-0.5">Saha görevlileri ve yöneticileri ekleyin, e-posta, şifre ve hesap durumlarını yönetin.</p>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
-              <!-- Search Input -->
-              <div class="relative flex-1 md:w-60">
-                <input type="text" id="input-search-personnel" value="${state.searchPersonnelQuery || ''}" placeholder="Personel adı, e-posta..." class="w-full h-10 pl-9 pr-3 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary font-medium"/>
-                <span class="absolute left-3 top-2.5 text-text-muted">${iconSvg('search', 'w-4 h-4 text-text-muted')}</span>
-              </div>
-
-              <!-- Role Filter -->
-              <div class="flex items-center gap-1 bg-surface-container-low p-1 border border-border rounded-xl text-[11px] font-bold">
-                <button type="button" data-filter="ALL" class="btn-filter-role-personnel px-3 py-1.5 rounded-lg transition-all ${roleFilterP === 'ALL' ? 'bg-primary text-white shadow-xs' : 'text-text-secondary hover:text-on-surface'}">Tümü</button>
-                <button type="button" data-filter="FIELD" class="btn-filter-role-personnel px-3 py-1.5 rounded-lg transition-all ${roleFilterP === 'FIELD' ? 'bg-emerald-600 text-white shadow-xs' : 'text-text-secondary hover:text-on-surface'}">Saha</button>
-                <button type="button" data-filter="ADMIN" class="btn-filter-role-personnel px-3 py-1.5 rounded-lg transition-all ${roleFilterP === 'ADMIN' ? 'bg-indigo-600 text-white shadow-xs' : 'text-text-secondary hover:text-on-surface'}">Admin</button>
-              </div>
-
-              <button id="btn-open-add-personnel-modal" class="px-4 py-2 bg-primary text-white font-bold rounded-xl text-xs hover:bg-primary-dark transition-all flex items-center gap-1.5 shadow-sm whitespace-nowrap">
-                ${iconSvg('plus', 'w-4 h-4')}
-                Yeni Personel Ekle
-              </button>
-            </div>
+        <!-- TOOLBAR: SEARCH, SEGMENTED FILTER & PRIMARY CTA (SECTION 15) -->
+        <div class="bg-white p-4 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-3 sm:space-y-0 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+          <div class="flex items-center gap-3">
+            <h2 class="text-base font-semibold text-[#01214A]">Saha Ekibi ve Personeller (${filteredPersonnel.length})</h2>
           </div>
 
+          <div class="flex flex-wrap items-center gap-3">
+            <!-- SEARCH INPUT -->
+            <div class="relative w-full sm:w-60">
+              <input type="text" id="input-search-personnel" value="${state.searchPersonnelQuery || ''}" placeholder="Personel adı, e-posta..." class="w-full h-9 pl-9 pr-3 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-[#2A9D38] font-normal placeholder:text-slate-400 transition-colors duration-150"/>
+              <span class="absolute left-3 top-2.5 text-slate-400 pointer-events-none">${iconSvg('search', 'w-4 h-4 text-slate-400')}</span>
+            </div>
+
+            <!-- SEGMENTED FILTER -->
+            <div class="flex items-center gap-1 bg-[#F8FAFC] p-1 border border-[#E9EDF2] rounded-[10px] text-xs">
+              <button type="button" data-filter="ALL" class="btn-filter-role-personnel px-3 py-1 rounded-[8px] font-medium transition-all duration-150 cursor-pointer ${roleFilterP === 'ALL' ? 'bg-white text-[#01214A] font-semibold shadow-xs' : 'text-slate-500 hover:text-slate-800'}">Tümü</button>
+              <button type="button" data-filter="FIELD" class="btn-filter-role-personnel px-3 py-1 rounded-[8px] font-medium transition-all duration-150 cursor-pointer ${roleFilterP === 'FIELD' ? 'bg-[#2A9D38] text-white font-semibold shadow-xs' : 'text-slate-500 hover:text-slate-800'}">Saha</button>
+              <button type="button" data-filter="ADMIN" class="btn-filter-role-personnel px-3 py-1 rounded-[8px] font-medium transition-all duration-150 cursor-pointer ${roleFilterP === 'ADMIN' ? 'bg-[#01214A] text-white font-semibold shadow-xs' : 'text-slate-500 hover:text-slate-800'}">Yönetici</button>
+            </div>
+
+            <button id="btn-open-add-personnel-modal" class="h-[38px] px-4 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[10px] transition-all duration-150 flex items-center gap-2 cursor-pointer whitespace-nowrap">
+              ${iconSvg('plus', 'w-4 h-4 text-white')}
+              <span>Yeni Personel Ekle</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- PERSONNEL TABLE -->
+        <div class="bg-white rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse text-xs">
               <thead>
-                <tr class="bg-surface-container border-b border-border text-text-secondary uppercase font-bold text-[10px]">
-                  <th class="p-3">Ad Soyad</th>
-                  <th class="p-3">E-Posta (Giriş Adresi)</th>
-                  <th class="p-3">Telefon</th>
-                  <th class="p-3">Rol</th>
-                  <th class="p-3">Hesap Durumu</th>
-                  <th class="p-3 text-right">İşlem</th>
+                <tr class="bg-[#F8FAFC] border-b border-[#E9EDF2] text-slate-500 font-semibold text-[11px]">
+                  <th class="py-3 px-5">Ad Soyad</th>
+                  <th class="py-3 px-5">E-Posta (Giriş Adresi)</th>
+                  <th class="py-3 px-5">Telefon</th>
+                  <th class="py-3 px-5">Rol</th>
+                  <th class="py-3 px-5">Hesap Durumu</th>
+                  <th class="py-3 px-5 text-right">İşlem</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-border">
+              <tbody class="divide-y divide-[#F1F5F9]">
                 ${filteredPersonnel.length === 0 ? `
                   <tr>
-                    <td colspan="6" class="p-8 text-center text-text-secondary text-xs font-medium">
-                      Aramanıza uygun personel bulunamadı.
+                    <td colspan="6" class="p-12 text-center text-slate-500 text-xs font-normal space-y-2">
+                      <div class="font-semibold text-[#01214A]">Henüz personel bulunmuyor</div>
+                      <p class="text-slate-400 text-xs">Aramanıza uygun kayıt bulunamadı.</p>
                     </td>
                   </tr>
                 ` : filteredPersonnel.map(p => `
-                  <tr>
-                    <td class="p-3 font-bold text-on-surface">${p.fullName}</td>
-                    <td class="p-3 text-text-secondary font-medium">${p.email || 'personel@sahaanket.gov.tr'}</td>
-                    <td class="p-3 text-text-secondary font-medium">${p.phone}</td>
-                    <td class="p-3 font-semibold ${p.role === 'ADMIN' ? 'text-indigo-600' : 'text-primary'}">${p.role === 'ADMIN' ? 'YÖNETİCİ' : 'SAHA PERSONELİ'}</td>
-                    <td class="p-3">
-                      <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${p.isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}">
+                  <tr class="hover:bg-slate-50/60 transition-colors duration-150">
+                    <td class="py-4 px-5 font-semibold text-[#01214A]">${p.fullName}</td>
+                    <td class="py-4 px-5 text-slate-500 font-normal">${p.email || 'personel@sahaanket.gov.tr'}</td>
+                    <td class="py-4 px-5 text-slate-500 font-normal">${p.phone}</td>
+                    <td class="py-4 px-5">
+                      <span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold ${p.role === 'ADMIN' ? 'bg-slate-100 text-[#01214A] border border-slate-200' : 'bg-slate-50 text-slate-700 border border-slate-200'}">
+                        ${p.role === 'ADMIN' ? 'YÖNETİCİ' : 'SAHA PERSONELİ'}
+                      </span>
+                    </td>
+                    <td class="py-4 px-5">
+                      <span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold ${p.isActive ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-red-50 text-red-800 border border-red-200'}">
                         ${p.isActive ? 'Aktif' : 'Pasif'}
                       </span>
                     </td>
-                    <td class="p-3 text-right">
-                      <div class="flex items-center justify-end gap-1.5">
-                        <button data-user-id="${p.id}" class="btn-open-edit-personnel-modal px-2.5 py-1 bg-surface-container-low border border-border text-xs font-semibold rounded-lg hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-all flex items-center gap-1">
-                          ${iconSvg('user', 'w-3.5 h-3.5')}
+                    <td class="py-4 px-5 text-right">
+                      <div class="flex items-center justify-end gap-2">
+                        <button data-user-id="${p.id}" class="btn-open-edit-personnel-modal h-8 px-3 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 text-xs font-normal rounded-[8px] transition-colors duration-150 flex items-center gap-1 cursor-pointer">
+                          ${iconSvg('user', 'w-3.5 h-3.5 text-slate-400')}
                           <span>Düzenle</span>
                         </button>
 
-                        <button data-user-id="${p.id}" class="btn-toggle-personnel-status px-2.5 py-1 bg-surface-container-low border border-border text-xs font-semibold rounded-lg hover:bg-surface-container transition-all">
+                        <button data-user-id="${p.id}" class="btn-toggle-personnel-status h-8 px-3 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 text-xs font-normal rounded-[8px] transition-colors duration-150 cursor-pointer">
                           ${p.isActive ? 'Pasif Yap' : 'Aktif Yap'}
                         </button>
 
-                        <button data-user-id="${p.id}" class="btn-open-delete-personnel-modal p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Personeli Sil">
+                        <button data-user-id="${p.id}" class="btn-open-delete-personnel-modal h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-[8px] transition-colors flex items-center justify-center cursor-pointer" title="Personeli Sil">
                           ${iconSvg('trash', 'w-3.5 h-3.5')}
                         </button>
                       </div>
@@ -2359,105 +3629,173 @@ function renderAdminTabContent(tab, state) {
       `;
 
     case 'messages':
+      const messagesList = Array.isArray(state.messages) ? state.messages : [];
+      // Adminın gönderdiği mesajlar
+      const sentMessages = messagesList.filter(m => m.senderRole === 'ADMIN' || m.direction === 'FROM_ADMIN');
+      // Saha personelinden gelen mesajlar
+      const receivedMessages = messagesList.filter(m => m.senderRole === 'FIELD_USER' || m.direction === 'TO_ADMIN');
+
       return `
-        <div class="bg-surface p-6 rounded-2xl border border-border shadow-sm space-y-6">
-          <div>
-            <h3 class="font-bold text-on-surface text-lg">Saha Ekibine Mesaj Gönder (Kişiye Özel / Toplu Duyuru)</h3>
-            <p class="text-xs text-text-secondary mt-1">İsterseniz özel bir saha personeli seçin, isterseniz tüm ekibe toplu bildirim gönderin.</p>
-          </div>
-
-          <form id="form-admin-send-message" class="space-y-4 max-w-xl">
+        <!-- 2-COLUMN BALANCED GRID -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          <!-- LEFT COLUMN: MESAJ OLUŞTURMA FORMU -->
+          <section class="lg:col-span-6 bg-white p-6 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-5">
             <div>
-              <label class="block text-xs font-bold text-on-surface mb-1.5">Gönderim Modu *</label>
-              <div class="flex gap-4 text-xs font-semibold">
-                <label class="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="msg-target-mode" value="all" checked class="text-primary focus:ring-primary"/>
-                  <span>Tüm Saha Ekibine Toplu Duyuru</span>
-                </label>
-                <label class="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="msg-target-mode" value="specific" class="text-primary focus:ring-primary"/>
-                  <span>Özel Kişi Seçerek Gönder</span>
-                </label>
-              </div>
+              <h2 class="text-[18px] font-semibold text-[#01214A]">Saha Ekibine Mesaj Gönder</h2>
+              <p class="text-[13px] text-slate-400 font-normal mt-0.5">Saha personeline özel talimat veya tüm ekibe toplu duyuru iletin.</p>
             </div>
 
-            <div id="msg-personnel-selector-wrapper" class="hidden space-y-2">
-              <label class="block text-xs font-bold text-on-surface mb-1">Mesaj Gönderilecek Personeller *</label>
-              
-              <!-- Dropdown Trigger Button -->
-              <button type="button" id="btn-toggle-msg-personnel-dropdown" class="w-full h-12 px-4 bg-surface-container-low border border-border rounded-xl text-xs font-bold text-on-surface flex items-center justify-between hover:bg-slate-50 transition-all shadow-xs">
-                <div class="flex items-center gap-2">
-                  ${iconSvg('group', 'w-4 h-4 text-primary')}
-                  <span id="label-selected-personnel-count">Personelleri Seçin (0 kişi seçildi)</span>
+            <form id="form-admin-send-message" class="space-y-4">
+              <div>
+                <label class="block text-xs font-semibold text-[#667085] uppercase tracking-wider mb-2">Gönderim Modu *</label>
+                <div class="flex items-center gap-4 text-xs font-medium text-[#01214A]">
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="msg-target-mode" value="all" checked class="text-[#2A9D38] focus:ring-[#2A9D38] cursor-pointer"/>
+                    <span>Tüm Ekibe Toplu Duyuru</span>
+                  </label>
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="msg-target-mode" value="specific" class="text-[#2A9D38] focus:ring-[#2A9D38] cursor-pointer"/>
+                    <span>Özel Personel Seç</span>
+                  </label>
                 </div>
-                ${iconSvg('moveDown', 'w-4 h-4 text-slate-500 transition-transform duration-200')}
-              </button>
+              </div>
 
-              <!-- Downward Dropdown Menu Container (Aşağı Doğru Açılan Kutu) -->
-              <div id="dropdown-msg-personnel-menu" class="hidden relative z-30 bg-white border border-slate-200 rounded-2xl p-3.5 shadow-2xl space-y-3 border-t-2 border-t-primary animate-in fade-in zoom-in-95 duration-150">
-                <div class="flex items-center justify-between pb-2 border-b border-slate-100">
-                  <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Aşağı Açılır Personel Listesi</span>
-                  <div class="flex items-center gap-2 text-[10px] font-bold">
-                    <button type="button" id="btn-msg-select-all-personnel" class="text-primary hover:underline">Tümünü Seç</button>
-                    <span class="text-slate-300">|</span>
-                    <button type="button" id="btn-msg-clear-all-personnel" class="text-slate-400 hover:text-slate-600 hover:underline">Temizle</button>
+              <div id="msg-personnel-selector-wrapper" class="hidden space-y-2">
+                <label class="block text-xs font-semibold text-[#667085] uppercase tracking-wider">Mesaj Alıcıları *</label>
+                
+                <button type="button" id="btn-toggle-msg-personnel-dropdown" class="w-full h-10 px-3 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs font-medium text-[#01214A] flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer">
+                  <div class="flex items-center gap-2">
+                    ${iconSvg('group', 'w-4 h-4 text-[#2A9D38]')}
+                    <span id="label-selected-personnel-count">Personelleri Seçin (0 kişi seçildi)</span>
                   </div>
-                </div>
+                  ${iconSvg('moveDown', 'w-4 h-4 text-slate-400')}
+                </button>
 
-                <!-- Sticky Live Search Bar inside Dropdown -->
-                <div class="relative">
-                  <input type="text" id="input-search-msg-personnel" placeholder="Personel ara (isim veya e-posta)..." class="w-full h-10 pl-9 pr-3 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-primary font-medium"/>
-                  <span class="absolute left-3 top-3 text-slate-400">${iconSvg('search', 'w-4 h-4 text-slate-400')}</span>
-                </div>
+                <div id="dropdown-msg-personnel-menu" class="hidden relative z-30 bg-white border border-[#E9EDF2] rounded-[14px] p-3 shadow-xl space-y-2 border-t-2 border-t-[#2A9D38]">
+                  <div class="flex items-center justify-between pb-2 border-b border-[#F1F5F9]">
+                    <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Personel Seçimi</span>
+                    <div class="flex items-center gap-2 text-[11px] font-medium">
+                      <button type="button" id="btn-msg-select-all-personnel" class="text-[#2A9D38] hover:underline cursor-pointer">Tümünü Seç</button>
+                      <span class="text-slate-300">|</span>
+                      <button type="button" id="btn-msg-clear-all-personnel" class="text-slate-400 hover:text-slate-600 hover:underline cursor-pointer">Temizle</button>
+                    </div>
+                  </div>
 
-                <!-- Scrollable Personnel List for 100+ Users -->
-                <div class="max-h-56 overflow-y-auto divide-y divide-slate-100 bg-slate-50/50 rounded-xl border border-slate-200 p-1">
-                  ${state.allPersonnel.map(p => `
-                    <label class="msg-personnel-item flex items-center justify-between p-2.5 hover:bg-white rounded-lg cursor-pointer transition-all" data-name="${(p.fullName + ' ' + (p.email || '')).toLowerCase()}">
-                      <div class="flex items-center gap-3">
-                        <input type="checkbox" name="msg-selected-personnel" value="${p.id}" class="cb-msg-personnel rounded text-primary focus:ring-primary w-4 h-4 cursor-pointer"/>
-                        <div>
-                          <span class="font-bold text-slate-900 block text-xs">${p.fullName}</span>
-                          <span class="text-[10px] text-slate-500 block">${p.email || p.phone}</span>
+                  <div class="relative">
+                    <input type="text" id="input-search-msg-personnel" placeholder="Personel ara..." class="w-full h-8 pl-8 pr-3 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[8px] text-xs font-normal focus:outline-none focus:border-[#2A9D38]"/>
+                    <span class="absolute left-2.5 top-2 text-slate-400">${iconSvg('search', 'w-3.5 h-3.5 text-slate-400')}</span>
+                  </div>
+
+                  <div class="max-h-48 overflow-y-auto divide-y divide-[#F1F5F9] bg-[#F8FAFC] rounded-[8px] border border-[#E9EDF2] p-1">
+                    ${(Array.isArray(state.allPersonnel) ? state.allPersonnel : []).map(p => `
+                      <label class="msg-personnel-item flex items-center justify-between p-2 hover:bg-white rounded-[6px] cursor-pointer transition-colors" data-name="${(p.fullName + ' ' + (p.email || '')).toLowerCase()}">
+                        <div class="flex items-center gap-2.5">
+                          <input type="checkbox" name="msg-selected-personnel" value="${p.id}" class="cb-msg-personnel rounded text-[#2A9D38] focus:ring-[#2A9D38] w-4 h-4 cursor-pointer"/>
+                          <div>
+                            <span class="font-medium text-[#01214A] block text-xs">${p.fullName}</span>
+                            <span class="text-[10px] text-slate-400 block">${p.email || p.phone}</span>
+                          </div>
                         </div>
-                      </div>
-                      <span class="px-2 py-0.5 rounded text-[9px] font-bold ${p.role === 'ADMIN' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}">${p.role === 'ADMIN' ? 'Yönetici' : 'Saha'}</span>
-                    </label>
-                  `).join('')}
+                        <span class="px-2 py-0.5 rounded text-[10px] font-medium ${p.role === 'ADMIN' ? 'bg-slate-200 text-[#01214A]' : 'bg-emerald-50 text-emerald-800'}">${p.role === 'ADMIN' ? 'Yönetici' : 'Saha'}</span>
+                      </label>
+                    `).join('')}
+                  </div>
                 </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-[#667085] uppercase tracking-wider mb-1">Mesaj Başlığı *</label>
+                <input type="text" id="admin-msg-title" required placeholder="Örn: Sinan Köyü Saha Hatırlatması" class="w-full h-10 px-3 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-[#2A9D38] font-normal"/>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-[#667085] uppercase tracking-wider mb-1">Mesaj İçeriği *</label>
+                <textarea id="admin-msg-content" required rows="4" placeholder="Saha personeline iletilecek açık duyuru metni..." class="w-full p-3 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-[#2A9D38] font-normal leading-relaxed"></textarea>
+              </div>
+
+              <button type="submit" class="h-[38px] px-5 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[10px] transition-all duration-150 flex items-center gap-2 cursor-pointer">
+                ${iconSvg('send', 'w-4 h-4 text-white')}
+                <span>Mesaj Gönder</span>
+              </button>
+            </form>
+          </section>
+
+          <!-- RIGHT COLUMN: MESAJ GEÇMİŞİ (Gönderilen + Gelen) -->
+          <section class="lg:col-span-6 space-y-5">
+
+            <!-- SAHADAN GELEN MESAJLAR -->
+            <div class="bg-white p-5 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-4">
+              <div class="flex items-center justify-between pb-3 border-b border-[#E9EDF2]">
+                <div class="flex items-center gap-2">
+                  ${iconSvg('mail', 'w-4 h-4 text-[#01214A]')}
+                  <h2 class="text-sm font-semibold text-[#01214A]">Sahadan Gelen Mesajlar</h2>
+                  ${receivedMessages.length > 0 ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-600 border border-red-200">${receivedMessages.filter(m => m.isUnread).length} Yeni</span>` : ''}
+                </div>
+                <span class="text-[11px] text-slate-400 font-normal">${receivedMessages.length} mesaj</span>
+              </div>
+
+              <div class="space-y-3 max-h-64 overflow-y-auto">
+                ${receivedMessages.length === 0 ? `
+                  <div class="py-8 text-center space-y-1.5">
+                    ${iconSvg('mail', 'w-8 h-8 text-slate-300 mx-auto')}
+                    <p class="text-xs text-slate-400 font-normal">Henüz saha mesajı alınmadı.</p>
+                  </div>
+                ` : receivedMessages.map(m => `
+                  <div class="p-3.5 bg-[#F8FAFC] rounded-[10px] border ${m.isUnread ? 'border-emerald-300 bg-emerald-50/30' : 'border-[#E9EDF2]'} space-y-1.5 transition-colors">
+                    <div class="flex justify-between items-start gap-2">
+                      <div class="flex items-center gap-2 min-w-0">
+                        ${m.isUnread ? '<span class="w-2 h-2 rounded-full bg-[#2A9D38] shrink-0 mt-0.5"></span>' : ''}
+                        <h3 class="font-semibold text-[#01214A] text-xs truncate">${m.title}</h3>
+                      </div>
+                      <span class="text-[10px] text-slate-400 font-normal shrink-0">${m.date || 'Bugün'}</span>
+                    </div>
+                    <p class="text-xs text-slate-600 font-normal leading-relaxed line-clamp-3">${m.content}</p>
+                    <div class="pt-1 flex items-center gap-1.5 text-[11px] text-slate-500 font-normal border-t border-[#F1F5F9]">
+                      ${iconSvg('user', 'w-3 h-3 text-slate-400')}
+                      <span><strong class="text-slate-700 font-medium">${m.sender || 'Saha Personeli'}</strong> · Saha Personeli</span>
+                    </div>
+                  </div>
+                `).join('')}
               </div>
             </div>
 
-            <div>
-              <label class="block text-xs font-bold text-on-surface mb-1">Mesaj Başlığı *</label>
-              <input type="text" id="admin-msg-title" required placeholder="Örn: Sinan Köyü Saha Hatırlatması" class="w-full h-11 px-4 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary"/>
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold text-on-surface mb-1">Mesaj İçeriği *</label>
-              <textarea id="admin-msg-content" required rows="3" placeholder="Saha personeline iletilecek özel açıklama..." class="w-full p-4 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary"></textarea>
-            </div>
-
-            <button type="submit" class="px-6 py-2.5 bg-primary text-white font-bold rounded-xl text-xs hover:bg-primary-dark transition-all flex items-center gap-2 shadow-sm">
-              ${iconSvg('send', 'w-4 h-4')}
-              Mesajı İlet
-            </button>
-          </form>
-
-          <div class="pt-4 border-t border-border space-y-3">
-            <h4 class="font-bold text-on-surface text-sm">Gönderilmiş Mesajlar (${state.messages.length})</h4>
-            <div class="space-y-2">
-              ${state.messages.map(m => `
-                <div class="p-4 bg-surface-container-low rounded-xl border border-border text-xs flex justify-between items-start">
-                  <div>
-                    <h5 class="font-bold text-on-surface text-sm">${m.title}</h5>
-                    <p class="text-text-secondary mt-1">${m.content}</p>
-                  </div>
-                  <span class="text-[10px] text-text-muted">${m.date}</span>
+            <!-- GÖNDERİLEN MESAJLAR -->
+            <div class="bg-white p-5 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-4">
+              <div class="flex items-center justify-between pb-3 border-b border-[#E9EDF2]">
+                <div class="flex items-center gap-2">
+                  ${iconSvg('send', 'w-4 h-4 text-[#01214A]')}
+                  <h2 class="text-sm font-semibold text-[#01214A]">Gönderilmiş Mesajlar</h2>
                 </div>
-              `).join('')}
+                <span class="text-[11px] text-slate-400 font-normal">${sentMessages.length} mesaj</span>
+              </div>
+
+              <div class="space-y-3 max-h-64 overflow-y-auto">
+                ${sentMessages.length === 0 ? `
+                  <div class="py-8 text-center space-y-1.5">
+                    ${iconSvg('send', 'w-8 h-8 text-slate-300 mx-auto')}
+                    <p class="text-xs text-slate-400 font-normal">Sol taraftaki formu kullanarak saha ekibine mesaj gönderin.</p>
+                  </div>
+                ` : sentMessages.map(m => `
+                  <div class="p-3.5 bg-[#F8FAFC] rounded-[10px] border border-[#E9EDF2] space-y-1.5 hover:bg-slate-50 transition-colors">
+                    <div class="flex justify-between items-start gap-2">
+                      <h3 class="font-semibold text-[#01214A] text-xs">${m.title}</h3>
+                      <span class="text-[10px] text-slate-400 font-normal shrink-0">${m.date || 'Bugün'}</span>
+                    </div>
+                    <p class="text-xs text-slate-600 font-normal leading-relaxed line-clamp-2">${m.content}</p>
+                    <div class="pt-1 flex items-center justify-between text-[11px] text-slate-400 font-normal border-t border-[#F1F5F9]">
+                      <span>Alıcı: <strong class="text-slate-600 font-medium">${m.recipient || 'Tüm Saha Ekibi'}</strong></span>
+                      <span class="text-[#2A9D38] font-semibold flex items-center gap-1">
+                        ${iconSvg('checkCircle', 'w-3 h-3')} Gönderildi
+                      </span>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
             </div>
-          </div>
+
+          </section>
+
         </div>
       `;
 
@@ -2465,3 +3803,4 @@ function renderAdminTabContent(tab, state) {
       return '';
   }
 }
+

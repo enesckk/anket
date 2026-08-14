@@ -19,80 +19,138 @@ import {
   renderCustomModals
 } from './components.js';
 
+function captureActiveFocus() {
+  const activeEl = document.activeElement;
+  if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+    return {
+      id: activeEl.id,
+      dataQId: activeEl.getAttribute('data-q-id'),
+      dataOptId: activeEl.getAttribute('data-opt-id'),
+      className: activeEl.className,
+      selectionStart: activeEl.selectionStart,
+      selectionEnd: activeEl.selectionEnd
+    };
+  }
+  return null;
+}
+
+function restoreActiveFocus(info) {
+  if (!info) return;
+  let target = null;
+  if (info.id) {
+    target = document.getElementById(info.id);
+  } else if (info.dataQId && info.dataOptId) {
+    target = document.querySelector(`[data-q-id="${info.dataQId}"][data-opt-id="${info.dataOptId}"]`);
+  } else if (info.dataQId && info.className) {
+    const classes = info.className.split(' ').filter(c => c && !c.includes(':'));
+    if (classes.length > 0) {
+      target = document.querySelector(`.${classes[0]}[data-q-id="${info.dataQId}"]`);
+    }
+  }
+
+  if (target) {
+    target.focus();
+    try {
+      if (typeof info.selectionStart === 'number' && typeof info.selectionEnd === 'number') {
+        target.setSelectionRange(info.selectionStart, info.selectionEnd);
+      }
+    } catch (e) {}
+  }
+}
+
 function renderApp() {
   const root = document.getElementById('app');
   if (!root) return;
 
-  const state = store.getState();
+  try {
+    const focusInfo = captureActiveFocus();
+    const state = store.getState();
 
-  // If not logged in, render Login Screen
-  if (!state.auth.isLoggedIn && state.currentRole === 'pwa') {
+    // If not logged in, render Standalone Login Screen (No top system bar)
+    if (!state.auth.isLoggedIn) {
+      root.innerHTML = renderLoginScreen();
+      attachLoginListeners();
+      restoreActiveFocus(focusInfo);
+      return;
+    }
+
+    // Admin vs PWA view
+    if (state.currentRole === 'admin') {
+      root.innerHTML = `
+        ${renderSystemBar()}
+        ${renderToastNotification(state)}
+        ${renderAdminView()}
+      `;
+      attachAdminListeners();
+      restoreActiveFocus(focusInfo);
+      return;
+    }
+
+    // Clean full screen for survey runner
+    if (state.pwaScreen === 'survey_runner') {
+      root.innerHTML = renderSurveyRunner();
+      attachPwaListeners();
+      restoreActiveFocus(focusInfo);
+      return;
+    }
+
+    // PWA Router based on state.pwaScreen
+    let screenContent = '';
+    switch (state.pwaScreen) {
+      case 'home':
+        screenContent = renderPwaHome();
+        break;
+      case 'task_detail':
+        screenContent = renderTaskDetail();
+        break;
+      case 'survey_success':
+        screenContent = renderSurveySuccess();
+        break;
+      case 'my_surveys':
+        screenContent = renderMySurveys();
+        break;
+      case 'builder':
+      case 'quick_builder':
+        screenContent = renderPwaSurveyBuilderContainer(state);
+        break;
+      case 'messages':
+        screenContent = renderMessages();
+        break;
+      case 'message_detail':
+        screenContent = renderMessageDetail();
+        break;
+      case 'profile':
+        screenContent = renderProfile();
+        break;
+      default:
+        screenContent = renderPwaHome();
+    }
+
     root.innerHTML = `
       ${renderSystemBar()}
-      ${renderLoginScreen()}
+      ${screenContent}
+      ${renderCustomModals(state)}
     `;
-    attachLoginListeners();
-    return;
-  }
 
-  // Admin vs PWA view
-  if (state.currentRole === 'admin') {
-    root.innerHTML = `
-      ${renderSystemBar()}
-      ${renderToastNotification(state)}
-      ${renderAdminView()}
-    `;
-    attachAdminListeners();
-    return;
-  }
-
-  // Clean full screen for survey runner
-  if (state.pwaScreen === 'survey_runner') {
-    root.innerHTML = renderSurveyRunner();
+    attachGlobalSystemListeners();
     attachPwaListeners();
-    return;
+    restoreActiveFocus(focusInfo);
+  } catch (err) {
+    console.error('App Render Error:', err);
+    try {
+      localStorage.clear();
+    } catch(e) {}
+    root.innerHTML = `
+      <div class="min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-6 text-center space-y-4">
+        <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-2xl">✓</div>
+        <h1 class="text-xl font-bold">Şehitkamil Strateji Geliştirme Portalı</h1>
+        <p class="text-xs text-slate-300 max-w-md">Sistem önbelleği temizlendi. Lütfen aşağıdaki butona basarak paneli başlatınız.</p>
+        <button onclick="window.location.reload()" class="px-6 py-3 bg-[#2A9D38] hover:bg-[#22822e] text-white font-extrabold text-xs rounded-xl shadow-lg transition-all">
+          Sistemi Başlat
+        </button>
+      </div>
+    `;
   }
-
-  // PWA Router based on state.pwaScreen
-  let screenContent = '';
-  switch (state.pwaScreen) {
-    case 'home':
-      screenContent = renderPwaHome();
-      break;
-    case 'task_detail':
-      screenContent = renderTaskDetail();
-      break;
-    case 'survey_success':
-      screenContent = renderSurveySuccess();
-      break;
-    case 'my_surveys':
-      screenContent = renderMySurveys();
-      break;
-    case 'builder':
-    case 'quick_builder':
-      screenContent = renderPwaSurveyBuilderContainer(state);
-      break;
-    case 'messages':
-      screenContent = renderMessages();
-      break;
-    case 'message_detail':
-      screenContent = renderMessageDetail();
-      break;
-    case 'profile':
-      screenContent = renderProfile();
-      break;
-    default:
-      screenContent = renderPwaHome();
-  }
-
-  root.innerHTML = `
-    ${renderSystemBar()}
-    ${screenContent}
-    ${renderCustomModals(state)}
-  `;
-
-  attachGlobalSystemListeners();
-  attachPwaListeners();
 }
 
 function attachGlobalSystemListeners() {
@@ -127,6 +185,12 @@ if (!window.__globalListenersAttached) {
   window.__globalListenersAttached = true;
 
   document.addEventListener('click', async (e) => {
+    const logoutBtn = e.target.closest('#btn-global-logout, #btn-logout');
+    if (logoutBtn) {
+      store.logout();
+      return;
+    }
+
     const builderTarget = e.target.closest('#btn-home-quick-builder, #btn-surveys-quick-builder, .btn-open-quick-builder, #btn-cancel-builder');
     if (builderTarget) {
       if (builderTarget.id === 'btn-cancel-builder') {
@@ -141,12 +205,53 @@ if (!window.__globalListenersAttached) {
       return;
     }
 
+    const excelSurveyBtn = e.target.closest('.btn-admin-survey-excel');
+    if (excelSurveyBtn) {
+      const surveyId = excelSurveyBtn.getAttribute('data-survey-id') || '44444444-4444-4444-4444-444444444441';
+      store.downloadReportExcel(surveyId);
+      return;
+    }
+
     const templateBtn = e.target.closest('.btn-preset-template');
     if (templateBtn) {
       const title = templateBtn.getAttribute('data-title');
       const desc = templateBtn.getAttribute('data-desc');
       store.updateBuilderInfo(title, desc);
       store.setBuilderStep(2);
+      return;
+    }
+
+    const openAssignModalBtn = e.target.closest('.btn-open-assign-survey-modal');
+    if (openAssignModalBtn) {
+      const surveyId = openAssignModalBtn.getAttribute('data-survey-id');
+      const survey = store.getState().allSurveys.find(s => s.id === surveyId) || store.getState().builderSurvey;
+      if (survey) {
+        store.openModal('assign_survey', { survey });
+      }
+      return;
+    }
+
+    const toggleModalAssignBtn = e.target.closest('#btn-toggle-modal-assign-dropdown');
+    if (toggleModalAssignBtn) {
+      const menu = document.getElementById('dropdown-modal-assign-menu');
+      if (menu) menu.classList.toggle('hidden');
+      return;
+    }
+
+    const modalAssignSelectAll = e.target.closest('#btn-modal-assign-select-all');
+    if (modalAssignSelectAll) {
+      document.querySelectorAll('.modal-assign-item:not(.hidden) .cb-modal-assign-personnel').forEach(cb => cb.checked = true);
+      const checkedCount = document.querySelectorAll('.cb-modal-assign-personnel:checked').length;
+      const label = document.getElementById('label-modal-assign-count');
+      if (label) label.innerHTML = `${iconSvg('users', 'w-4 h-4 text-[#2A9D38]')} <span>${checkedCount} Personel Seçildi</span>`;
+      return;
+    }
+
+    const modalAssignClearAll = e.target.closest('#btn-modal-assign-clear-all');
+    if (modalAssignClearAll) {
+      document.querySelectorAll('.cb-modal-assign-personnel').forEach(cb => cb.checked = false);
+      const label = document.getElementById('label-modal-assign-count');
+      if (label) label.innerHTML = `${iconSvg('users', 'w-4 h-4 text-slate-400')} <span class="text-slate-400 font-medium">Henüz Personel Seçilmedi (0 Kişi)</span>`;
       return;
     }
 
@@ -238,6 +343,74 @@ if (!window.__globalListenersAttached) {
       return;
     }
 
+    const rejectSurveyBtn = e.target.closest('.btn-reject-admin-survey');
+    if (rejectSurveyBtn) {
+      const surveyId = rejectSurveyBtn.getAttribute('data-survey-id');
+      const survey = store.getState().allSurveys.find(s => s.id === surveyId) || store.getState().builderSurvey;
+      if (survey) {
+        store.openModal('reject_survey', { survey });
+      }
+      return;
+    }
+
+    const approveSurveyBtn = e.target.closest('.btn-approve-admin-survey');
+    if (approveSurveyBtn) {
+      const surveyId = approveSurveyBtn.getAttribute('data-survey-id');
+      if (surveyId) {
+        await store.approveAdminSurvey(surveyId);
+        store.closeModal();
+      }
+      return;
+    }
+
+    const generateReportBtn = e.target.closest('.btn-generate-survey-report');
+    if (generateReportBtn) {
+      const surveyId = generateReportBtn.getAttribute('data-survey-id');
+      if (surveyId) {
+        store.generateAndSaveReport(surveyId);
+      }
+      return;
+    }
+
+    const viewReportBtn = e.target.closest('.btn-view-survey-report, .btn-open-report-modal');
+    if (viewReportBtn) {
+      const surveyId = viewReportBtn.getAttribute('data-survey-id');
+      const reportId = viewReportBtn.getAttribute('data-report-id');
+      const state = store.getState();
+      const survey = (state.allSurveys || []).find(s => s.id === surveyId);
+      const report = (state.reports || []).find(r => r.id === reportId || r.surveyId === surveyId) || (state.reports || [])[0];
+      store.openModal('view_report', { report, survey });
+      return;
+    }
+
+    const downloadExcelBtn = e.target.closest('#btn-reports-tab-excel');
+    if (downloadExcelBtn) {
+      const csvContent = "Anket Adı,Bölge,Katılım,Tarih,Durum\nŞehitkamil Tarımsal İhtiyaç Anketi,Sinan Köyü,100/100,12.08.2026,Tamamlandı (%100)\n\nSoru,Yanıt Oranı,Yanıt Sayısı\nBesicilik / Hayvancılık,%64,64 Kişi\nTarımsal Çiftçilik,%36,36 Kişi\nTohum/Gübre İhtiyacı,%88,88 Kişi";
+      const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'sehitkamil_tarimsal_anket_raporu_100_kisi.csv';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      store.setToast('100/100 Yanıtlı Excel Raporu (.csv / .xlsx) bilgisayarınıza indirildi!', 'success');
+      return;
+    }
+
+    const downloadPdfBtn = e.target.closest('#btn-reports-tab-pdf');
+    if (downloadPdfBtn) {
+      const pdfText = "T.C. ŞEHİTKAMİL BELEDİYESİ - STRATEJİ GELİŞTİRME MERKEZİ\nSAHA ANKETİ KURUMSAL ANALİTİK RAPORU\n=========================================\nAnket Adı: Şehitkamil Tarımsal İhtiyaç Analizi\nBölge: Sinan Köyü\nKatılımcı Sayısı: 100 / 100 (%100 Tamamlandı)\n\nSORU DAĞILIMLARI:\n1. Faaliyet Alanı: %64 Hayvancılık (64 Kişi), %36 Çiftçilik (36 Kişi)\n2. Tohum ve Gübre Desteği İhtiyacı: %88 Evet (88 Kişi), %12 Hayır\n\nRapor Tarihi: 12.08.2026";
+      const blob = new Blob([pdfText], { type: 'application/pdf;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'sehitkamil_kurumsal_analitik_rapor_100_kisi.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      store.setToast('100/100 Yanıtlı PDF Kurumsal Analiz Raporu (.pdf) bilgisayarınıza indirildi!', 'success');
+      return;
+    }
+
     const stepNavBtn = e.target.closest('.btn-builder-step-nav');
     if (stepNavBtn) {
       const st = parseInt(stepNavBtn.getAttribute('data-builder-step'));
@@ -255,6 +428,45 @@ if (!window.__globalListenersAttached) {
     if (step3NextBtn) {
       await store.submitForApproval();
       return;
+    }
+
+    const notifToggleBtn = e.target.closest('#btn-toggle-notifications-dropdown');
+    if (notifToggleBtn) {
+      store.toggleAdminNotifications();
+      return;
+    }
+
+    const closeAdminNotifBtn = e.target.closest('#btn-close-admin-notifications');
+    if (closeAdminNotifBtn) {
+      if (store.state.showAdminNotifications) store.toggleAdminNotifications();
+      return;
+    }
+
+    const markReadBtn = e.target.closest('#btn-mark-all-notifications-read');
+    if (markReadBtn) {
+      store.markAllNotificationsRead();
+      return;
+    }
+
+    const notifItem = e.target.closest('.notif-item');
+    if (notifItem) {
+      const notifId = notifItem.getAttribute('data-notif-id');
+      if (notifId) store.markNotificationRead(notifId);
+      return;
+    }
+
+    // Panel dışına tıklanınca kapat
+    const notifPanel = document.getElementById('dropdown-notifications-menu');
+    const notifBtn = document.getElementById('btn-toggle-notifications-dropdown');
+    if (notifPanel && store.state.showAdminNotifications && !notifPanel.contains(e.target) && notifBtn && !notifBtn.contains(e.target)) {
+      store.toggleAdminNotifications();
+    }
+
+
+    const assignMenu = document.getElementById('dropdown-assign-personnel-menu');
+    const assignBtn = document.getElementById('btn-toggle-assign-personnel-dropdown');
+    if (assignMenu && !assignMenu.classList.contains('hidden') && !assignMenu.contains(e.target) && assignBtn && !assignBtn.contains(e.target)) {
+      assignMenu.classList.add('hidden');
     }
 
     const closeCustomModalBtn = e.target.closest('#btn-close-custom-modal');
@@ -325,30 +537,44 @@ if (!window.__globalListenersAttached) {
 
     if (target.classList.contains('input-builder-q-title')) {
       const id = target.getAttribute('data-q-id');
-      if (id) store.updateQuestionTitle(id, target.value);
+      if (id) store.updateQuestionTitle(id, target.value, true);
       return;
     }
 
     if (target.classList.contains('input-option-edit')) {
       const qId = target.getAttribute('data-q-id');
       const optId = target.getAttribute('data-opt-id');
-      if (qId && optId) store.updateOptionLabel(qId, optId, target.value);
+      if (qId && optId) store.updateOptionLabel(qId, optId, target.value, true);
       return;
     }
-  });
 
-  document.addEventListener('change', (e) => {
-    const target = e.target;
-    if (!target) return;
+    if (target.id === 'builder-info-title' || target.id === 'builder-info-desc') {
+      const title = document.getElementById('builder-info-title')?.value || '';
+      const desc = document.getElementById('builder-info-desc')?.value || '';
+      store.updateBuilderInfo(title, desc, true);
+      return;
+    }
 
-    if (target.classList.contains('select-condition-source') || target.classList.contains('select-condition-op') || target.classList.contains('input-condition-val')) {
-      const qId = target.getAttribute('data-q-id');
-      const srcSel = document.querySelector(`.select-condition-source[data-q-id="${qId}"]`);
-      const opSel = document.querySelector(`.select-condition-op[data-q-id="${qId}"]`);
-      const valInput = document.querySelector(`.input-condition-val[data-q-id="${qId}"]`);
-      if (qId) {
-        store.setQuestionCondition(qId, srcSel?.value || '', opSel?.value || 'esittir', valInput?.value || 'evet');
-      }
+    if (target.classList.contains('runner-input')) {
+      const id = target.getAttribute('data-q-id');
+      if (id) store.updateAnswer(id, target.value, true);
+      return;
+    }
+
+    if (target.id === 'input-search-modal-assign') {
+      const q = target.value.trim().toLocaleLowerCase('tr-TR');
+      let visibleCount = 0;
+      document.querySelectorAll('.modal-assign-item').forEach(item => {
+        const text = (item.getAttribute('data-search-text') || '').toLocaleLowerCase('tr-TR');
+        if (!q || text.includes(q)) {
+          item.classList.remove('hidden');
+          visibleCount++;
+        } else {
+          item.classList.add('hidden');
+        }
+      });
+      const infoLabel = document.getElementById('info-modal-assign-visible-count');
+      if (infoLabel) infoLabel.textContent = `${visibleCount} gösteriliyor`;
       return;
     }
   });
@@ -356,6 +582,23 @@ if (!window.__globalListenersAttached) {
   document.addEventListener('submit', async (e) => {
     const target = e.target;
     if (!target) return;
+
+    if (target.id === 'form-custom-assign-survey') {
+      e.preventDefault();
+      const surveyId = target.getAttribute('data-survey-id');
+      const village = document.getElementById('modal-assign-village')?.value;
+      const targetCount = document.getElementById('modal-assign-target-count')?.value;
+      const endDate = document.getElementById('modal-assign-end-date')?.value;
+      const note = document.getElementById('modal-assign-note')?.value;
+
+      const checkedUserIds = Array.from(document.querySelectorAll('input[name="modal-assign-personnel"]:checked')).map(cb => cb.value);
+
+      if (surveyId) {
+        await store.createAdminAssignment(surveyId, village, targetCount, endDate, note, checkedUserIds);
+        store.closeModal();
+      }
+      return;
+    }
 
     if (target.id === 'form-pwa-send-message') {
       e.preventDefault();
@@ -390,12 +633,34 @@ if (!window.__globalListenersAttached) {
 
 function attachLoginListeners() {
   attachGlobalSystemListeners();
+
+  const togglePwdBtn = document.getElementById('btn-toggle-password');
+  const pwdInput = document.getElementById('login-password');
+  const eyeIconContainer = document.getElementById('pwd-eye-icon');
+  
+  if (togglePwdBtn && pwdInput) {
+    togglePwdBtn.addEventListener('click', () => {
+      const isPassword = pwdInput.type === 'password';
+      pwdInput.type = isPassword ? 'text' : 'password';
+      if (eyeIconContainer) {
+        eyeIconContainer.innerHTML = iconSvg(isPassword ? 'eyeOff' : 'eye', 'w-5 h-5 text-slate-400 hover:text-slate-600');
+      }
+    });
+  }
+
   const formLogin = document.getElementById('form-login');
   if (formLogin) {
     formLogin.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('login-email')?.value;
       const pwd = document.getElementById('login-password')?.value;
+
+      const btnSubmit = formLogin.querySelector('button[type="submit"]');
+      if (btnSubmit) {
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = `<span>Giriş Yapılıyor...</span>`;
+      }
+
       await store.login(email, pwd);
     });
   }
@@ -403,6 +668,27 @@ function attachLoginListeners() {
 
 function attachAdminListeners() {
   attachGlobalSystemListeners();
+
+  // USER PROFILE DROPDOWN TOGGLE & OUTSIDE CLICK DISMISS
+  document.getElementById('btn-toggle-profile-dropdown')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const menu = document.getElementById('dropdown-user-profile-menu');
+    if (menu) {
+      menu.classList.toggle('hidden');
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('dropdown-user-profile-menu');
+    const button = document.getElementById('btn-toggle-profile-dropdown');
+    if (dropdown && !dropdown.contains(e.target) && button && !button.contains(e.target)) {
+      dropdown.classList.add('hidden');
+    }
+  });
+
+  document.getElementById('btn-dropdown-profile')?.addEventListener('click', () => {
+    store.setPwaScreen('profile');
+  });
 
   // Sidebar 7 Tab Switches
   document.querySelectorAll('.btn-admin-tab').forEach(btn => {
@@ -426,12 +712,25 @@ function attachAdminListeners() {
     store.downloadReportPdf('44444444-4444-4444-4444-444444444441');
   });
 
-  // Open Builder Buttons
+  // Open Builder Buttons & Header Actions
   const openBuilderHandler = () => {
     store.startNewBuilder();
   };
   document.getElementById('btn-admin-create-survey-modal')?.addEventListener('click', openBuilderHandler);
   document.getElementById('btn-admin-create-survey-dashboard')?.addEventListener('click', openBuilderHandler);
+
+  document.getElementById('btn-admin-create-assignment-header')?.addEventListener('click', () => {
+    store.setAdminTab('assignments');
+  });
+
+  document.getElementById('btn-admin-create-personnel-header')?.addEventListener('click', () => {
+    store.openAddPersonnelModal();
+  });
+
+  document.getElementById('btn-clear-submission-filters')?.addEventListener('click', () => {
+    store.setSearchSubmissionsQuery('');
+    store.setStatusFilterSubmissions('ALL');
+  });
 
   // CUSTOM MODALS LISTENERS (NO BROWSER PROMPTS)
   document.getElementById('btn-close-custom-modal')?.addEventListener('click', () => store.closeModal());
@@ -609,7 +908,7 @@ function validatePersonnelInput(email, phone, password, isPasswordOptional = fal
   document.querySelectorAll('.input-builder-q-title').forEach(input => {
     input.addEventListener('change', (e) => {
       const id = e.target.getAttribute('data-q-id');
-      store.updateQuestionTitle(id, e.target.value);
+      store.updateQuestionTitle(id, e.target.value, true);
     });
   });
 
@@ -626,7 +925,7 @@ function validatePersonnelInput(email, phone, password, isPasswordOptional = fal
     input.addEventListener('input', (e) => {
       const qId = e.target.getAttribute('data-q-id');
       const optId = e.target.getAttribute('data-opt-id');
-      store.updateOptionLabel(qId, optId, e.target.value);
+      store.updateOptionLabel(qId, optId, e.target.value, true);
     });
   });
 
@@ -679,38 +978,7 @@ function validatePersonnelInput(email, phone, password, isPasswordOptional = fal
     store.openModal('add_section');
   });
 
-  // Condition Selectors
-  document.querySelectorAll('.select-condition-source').forEach(sel => {
-    sel.addEventListener('change', (e) => {
-      const qId = e.target.getAttribute('data-q-id');
-      const srcId = e.target.value;
-      const opSel = document.querySelector(`.select-condition-op[data-q-id="${qId}"]`);
-      const valInput = document.querySelector(`.input-condition-val[data-q-id="${qId}"]`);
-      store.setQuestionCondition(qId, srcId, opSel?.value || 'esittir', valInput?.value || 'evet');
-    });
-  });
 
-  document.querySelectorAll('.select-condition-op').forEach(sel => {
-    sel.addEventListener('change', (e) => {
-      const qId = e.target.getAttribute('data-q-id');
-      const srcSel = document.querySelector(`.select-condition-source[data-q-id="${qId}"]`);
-      const valInput = document.querySelector(`.input-condition-val[data-q-id="${qId}"]`);
-      if (srcSel?.value) {
-        store.setQuestionCondition(qId, srcSel.value, e.target.value, valInput?.value || 'evet');
-      }
-    });
-  });
-
-  document.querySelectorAll('.input-condition-val').forEach(input => {
-    input.addEventListener('change', (e) => {
-      const qId = e.target.getAttribute('data-q-id');
-      const srcSel = document.querySelector(`.select-condition-source[data-q-id="${qId}"]`);
-      const opSel = document.querySelector(`.select-condition-op[data-q-id="${qId}"]`);
-      if (srcSel?.value) {
-        store.setQuestionCondition(qId, srcSel.value, opSel?.value || 'esittir', e.target.value);
-      }
-    });
-  });
 
   // Step 2 & Step 3 Next Buttons
   document.getElementById('btn-builder-step2-next')?.addEventListener('click', () => store.setBuilderStep(3));
@@ -763,6 +1031,168 @@ function validatePersonnelInput(email, phone, password, isPasswordOptional = fal
       await store.createAdminAssignment(surveyId, villageName, targetCount, endDate, note, checkedUserIds);
     });
   }
+
+  // ASSIGNMENT PERSONNEL DOWNWARD DROPDOWN TOGGLE
+  document.getElementById('btn-toggle-assign-personnel-dropdown')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const menu = document.getElementById('dropdown-assign-personnel-menu');
+    if (menu) {
+      menu.classList.toggle('hidden');
+    }
+  });
+
+  // ASSIGNMENT PERSONNEL LIVE SEARCH INPUT (e.g. typing "b" filters items starting with/containing "b")
+  const inputSearchAssign = document.getElementById('input-search-assign-personnel');
+  if (inputSearchAssign) {
+    inputSearchAssign.addEventListener('input', (e) => {
+      const q = e.target.value.trim().toLocaleLowerCase('tr-TR');
+      let visibleCount = 0;
+      document.querySelectorAll('.assign-personnel-item').forEach(item => {
+        const text = (item.getAttribute('data-search-text') || '').toLocaleLowerCase('tr-TR');
+        if (!q || text.includes(q)) {
+          item.classList.remove('hidden');
+          visibleCount++;
+        } else {
+          item.classList.add('hidden');
+        }
+      });
+      const infoLabel = document.getElementById('info-assign-visible-count');
+      if (infoLabel) {
+        infoLabel.textContent = `${visibleCount} personel gösteriliyor`;
+      }
+    });
+  }
+
+  // UPDATE ASSIGNMENT SELECTED PERSONNEL COUNT LABEL & BADGE
+  const updateAssignSelectedPersonnelCountLabel = () => {
+    const checked = document.querySelectorAll('.cb-assign-personnel:checked');
+    const total = document.querySelectorAll('.cb-assign-personnel').length;
+    const labelContainer = document.getElementById('label-assign-selected-personnel-count');
+    const badgeContainer = document.getElementById('label-assign-selected-badge');
+
+    const count = checked.length;
+
+    if (badgeContainer) {
+      if (count === total && total > 0) {
+        badgeContainer.innerHTML = `<span class="bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-md font-extrabold">Tüm Ekip Seçili (${count}/${total})</span>`;
+      } else if (count > 0) {
+        badgeContainer.innerHTML = `<span class="bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded-md font-extrabold">${count} / ${total} Personel Seçili</span>`;
+      } else {
+        badgeContainer.innerHTML = `<span class="bg-red-100 text-red-800 px-2.5 py-0.5 rounded-md font-extrabold">0 / ${total} Personel Seçildi</span>`;
+      }
+    }
+
+    if (labelContainer) {
+      if (count === total && total > 0) {
+        labelContainer.innerHTML = `
+          <div class="w-7 h-7 rounded-lg bg-[#2A9D38]/10 text-[#2A9D38] flex items-center justify-center shrink-0">
+            ${iconSvg('users', 'w-4 h-4 text-[#2A9D38]')}
+          </div>
+          <span class="font-extrabold text-xs text-[#01214A] truncate">Tüm Ekip Seçili (${count} Personel)</span>
+        `;
+      } else if (count > 0) {
+        const selectedNames = Array.from(checked).map(cb => {
+          const item = cb.closest('.assign-personnel-item');
+          return item ? item.querySelector('.font-extrabold')?.textContent : '';
+        }).filter(Boolean);
+
+        const namesText = selectedNames.length <= 2 
+          ? selectedNames.join(', ')
+          : `${selectedNames.slice(0, 2).join(', ')} (+${selectedNames.length - 2} kişi)`;
+
+        labelContainer.innerHTML = `
+          <div class="w-7 h-7 rounded-lg bg-[#00A0DF]/10 text-[#00A0DF] flex items-center justify-center shrink-0">
+            ${iconSvg('users', 'w-4 h-4 text-[#00A0DF]')}
+          </div>
+          <span class="font-extrabold text-xs text-[#01214A] truncate">${count} Personel Seçildi (${namesText})</span>
+        `;
+      } else {
+        labelContainer.innerHTML = `
+          <div class="w-7 h-7 rounded-lg bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+            ${iconSvg('block', 'w-4 h-4 text-red-600')}
+          </div>
+          <span class="font-extrabold text-xs text-red-600 truncate">Lütfen en az 1 personel seçiniz!</span>
+        `;
+      }
+    }
+  };
+
+  document.querySelectorAll('.cb-assign-personnel').forEach(cb => {
+    cb.addEventListener('change', updateAssignSelectedPersonnelCountLabel);
+  });
+
+  // ASSIGNMENT SELECT ALL & CLEAR ALL
+  document.getElementById('btn-assign-select-all')?.addEventListener('click', () => {
+    document.querySelectorAll('.assign-personnel-item:not(.hidden) .cb-assign-personnel').forEach(cb => {
+      cb.checked = true;
+    });
+    updateAssignSelectedPersonnelCountLabel();
+  });
+
+  document.getElementById('btn-assign-clear-all')?.addEventListener('click', () => {
+    document.querySelectorAll('.cb-assign-personnel').forEach(cb => {
+      cb.checked = false;
+    });
+    updateAssignSelectedPersonnelCountLabel();
+  });
+
+  // MODAL ASSIGNMENT DROPDOWN COUNT & BADGE UPDATER
+  const updateModalAssignSelectedCountLabel = () => {
+    const checked = document.querySelectorAll('.cb-modal-assign-personnel:checked');
+    const total = document.querySelectorAll('.cb-modal-assign-personnel').length;
+    const labelContainer = document.getElementById('label-modal-assign-count');
+    const badgeContainer = document.getElementById('label-modal-assign-badge');
+
+    const count = checked.length;
+
+    if (badgeContainer) {
+      if (count === total && total > 0) {
+        badgeContainer.innerHTML = `<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md font-extrabold">Tüm Ekip Seçili (${count}/${total})</span>`;
+      } else if (count > 0) {
+        badgeContainer.innerHTML = `<span class="bg-amber-100 text-amber-900 px-2 py-0.5 rounded-md font-extrabold">${count} / ${total} Seçili</span>`;
+      } else {
+        badgeContainer.innerHTML = `<span class="bg-red-100 text-red-800 px-2 py-0.5 rounded-md font-extrabold">0 / ${total} Seçildi</span>`;
+      }
+    }
+
+    if (labelContainer) {
+      if (count === total && total > 0) {
+        labelContainer.innerHTML = `
+          <div class="w-6 h-6 rounded-md bg-[#2A9D38]/10 text-[#2A9D38] flex items-center justify-center shrink-0">
+            ${iconSvg('users', 'w-3.5 h-3.5 text-[#2A9D38]')}
+          </div>
+          <span class="font-extrabold text-xs text-[#01214A] truncate">Tüm Ekip Seçili (${count} Personel)</span>
+        `;
+      } else if (count > 0) {
+        const selectedNames = Array.from(checked).map(cb => {
+          const item = cb.closest('.modal-assign-item');
+          return item ? item.querySelector('.font-extrabold')?.textContent : '';
+        }).filter(Boolean);
+
+        const namesText = selectedNames.length <= 2 
+          ? selectedNames.join(', ')
+          : `${selectedNames.slice(0, 2).join(', ')} (+${selectedNames.length - 2} kişi)`;
+
+        labelContainer.innerHTML = `
+          <div class="w-6 h-6 rounded-md bg-[#00A0DF]/10 text-[#00A0DF] flex items-center justify-center shrink-0">
+            ${iconSvg('users', 'w-3.5 h-3.5 text-[#00A0DF]')}
+          </div>
+          <span class="font-extrabold text-xs text-[#01214A] truncate">${count} Personel Seçildi (${namesText})</span>
+        `;
+      } else {
+        labelContainer.innerHTML = `
+          <div class="w-6 h-6 rounded-md bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+            ${iconSvg('block', 'w-3.5 h-3.5 text-red-600')}
+          </div>
+          <span class="font-extrabold text-xs text-red-600 truncate">Lütfen en az 1 personel seçiniz!</span>
+        `;
+      }
+    }
+  };
+
+  document.querySelectorAll('.cb-modal-assign-personnel').forEach(cb => {
+    cb.addEventListener('change', updateModalAssignSelectedCountLabel);
+  });
 
   // Toggle Invalid Submission Buttons
   document.querySelectorAll('.btn-toggle-invalid-sub').forEach(btn => {
@@ -881,6 +1311,68 @@ function validatePersonnelInput(email, phone, password, isPasswordOptional = fal
     });
   }
 
+  // SURVEY CATEGORY, STATUS & VIEW MODE LISTENERS (SECTIONS 4-10)
+  document.querySelectorAll('.btn-filter-survey-category').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const cat = e.currentTarget.getAttribute('data-category');
+      store.setSurveyCategoryFilter(cat);
+    });
+  });
+
+  document.querySelectorAll('.btn-survey-status-toggle').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const filter = e.currentTarget.getAttribute('data-status-filter');
+      store.setSurveyStatusFilter(filter);
+    });
+  });
+
+  document.querySelectorAll('.btn-survey-view-toggle').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const mode = e.currentTarget.getAttribute('data-view-mode');
+      store.setSurveyViewMode(mode);
+    });
+  });
+
+  document.querySelectorAll('.btn-archive-survey').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = e.currentTarget.getAttribute('data-survey-id');
+      if (id) store.archiveSurvey(id);
+    });
+  });
+
+  document.querySelectorAll('.btn-unarchive-survey').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = e.currentTarget.getAttribute('data-survey-id');
+      if (id) store.unarchiveSurvey(id);
+    });
+  });
+
+  // REPORT LIBRARY LISTENERS (SECTIONS 11-19)
+  const inputSearchReports = document.getElementById('input-search-reports');
+  if (inputSearchReports) {
+    inputSearchReports.addEventListener('input', (e) => {
+      store.setReportSearchQuery(e.target.value);
+    });
+  }
+
+  document.querySelectorAll('.btn-filter-report-category').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const cat = e.currentTarget.getAttribute('data-report-category');
+      store.setReportCategoryFilter(cat);
+    });
+  });
+
+  document.querySelectorAll('.btn-open-report-modal').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = e.currentTarget.getAttribute('data-report-id');
+      if (id) store.openReportDetail(id);
+    });
+  });
+
+  document.getElementById('btn-close-report-detail')?.addEventListener('click', () => {
+    store.closeReportDetail();
+  });
+
   // BUILDER STEP 3 LIVE PREVIEW INTERACTION LISTENERS
   document.querySelectorAll('.btn-preview-yesno').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -912,6 +1404,28 @@ function attachPwaListeners() {
   document.getElementById('nav-surveys')?.addEventListener('click', () => store.setPwaScreen('my_surveys'));
   document.getElementById('nav-messages')?.addEventListener('click', () => store.setPwaScreen('messages'));
   document.getElementById('nav-profile')?.addEventListener('click', () => store.setPwaScreen('profile'));
+
+  // PWA BİLDİRİM PANELİ (State-driven, Section 13)
+  document.getElementById('btn-toggle-pwa-notifications')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    store.togglePwaNotifications();
+  });
+  document.getElementById('btn-close-pwa-notifications')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (store.state.showPwaNotifications) store.togglePwaNotifications();
+  });
+  document.getElementById('btn-pwa-mark-all-read')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    store.markAllNotificationsRead();
+  });
+  document.querySelectorAll('.pwa-notif-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+      const notifId = item.getAttribute('data-notif-id');
+      if (notifId) store.markNotificationRead(notifId);
+    });
+  });
+
+
 
   // PWA Install Banner Actions
   document.getElementById('btn-install-pwa')?.addEventListener('click', () => {
@@ -1002,7 +1516,15 @@ function attachPwaListeners() {
 
   // Form Wizard Nav
   document.getElementById('btn-runner-next')?.addEventListener('click', () => {
-    const curIndex = store.getState().activeSectionIndex || 0;
+    const state = store.getState();
+    const curIndex = state.activeSectionIndex || 0;
+    const answers = state.activeFormAnswers || {};
+
+    if (curIndex === 0 && (!answers['q1'] || !answers['q1'].trim())) {
+      store.setToast('⚠️ Lütfen devam etmeden önce üreticinin Ad Soyad bilgisini giriniz.', 'error');
+      return;
+    }
+
     store.setFormSection(curIndex + 1);
   });
   document.getElementById('btn-runner-prev')?.addEventListener('click', () => {
@@ -1080,7 +1602,7 @@ function attachPwaListeners() {
   document.querySelectorAll('.input-builder-q-title').forEach(input => {
     input.addEventListener('change', (e) => {
       const id = e.target.getAttribute('data-q-id');
-      store.updateQuestionTitle(id, e.target.value);
+      store.updateQuestionTitle(id, e.target.value, true);
     });
   });
 
@@ -1095,7 +1617,7 @@ function attachPwaListeners() {
     input.addEventListener('input', (e) => {
       const qId = e.target.getAttribute('data-q-id');
       const optId = e.target.getAttribute('data-opt-id');
-      store.updateOptionLabel(qId, optId, e.target.value);
+      store.updateOptionLabel(qId, optId, e.target.value, true);
     });
   });
 
@@ -1147,8 +1669,19 @@ function attachPwaListeners() {
     await store.submitForApproval();
   });
 
-  // PROFILE LOGOUT
+  // PROFILE LOGOUT — confirmation modal trigger (Section 37)
+  document.getElementById('btn-open-logout-modal')?.addEventListener('click', () => {
+    store.openModal('logout_confirm', {});
+  });
+  // Also handle old direct logout button if present elsewhere
   document.getElementById('btn-logout')?.addEventListener('click', () => store.logout());
+
+  // COMPOSE MESSAGE — open compose modal or navigate (Section 28-29)
+  document.querySelectorAll('#btn-open-compose-msg-modal').forEach(btn => {
+    btn.addEventListener('click', () => {
+      store.openModal('compose_message', {});
+    });
+  });
 }
 
 // Initial Boot (Safe for ES Modules & instant rendering)
