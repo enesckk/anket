@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "type": "module",
   "description": "SurveyAdmin Intelligence - Saha Anket & Executive Admin Platformu",
-  "main": "index.html",
   "scripts": {
     "start": "node server.js"
   },
