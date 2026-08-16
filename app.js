@@ -726,6 +726,11 @@ function attachLoginListeners() {
   const pwdInput = document.getElementById('login-password');
   const eyeIconContainer = document.getElementById('pwd-eye-icon');
   
+  if (pwdInput) {
+    pwdInput.value = '';
+    pwdInput.type = 'password';
+  }
+
   if (togglePwdBtn && pwdInput) {
     togglePwdBtn.addEventListener('click', () => {
       const isPassword = pwdInput.type === 'password';
