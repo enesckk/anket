@@ -11,6 +11,10 @@ services:
         value: Production
       - key: UseSqlServer
         value: "false"
+      - key: DOTNET_gcServer
+        value: "0"
+      - key: DOTNET_GCConserveMemory
+        value: "9"
       - key: JwtSettings__Secret
         value: SuperSecretKeySurveyAdmin2026!ProEnterpriseMasterSecret
       - key: JwtSettings__Issuer
