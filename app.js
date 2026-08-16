@@ -1684,6 +1684,154 @@ function attachPwaListeners() {
   });
 }
 
+// ─── PWA Install Prompt ──────────────────────────────────────────────────────
+let _pwaInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  // Tarayıcının varsayılan mini-banner'ını engelle
+  e.preventDefault();
+  _pwaInstallPrompt = e;
+  console.log('[PWA] Install prompt captured. Showing install button...');
+  showPwaInstallBanner();
+});
+
+window.addEventListener('appinstalled', () => {
+  console.log('[PWA] App installed successfully!');
+  _pwaInstallPrompt = null;
+  hidePwaInstallBanner();
+  showPwaInstalledToast();
+});
+
+function showPwaInstallBanner() {
+  // Eğer zaten varsa tekrar ekleme
+  if (document.getElementById('pwa-install-banner')) return;
+
+  const banner = document.createElement('div');
+  banner.id = 'pwa-install-banner';
+  banner.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #01214A 0%, #0a2f5c 100%);
+    color: white;
+    padding: 14px 20px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 8px 32px rgba(1, 33, 74, 0.35), 0 2px 8px rgba(0,0,0,0.2);
+    z-index: 99999;
+    font-family: Inter, sans-serif;
+    font-size: 14px;
+    max-width: 90vw;
+    width: max-content;
+    animation: pwa-banner-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    border: 1px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+  `;
+
+  banner.innerHTML = `
+    <style>
+      @keyframes pwa-banner-in {
+        from { opacity: 0; transform: translateX(-50%) translateY(20px) scale(0.95); }
+        to   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+      }
+      #pwa-install-banner:hover { box-shadow: 0 12px 40px rgba(1,33,74,0.45), 0 4px 12px rgba(0,0,0,0.25); }
+      #pwa-install-btn {
+        background: linear-gradient(135deg, #2A9D38, #22822e);
+        color: white;
+        border: none;
+        padding: 8px 18px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: Inter, sans-serif;
+        transition: all 0.2s;
+        white-space: nowrap;
+      }
+      #pwa-install-btn:hover { background: linear-gradient(135deg, #22822e, #1a6b26); transform: scale(1.03); }
+      #pwa-install-dismiss {
+        background: transparent;
+        border: none;
+        color: rgba(255,255,255,0.55);
+        cursor: pointer;
+        font-size: 18px;
+        line-height: 1;
+        padding: 4px;
+        margin-left: 4px;
+        transition: color 0.2s;
+      }
+      #pwa-install-dismiss:hover { color: rgba(255,255,255,0.9); }
+    </style>
+    <img src="/icons/icon-72.png" width="36" height="36" style="border-radius:8px; flex-shrink:0;" onerror="this.style.display='none'"/>
+    <div>
+      <div style="font-weight:600; color:white;">Saha Anket'i Yükle</div>
+      <div style="color:rgba(255,255,255,0.65); font-size:12px; margin-top:2px;">Masaüstüne ekle, çevrimdışı çalış</div>
+    </div>
+    <button id="pwa-install-btn">📲 Yükle</button>
+    <button id="pwa-install-dismiss" title="Kapat">✕</button>
+  `;
+
+  document.body.appendChild(banner);
+
+  document.getElementById('pwa-install-btn')?.addEventListener('click', async () => {
+    if (!_pwaInstallPrompt) return;
+    try {
+      _pwaInstallPrompt.prompt();
+      const { outcome } = await _pwaInstallPrompt.userChoice;
+      console.log('[PWA] User install choice:', outcome);
+      if (outcome === 'accepted') {
+        _pwaInstallPrompt = null;
+        hidePwaInstallBanner();
+      }
+    } catch (err) {
+      console.warn('[PWA] Install prompt error:', err);
+    }
+  });
+
+  document.getElementById('pwa-install-dismiss')?.addEventListener('click', () => {
+    hidePwaInstallBanner();
+    // 24 saat boyunca gösterme
+    localStorage.setItem('pwa-banner-dismissed', Date.now().toString());
+  });
+}
+
+function hidePwaInstallBanner() {
+  const banner = document.getElementById('pwa-install-banner');
+  if (banner) {
+    banner.style.animation = 'pwa-banner-in 0.25s ease reverse forwards';
+    setTimeout(() => banner.remove(), 250);
+  }
+}
+
+function showPwaInstalledToast() {
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    background: linear-gradient(135deg, #2A9D38, #22822e);
+    color: white;
+    padding: 14px 18px;
+    border-radius: 12px;
+    font-family: Inter, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 8px 24px rgba(42,157,56,0.35);
+    z-index: 99999;
+    animation: pwa-banner-in 0.35s ease both;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  `;
+  toast.innerHTML = `<span style="font-size:18px;">✅</span> Saha Anket masaüstüne eklendi!`;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3500);
+}
+
+// ─── Boot ────────────────────────────────────────────────────────────────────
 // Initial Boot (Safe for ES Modules & instant rendering)
 function boot() {
   try {
@@ -1698,6 +1846,15 @@ function boot() {
       console.error('App re-render error:', err);
     }
   });
+
+  // PWA banner dismiss check (24 saat cooldown)
+  const dismissed = localStorage.getItem('pwa-banner-dismissed');
+  if (dismissed) {
+    const elapsed = Date.now() - parseInt(dismissed, 10);
+    if (elapsed > 24 * 60 * 60 * 1000) {
+      localStorage.removeItem('pwa-banner-dismissed');
+    }
+  }
 }
 
 if (document.readyState === 'loading') {
@@ -1705,3 +1862,4 @@ if (document.readyState === 'loading') {
 } else {
   boot();
 }
+

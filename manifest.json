@@ -1,6 +1,6 @@
 {
-  "name": "SurveyAdmin Intelligence",
-  "short_name": "SurveyAdmin",
+  "name": "Saha Anket",
+  "short_name": "Saha Anket",
   "description": "Saha anket yönetimi, PWA anket doldurma, çevrimdışı senkronizasyon ve executive admin data intelligence platformu.",
   "start_url": "/",
   "display": "standalone",

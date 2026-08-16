@@ -1,7 +1,7 @@
 // SurveyAdmin Intelligence - Service Worker
 // Versiyon: 1.0.0
 
-const CACHE_NAME = 'surveyadmin-v1';
+const CACHE_NAME = 'sahaanket-v1';
 const OFFLINE_URL = '/';
 
 // Cache'e alınacak dosyalar (App Shell)
@@ -160,7 +160,7 @@ self.addEventListener('push', (event) => {
     ]
   };
   event.waitUntil(
-    self.registration.showNotification(data.title || 'SurveyAdmin', options)
+    self.registration.showNotification(data.title || 'Saha Anket', options)
   );
 });
 
