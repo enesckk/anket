@@ -1095,7 +1095,7 @@ export function renderLoginScreen() {
         <!-- STANDALONE LOGO (DIRECT DISPLAY, NO DOUBLE BOX CLUTTER) -->
         <div class="flex justify-center mb-6">
           <div class="p-3 bg-white/95 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl transition-transform hover:scale-105 duration-200">
-            <img src="./logo_sehitkamil.png" alt="Şehitkamil Logo" class="h-16 sm:h-20 w-auto max-w-[280px] object-contain">
+            <img src="./logo_saha_anket.png" alt="Saha Anket Logo" class="h-16 sm:h-20 w-auto max-w-[280px] object-contain">
           </div>
         </div>
 
@@ -1104,7 +1104,7 @@ export function renderLoginScreen() {
           
           <!-- TITLE -->
           <div class="text-center pb-1">
-            <h1 class="text-lg sm:text-xl font-bold text-[#0B315D] tracking-tight leading-snug">Şehitkamil Strateji Geliştirme Merkezi</h1>
+            <h1 class="text-lg sm:text-xl font-bold text-[#0B315D] tracking-tight leading-snug">Saha Anket</h1>
           </div>
 
           <!-- FORM -->
