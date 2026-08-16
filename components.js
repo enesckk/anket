@@ -1134,11 +1134,26 @@ export function renderLoginScreen() {
               </div>
             </div>
 
-            <!-- SUBMIT BUTTON (NO PLAY ▶ TRIANGLE) -->
+            <!-- SUBMIT BUTTON -->
             <button type="submit" class="w-full h-[52px] bg-[#0B315D] hover:bg-[#072446] text-white font-semibold text-sm rounded-[14px] shadow-md hover:shadow-lg transition-all active:scale-[0.99] flex items-center justify-center cursor-pointer mt-3">
               Giriş Yap
             </button>
           </form>
+
+          <!-- HIZLI DEMO HESAPLARI -->
+          <div class="pt-4 border-t border-slate-100 space-y-2">
+            <div class="text-[11px] font-semibold text-slate-400 text-center">Hızlı Giriş Seçenekleri</div>
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" id="btn-quick-admin-login" class="py-2.5 px-3 bg-slate-50 hover:bg-[#01214A] hover:text-white text-[#01214A] rounded-xl text-xs font-bold border border-slate-200 transition-all text-center cursor-pointer flex flex-col items-center justify-center gap-0.5">
+                <span class="text-[11px]">🏢 Yönetici</span>
+                <span class="text-[9px] opacity-70 font-normal">Koordinatör Paneli</span>
+              </button>
+              <button type="button" id="btn-quick-field-login" class="py-2.5 px-3 bg-slate-50 hover:bg-[#2A9D38] hover:text-white text-[#2A9D38] rounded-xl text-xs font-bold border border-slate-200 transition-all text-center cursor-pointer flex flex-col items-center justify-center gap-0.5">
+                <span class="text-[11px]">📱 Saha Personeli</span>
+                <span class="text-[9px] opacity-70 font-normal">PWA Anket Uygulaması</span>
+              </button>
+            </div>
+          </div>
 
         </div>
 

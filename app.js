@@ -451,7 +451,7 @@ if (!window.__globalListenersAttached) {
     const notifItem = e.target.closest('.notif-item');
     if (notifItem) {
       const notifId = notifItem.getAttribute('data-notif-id');
-      if (notifId) store.markNotificationRead(notifId);
+      if (notifId) store.handleNotificationClick(notifId);
       return;
     }
 
@@ -475,13 +475,29 @@ if (!window.__globalListenersAttached) {
       return;
     }
 
-    const target = e.target.closest('.btn-open-review-survey-modal, .btn-set-q-review-status, .btn-submit-survey-revision');
+    const target = e.target.closest('.btn-open-review-survey-modal, .btn-set-q-review-status, .btn-submit-survey-revision, .btn-approve-admin-survey, .btn-reject-admin-survey');
     if (!target) return;
 
     if (target.classList.contains('btn-open-review-survey-modal')) {
       const surveyId = target.getAttribute('data-survey-id');
       const survey = store.getState().allSurveys.find(s => s.id === surveyId);
       if (survey) store.openModal('review_survey', { survey });
+      return;
+    }
+
+    if (target.classList.contains('btn-approve-admin-survey')) {
+      const surveyId = target.getAttribute('data-survey-id');
+      if (surveyId) {
+        await store.approveAdminSurvey(surveyId);
+      }
+      return;
+    }
+
+    if (target.classList.contains('btn-reject-admin-survey')) {
+      const surveyId = target.getAttribute('data-survey-id');
+      if (surveyId) {
+        await store.rejectAdminSurvey(surveyId, 'Yönetici tarafından onaylanmadı.');
+      }
       return;
     }
 
@@ -664,6 +680,15 @@ function attachLoginListeners() {
       await store.login(email, pwd);
     });
   }
+
+  // Hızlı Demo Giriş Butonları
+  document.getElementById('btn-quick-admin-login')?.addEventListener('click', async () => {
+    await store.login('admin@sahaanket.gov.tr', '123456');
+  });
+
+  document.getElementById('btn-quick-field-login')?.addEventListener('click', async () => {
+    await store.login('ahmet@sahaanket.gov.tr', '123456');
+  });
 }
 
 function attachAdminListeners() {
@@ -1421,7 +1446,7 @@ function attachPwaListeners() {
   document.querySelectorAll('.pwa-notif-item').forEach(item => {
     item.addEventListener('click', (e) => {
       const notifId = item.getAttribute('data-notif-id');
-      if (notifId) store.markNotificationRead(notifId);
+      if (notifId) store.handleNotificationClick(notifId);
     });
   });
 
