@@ -563,10 +563,26 @@ export function renderCustomModals(state) {
                 <input type="tel" id="personnel-phone" required placeholder="5359998877" class="w-full h-11 px-3 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary font-medium"/>
               </div>
 
-              <div class="sm:col-span-2">
-                <label class="block text-xs font-bold text-on-surface mb-1">Güçlü Giriş Şifresi *</label>
-                <input type="password" id="personnel-password" required placeholder="Güçlü şifre girin (Min 8 karakter, büyük/küçük harf, rakam, özel kar.)" class="w-full h-11 px-3 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary font-medium"/>
-                <span class="text-[10px] text-text-secondary mt-1 block">En az 8 karakter, 1 büyük harf, 1 küçük harf, 1 rakam ve 1 özel karakter içermelidir.</span>
+              <div class="sm:col-span-2 space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <label class="block text-xs font-bold text-on-surface">Güçlü Giriş Şifresi *</label>
+                  <button type="button" id="btn-generate-personnel-password" class="text-[11px] font-bold text-[#2A9D38] hover:text-[#22822e] hover:underline flex items-center gap-1 cursor-pointer">
+                    ${iconSvg('sync', 'w-3.5 h-3.5')}
+                    <span>Yeni Güçlü Şifre Öner</span>
+                  </button>
+                </div>
+                <div class="relative flex items-center">
+                  <input type="text" id="personnel-password" required value="Saha*${Math.floor(1000 + Math.random() * 9000)}!xK" placeholder="Güçlü şifre" class="w-full h-11 pl-3 pr-24 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary font-mono font-bold text-[#01214A]"/>
+                  <div class="absolute right-2 flex items-center gap-1">
+                    <button type="button" id="btn-copy-personnel-password" title="Şifreyi Kopyala" class="px-2.5 py-1 bg-slate-100 hover:bg-[#01214A] hover:text-white text-slate-700 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer">
+                      <span>📋 Kopyala</span>
+                    </button>
+                    <button type="button" id="btn-toggle-personnel-pwd-visibility" title="Göster / Gizle" class="p-1 text-slate-400 hover:text-slate-700 cursor-pointer">
+                      ${iconSvg('eye', 'w-4 h-4')}
+                    </button>
+                  </div>
+                </div>
+                <span class="text-[10px] text-text-secondary mt-1 block">Önerilen şifreyi <strong>Kopyala</strong> butonuna basarak personele kolayca iletebilirsiniz.</span>
               </div>
             </div>
 
@@ -2785,7 +2801,7 @@ function renderAdminTabContent(tab, state) {
   switch (tab) {
     case 'dashboard':
       return `
-        <!-- 4 POWERFUL REFINED KPI SCORECARDS (24px padding, 14px radius, #667085 text) -->
+        <!-- 4 POWERFUL REFINED KPI SCORECARDS (Real-time dynamic data) -->
         <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           
           <!-- Card 1: Aktif Anketler -->
@@ -2794,19 +2810,19 @@ function renderAdminTabContent(tab, state) {
               <span class="text-[11px] font-semibold text-[#667085] uppercase tracking-wider block">AKTİF ANKETLER</span>
             </div>
             <div>
-              <div class="text-[30px] font-bold text-[#01214A] leading-none">${state.adminKpis.activeSurveysCount || '8'}</div>
-              <span class="text-xs text-[#667085] font-normal mt-1 block">6 mahallede devam ediyor</span>
+              <div class="text-[30px] font-bold text-[#01214A] leading-none">${(state.allSurveys || []).filter(s => s.status === 'ACTIVE').length}</div>
+              <span class="text-xs text-[#667085] font-normal mt-1 block">${(state.allSurveys || []).length} toplam anket yayında</span>
             </div>
           </div>
 
           <!-- Card 2: Bugünkü Yanıtlar -->
           <div class="bg-white p-6 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-col justify-between h-[128px] transition-colors duration-150 hover:border-[#D0D5DD]">
             <div>
-              <span class="text-[11px] font-semibold text-[#667085] uppercase tracking-wider block">BUGÜNKÜ YANITLAR</span>
+              <span class="text-[11px] font-semibold text-[#667085] uppercase tracking-wider block">TOPLAM YANITLAR</span>
             </div>
             <div>
-              <div class="text-[30px] font-bold text-[#01214A] leading-none">${state.adminKpis.todayCompleted || '142'}</div>
-              <span class="text-xs text-[#667085] font-normal mt-1 block">+18 yanıt bugün eklendi</span>
+              <div class="text-[30px] font-bold text-[#01214A] leading-none">${(state.submissions || []).length}</div>
+              <span class="text-xs text-[#667085] font-normal mt-1 block">${(state.submissions || []).length > 0 ? 'Saha verileri güncel' : 'Henüz saha yanıtı girilmedi'}</span>
             </div>
           </div>
 
@@ -2816,8 +2832,8 @@ function renderAdminTabContent(tab, state) {
               <span class="text-[11px] font-semibold text-[#667085] uppercase tracking-wider block">AKTİF GÖREV ATAMALARI</span>
             </div>
             <div>
-              <div class="text-[30px] font-bold text-[#01214A] leading-none">${state.adminKpis.activeAssignmentsCount || '24'}</div>
-              <span class="text-xs text-[#667085] font-normal mt-1 block">4 sahada çalışma sürüyor</span>
+              <div class="text-[30px] font-bold text-[#01214A] leading-none">${(state.allAssignments || []).filter(a => a.status === 'ACTIVE').length}</div>
+              <span class="text-xs text-[#667085] font-normal mt-1 block">${(state.allAssignments || []).length} kayıtlı görev</span>
             </div>
           </div>
 
@@ -2827,33 +2843,33 @@ function renderAdminTabContent(tab, state) {
               <span class="text-[11px] font-semibold text-[#667085] uppercase tracking-wider block">SAHADAKİ PERSONEL</span>
             </div>
             <div>
-              <div class="text-[30px] font-bold text-[#01214A] leading-none">${state.adminKpis.fieldStaffCount || '12'} / 14</div>
-              <span class="text-xs text-[#667085] font-normal mt-1 block">2 personel çevrimdışı</span>
+              <div class="text-[30px] font-bold text-[#01214A] leading-none">${(state.allPersonnel || []).filter(p => p.role === 'FIELD_USER' && p.isActive).length} / ${(state.allPersonnel || []).filter(p => p.role === 'FIELD_USER').length}</div>
+              <span class="text-xs text-[#667085] font-normal mt-1 block">${(state.allPersonnel || []).filter(p => p.role === 'FIELD_USER').length > 0 ? 'Saha personeli hazır' : 'Personel kaydı yok'}</span>
             </div>
           </div>
         </section>
 
-        <!-- SECONDARY QUIET STATUS ROW -->
+        <!-- SECONDARY STATUS ROW -->
         <div class="flex flex-wrap items-center justify-between gap-4 py-2.5 px-4 bg-white rounded-[12px] border border-[#E9EDF2] text-xs text-[#667085] font-normal shadow-none">
           <div class="flex items-center gap-2">
-            <span class="text-[#667085]">Toplam Tamamlanan:</span>
-            <span class="font-semibold text-[#01214A]">${state.adminKpis.totalCompleted || '12.480'} yanıt</span>
+            <span class="text-[#667085]">Toplam Kayıtlı Veri:</span>
+            <span class="font-semibold text-[#01214A]">${(state.submissions || []).length} yanıt</span>
           </div>
           <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-            <span class="text-slate-600 font-normal">${state.offlineQueueCount || '3'} çevrimdışı kayıt senkronizasyon bekliyor</span>
+            <span class="w-2 h-2 rounded-full ${state.isOnline ? 'bg-[#2A9D38]' : 'bg-amber-500'}"></span>
+            <span class="text-slate-600 font-normal">${state.isOnline ? 'Sistem Çevrimiçi · Merkezi Veritabanı Aktif' : 'Çevrimdışı Mod'}</span>
           </div>
         </div>
 
-        <!-- 68% / 32% GRID SPLIT -->
+        <!-- 68% / 32% GRID SPLIT (Real-time dynamic data) -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
           <!-- LEFT 68% (8 COLS): MAIN HERO TABLE -->
           <section class="lg:col-span-8 bg-white rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden flex flex-col">
             <div class="p-6 border-b border-[#E9EDF2] flex items-center justify-between">
               <div>
-                <h2 class="text-[18px] font-semibold text-[#01214A]">Aktif Anketler ve Saha İlerlemesi</h2>
-                <p class="text-[13px] text-slate-400 font-normal mt-0.5">Sahadaki görevlerin canlı hedef ve yüzde tamamlanma durumları</p>
+                <h2 class="text-[18px] font-semibold text-[#01214A]">Kayıtlı Anketler ve Durumları</h2>
+                <p class="text-[13px] text-slate-400 font-normal mt-0.5">Sistemdeki anketlerin güncel durumu ve tamamlama oranları</p>
               </div>
               <button type="button" class="btn-admin-tab text-xs font-semibold text-[#2A9D38] hover:underline cursor-pointer" data-admin-tab="surveys">
                 Tümünü Gör →
@@ -2865,109 +2881,61 @@ function renderAdminTabContent(tab, state) {
                 <thead>
                   <tr class="bg-[#F8FAFC] border-b border-[#E9EDF2] text-slate-500 font-semibold text-[11px]">
                     <th class="py-3 px-5">Anket Adı</th>
-                    <th class="py-3 px-5">Bölge</th>
-                    <th class="py-3 px-5">İlerleme Durumu</th>
-                    <th class="py-3 px-5 text-right">Son Tarih</th>
+                    <th class="py-3 px-5">Kategori</th>
+                    <th class="py-3 px-5">Durum</th>
+                    <th class="py-3 px-5 text-right">Hedef</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-[#F1F5F9]">
-                  <tr class="hover:bg-slate-50/60 transition-colors duration-150">
-                    <td class="py-4 px-5 font-semibold text-[#01214A] flex items-center gap-2">
-                      <span class="w-2 h-2 rounded-full bg-[#2A9D38]"></span>
-                      <span>Tarımsal İhtiyaç Analizi</span>
-                    </td>
-                    <td class="py-4 px-5 text-slate-600 font-normal">Sinan Köyü</td>
-                    <td class="py-4 px-5">
-                      <div class="space-y-1.5 max-w-xs">
-                        <div class="flex justify-between text-xs font-medium text-slate-700">
-                          <span>320 / 500 · %64</span>
-                        </div>
-                        <div class="w-full bg-[#F1F5F9] h-1 rounded-full overflow-hidden">
-                          <div class="bg-[#2A9D38] h-full rounded-full transition-all duration-500" style="width: 64%"></div>
-                        </div>
-                      </div>
-                    </td>
-                    <td class="py-4 px-5 text-right text-slate-400 font-normal">30.11.2026</td>
-                  </tr>
-
-                  <tr class="hover:bg-slate-50/60 transition-colors duration-150">
-                    <td class="py-4 px-5 font-semibold text-[#01214A] flex items-center gap-2">
-                      <span class="w-2 h-2 rounded-full bg-[#2A9D38]"></span>
-                      <span>Altyapı Durum Tespiti</span>
-                    </td>
-                    <td class="py-4 px-5 text-slate-600 font-normal">Merkez Mahalle</td>
-                    <td class="py-4 px-5">
-                      <div class="space-y-1.5 max-w-xs">
-                        <div class="flex justify-between text-xs font-medium text-slate-700">
-                          <span>150 / 200 · %75</span>
-                        </div>
-                        <div class="w-full bg-[#F1F5F9] h-1 rounded-full overflow-hidden">
-                          <div class="bg-[#2A9D38] h-full rounded-full transition-all duration-500" style="width: 75%"></div>
-                        </div>
-                      </div>
-                    </td>
-                    <td class="py-4 px-5 text-right text-slate-400 font-normal">15.11.2026</td>
-                  </tr>
-
-                  <tr class="hover:bg-slate-50/60 transition-colors duration-150">
-                    <td class="py-4 px-5 font-semibold text-[#01214A] flex items-center gap-2">
-                      <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                      <span>Eğitim Memnuniyet Anketi</span>
-                    </td>
-                    <td class="py-4 px-5 text-slate-600 font-normal">Yeşilyurt</td>
-                    <td class="py-4 px-5">
-                      <div class="space-y-1.5 max-w-xs">
-                        <div class="flex justify-between text-xs font-medium text-slate-700">
-                          <span>45 / 300 · %15</span>
-                        </div>
-                        <div class="w-full bg-[#F1F5F9] h-1 rounded-full overflow-hidden">
-                          <div class="bg-amber-500 h-full rounded-full transition-all duration-500" style="width: 15%"></div>
-                        </div>
-                      </div>
-                    </td>
-                    <td class="py-4 px-5 text-right text-slate-400 font-normal">10.12.2026</td>
-                  </tr>
+                  ${(state.allSurveys || []).length === 0 ? `
+                    <tr>
+                      <td colspan="4" class="py-8 text-center text-slate-400 text-xs">Henüz anket bulunmuyor. Yeni anket oluşturabilirsiniz.</td>
+                    </tr>
+                  ` : (state.allSurveys || []).slice(0, 5).map(s => {
+                    const statusBg = s.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : (s.status === 'PENDING_APPROVAL' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-slate-100 text-slate-600 border-slate-200');
+                    const statusLabel = s.status === 'ACTIVE' ? 'Aktif / Yayında' : (s.status === 'PENDING_APPROVAL' ? 'Onay Bekliyor' : 'Taslak');
+                    return `
+                      <tr class="hover:bg-slate-50/60 transition-colors duration-150">
+                        <td class="py-4 px-5 font-semibold text-[#01214A]">
+                          <span>${s.title}</span>
+                        </td>
+                        <td class="py-4 px-5 text-slate-600 font-normal">${s.category || 'Genel'}</td>
+                        <td class="py-4 px-5">
+                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${statusBg}">${statusLabel}</span>
+                        </td>
+                        <td class="py-4 px-5 text-right text-slate-700 font-bold">${s.completedCount || 0} / ${s.targetCount || 100}</td>
+                      </tr>
+                    `;
+                  }).join('')}
                 </tbody>
               </table>
             </div>
           </section>
 
-          <!-- RIGHT 32% (4 COLS): RECENT ACTIVITY TIMELINE -->
+          <!-- RIGHT 32% (4 COLS): PERSONNEL AND RECENT ACTIVITIES -->
           <section class="lg:col-span-4 bg-white rounded-[14px] border border-[#E9EDF2] p-6 shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-5">
             <div class="flex items-center justify-between pb-3 border-b border-[#E9EDF2]">
-              <h3 class="text-base font-semibold text-[#01214A]">Son Saha Hareketleri</h3>
-              <span class="flex items-center gap-1.5 text-[11px] text-slate-400 font-normal">
-                <span class="w-2 h-2 rounded-full bg-[#2A9D38]"></span> Canlı
+              <h3 class="text-base font-semibold text-[#01214A]">Sistem Personelleri</h3>
+              <span class="flex items-center gap-1.5 text-[11px] text-[#2A9D38] font-semibold">
+                ${(state.allPersonnel || []).length} Kayıtlı
               </span>
             </div>
 
-            <div class="space-y-5 relative pl-3 border-l border-[#E9EDF2]">
-              <div class="relative pl-5">
-                <div class="absolute -left-[17px] top-0.5 w-7 h-7 rounded-full bg-[#01214A] text-white font-semibold text-[10px] flex items-center justify-center ring-2 ring-white">AY</div>
-                <div class="flex justify-between items-baseline">
-                  <span class="text-[13px] font-semibold text-[#01214A]">Ahmet Yılmaz</span>
-                  <span class="text-[11px] text-slate-400 font-normal">19:42</span>
+            <div class="space-y-3">
+              ${(state.allPersonnel || []).map(p => `
+                <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-full ${p.role === 'ADMIN' ? 'bg-[#01214A]' : 'bg-[#2A9D38]'} text-white font-bold text-xs flex items-center justify-center">
+                      ${p.fullName ? p.fullName.charAt(0).toUpperCase() : 'P'}
+                    </div>
+                    <div>
+                      <div class="text-xs font-bold text-[#01214A]">${p.fullName}</div>
+                      <div class="text-[10px] text-slate-400 font-normal">${p.role === 'ADMIN' ? '🏢 Yönetici' : '📱 Saha Personeli'}</div>
+                    </div>
+                  </div>
+                  <span class="w-2 h-2 rounded-full ${p.isActive ? 'bg-[#2A9D38]' : 'bg-red-500'}"></span>
                 </div>
-                <p class="text-[12px] text-slate-600 font-normal leading-relaxed mt-0.5">Sinan Köyü için <strong class="text-[#01214A] font-semibold">'Tarımsal İhtiyaç Analizi'</strong> yanıtını tamamladı.</p>
-              </div>
-
-              <div class="relative pl-5">
-                <div class="absolute -left-[17px] top-0.5 w-7 h-7 rounded-full bg-[#2A9D38] text-white font-semibold text-[10px] flex items-center justify-center ring-2 ring-white">MD</div>
-                <div class="flex justify-between items-baseline">
-                  <span class="text-[13px] font-semibold text-[#01214A]">Mehmet Demir</span>
-                  <span class="text-[11px] text-slate-400 font-normal">19:15</span>
-                </div>
-                <p class="text-[12px] text-slate-600 font-normal leading-relaxed mt-0.5">Merkez Mahalle konumunda 1 yeni saha fotoğrafı yükledi.</p>
-              </div>
-
-              <div class="relative pl-5">
-                <div class="absolute -left-[17px] top-0.5 w-7 h-7 rounded-full bg-slate-700 text-white font-semibold text-[10px] flex items-center justify-center ring-2 ring-white">AK</div>
-                <div class="flex justify-between items-baseline">
-                  <span class="text-[13px] font-semibold text-[#01214A]">Ayşe Kaya</span>
-                  <span class="text-[11px] text-slate-400 font-normal">18:50</span>
-                </div>
-                <p class="text-[12px] text-slate-600 font-normal leading-relaxed mt-0.5">Atanan 'Altyapı Durum Tespiti' görevini görüntüledi.</p>
-              </div>
+              `).join('')}
             </div>
           </section>
 

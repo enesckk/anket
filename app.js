@@ -19,6 +19,27 @@ import {
   renderCustomModals
 } from './components.js';
 
+function generateRandomStrongPassword() {
+  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const lower = 'abcdefghijkmnpqrstuvwxyz';
+  const numbers = '23456789';
+  const symbols = '!@#$%&*?';
+  const all = upper + lower + numbers + symbols;
+
+  let pwd = '';
+  pwd += upper[Math.floor(Math.random() * upper.length)];
+  pwd += lower[Math.floor(Math.random() * lower.length)];
+  pwd += numbers[Math.floor(Math.random() * numbers.length)];
+  pwd += symbols[Math.floor(Math.random() * symbols.length)];
+
+  for (let i = 0; i < 6; i++) {
+    pwd += all[Math.floor(Math.random() * all.length)];
+  }
+
+  // Karakterleri karıştır (shuffle)
+  return pwd.split('').sort(() => 0.5 - Math.random()).join('');
+}
+
 function captureActiveFocus() {
   const activeEl = document.activeElement;
   if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
@@ -471,6 +492,46 @@ if (!window.__globalListenersAttached) {
     const closeCustomModalBtn = e.target.closest('#btn-close-custom-modal');
     if (closeCustomModalBtn) {
       store.closeModal();
+      return;
+    }
+
+    // GÜÇLÜ ŞİFRE ÜRETİCİ
+    const genPwdBtn = e.target.closest('#btn-generate-personnel-password');
+    if (genPwdBtn) {
+      const pwdInput = document.getElementById('personnel-password');
+      if (pwdInput) {
+        const strongPwd = generateRandomStrongPassword();
+        pwdInput.value = strongPwd;
+        pwdInput.type = 'text';
+        store.setToast('🎲 Yeni güçlü şifre oluşturuldu!', 'info');
+      }
+      return;
+    }
+
+    // ŞİFREYİ PANOMA KOPYALA
+    const copyPwdBtn = e.target.closest('#btn-copy-personnel-password');
+    if (copyPwdBtn) {
+      const pwdInput = document.getElementById('personnel-password');
+      const val = pwdInput ? pwdInput.value : '';
+      if (val) {
+        navigator.clipboard.writeText(val).then(() => {
+          store.setToast('📋 Şifre panoya kopyalandı! Personele iletebilirsiniz.', 'success');
+        }).catch(() => {
+          store.setToast('Şifre: ' + val, 'info');
+        });
+      } else {
+        store.setToast('Lütfen önce bir şifre üretin veya girin.', 'error');
+      }
+      return;
+    }
+
+    // ŞİFRE GÖSTER / GİZLE
+    const togglePwdVisBtn = e.target.closest('#btn-toggle-personnel-pwd-visibility');
+    if (togglePwdVisBtn) {
+      const pwdInput = document.getElementById('personnel-password');
+      if (pwdInput) {
+        pwdInput.type = pwdInput.type === 'password' ? 'text' : 'password';
+      }
       return;
     }
 
