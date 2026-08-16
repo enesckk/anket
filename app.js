@@ -77,7 +77,6 @@ function renderApp() {
     // Admin vs PWA view
     if (state.currentRole === 'admin') {
       root.innerHTML = `
-        ${renderSystemBar()}
         ${renderToastNotification(state)}
         ${renderAdminView()}
       `;
@@ -127,7 +126,7 @@ function renderApp() {
     }
 
     root.innerHTML = `
-      ${renderSystemBar()}
+      ${renderToastNotification(state)}
       ${screenContent}
       ${renderCustomModals(state)}
     `;
@@ -680,15 +679,6 @@ function attachLoginListeners() {
       await store.login(email, pwd);
     });
   }
-
-  // Hızlı Demo Giriş Butonları
-  document.getElementById('btn-quick-admin-login')?.addEventListener('click', async () => {
-    await store.login('admin@sahaanket.gov.tr', 'Admin123!');
-  });
-
-  document.getElementById('btn-quick-field-login')?.addEventListener('click', async () => {
-    await store.login('saha@sahaanket.gov.tr', 'Saha123!');
-  });
 }
 
 function attachAdminListeners() {

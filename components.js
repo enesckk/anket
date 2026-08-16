@@ -1049,36 +1049,9 @@ export function renderToastNotification(state) {
   `;
 }
 
-// System Top Bar (Role Switcher & Network Status)
+// System Top Bar (Disabled because Admin and PWA views manage their own dedicated headers)
 export function renderSystemBar() {
-  const state = store.getState();
-  // Admin view has its own single unified top header (Section 1-3)
-  if (state.currentRole === 'admin') {
-    return '';
-  }
-
-  const user = state.auth?.user || {};
-  const isLoggedIn = state.auth?.isLoggedIn;
-
-  return `
-    <header class="w-full h-14 bg-white border-b border-[#E9EDF2] flex items-center justify-between px-4 sticky top-0 z-50">
-      <div class="flex items-center gap-2.5">
-        <img src="./logo_sehitkamil.png" alt="Şehitkamil Logo" class="h-7 w-auto object-contain shrink-0">
-        <span class="text-xs font-bold text-[#01214A]">Şehitkamil Strateji Merkezi</span>
-      </div>
-
-      <div class="flex items-center gap-3">
-        ${renderNotificationCenter(state)}
-        ${isLoggedIn ? `
-          <div class="flex items-center gap-2">
-            <div class="w-7 h-7 rounded-full bg-[#01214A] text-white flex items-center justify-center font-bold text-xs">
-              ${user.fullName ? user.fullName.charAt(0).toUpperCase() : 'S'}
-            </div>
-          </div>
-        ` : ''}
-      </div>
-    </header>
-  `;
+  return '';
 }
 
 // 1. STANDALONE EXECUTIVE LOGIN EKRANI (MASTERWORK DESIGN)
@@ -1140,21 +1113,6 @@ export function renderLoginScreen() {
               Giriş Yap
             </button>
           </form>
-
-          <!-- HIZLI DEMO HESAPLARI -->
-          <div class="pt-4 border-t border-slate-100 space-y-2">
-            <div class="text-[11px] font-semibold text-slate-400 text-center">Hızlı Giriş Seçenekleri</div>
-            <div class="grid grid-cols-2 gap-2">
-              <button type="button" id="btn-quick-admin-login" class="py-2.5 px-3 bg-slate-50 hover:bg-[#01214A] hover:text-white text-[#01214A] rounded-xl text-xs font-bold border border-slate-200 transition-all text-center cursor-pointer flex flex-col items-center justify-center gap-0.5">
-                <span class="text-[11px]">🏢 Yönetici</span>
-                <span class="text-[9px] opacity-70 font-normal">Koordinatör Paneli</span>
-              </button>
-              <button type="button" id="btn-quick-field-login" class="py-2.5 px-3 bg-slate-50 hover:bg-[#2A9D38] hover:text-white text-[#2A9D38] rounded-xl text-xs font-bold border border-slate-200 transition-all text-center cursor-pointer flex flex-col items-center justify-center gap-0.5">
-                <span class="text-[11px]">📱 Saha Personeli</span>
-                <span class="text-[9px] opacity-70 font-normal">PWA Anket Uygulaması</span>
-              </button>
-            </div>
-          </div>
 
         </div>
 
