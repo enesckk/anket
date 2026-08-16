@@ -314,6 +314,14 @@ if (!window.__globalListenersAttached) {
       return;
     }
 
+    const bottomAddQBtn = e.target.closest('#btn-bottom-add-question');
+    if (bottomAddQBtn) {
+      const select = document.getElementById('select-bottom-q-type');
+      const type = select ? select.value : 'text';
+      store.addQuestionToBuilder(type);
+      return;
+    }
+
     const reqBtn = e.target.closest('.btn-toggle-required');
     if (reqBtn) {
       const id = reqBtn.getAttribute('data-q-id');

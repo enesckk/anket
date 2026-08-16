@@ -1141,7 +1141,7 @@ export function renderLoginScreen() {
 export function renderBottomNav() {
   const state = store.getState();
   const screen = state.pwaScreen;
-  const unreadMsgCount = (state.messages || []).filter(m => m.isUnread).length;
+  const unreadMsgCount = (state.messages || []).filter(m => m.isUnread && (m.senderRole === 'ADMIN' || m.direction === 'FROM_ADMIN' || !m.direction)).length;
 
   return `
     <!-- SAFE-AREA COMPLIANT FIXED BOTTOM NAVIGATION (SECTION 10) -->
@@ -1160,7 +1160,11 @@ export function renderBottomNav() {
         <button id="nav-messages" type="button" class="flex flex-col items-center justify-center flex-1 h-full gap-1 ${screen === 'messages' || screen === 'message_detail' ? 'text-[#2A9D38] font-semibold' : 'text-slate-400 hover:text-[#01214A]'} transition-all cursor-pointer relative">
           <div class="relative">
             ${iconSvg('mail', `w-5 h-5 ${screen === 'messages' || screen === 'message_detail' ? 'text-[#2A9D38]' : 'text-slate-400'}`)}
-            ${unreadMsgCount > 0 ? `<span class="absolute -top-1 -right-1 w-2 h-2 bg-[#2A9D38] rounded-full ring-2 ring-white"></span>` : ''}
+            ${unreadMsgCount > 0 ? `
+              <span class="absolute -top-1.5 -right-2 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-extrabold rounded-full flex items-center justify-center ring-2 ring-white animate-pulse shadow-sm">
+                ${unreadMsgCount}
+              </span>
+            ` : ''}
           </div>
           <span class="text-[11px]">Mesajlar</span>
         </button>
@@ -2154,6 +2158,9 @@ export function renderAdminView() {
     { id: 'messages', label: 'Mesajlar', icon: 'mail', subtitle: 'Saha ekiplerine direkt talimat ve duyuru iletimi' }
   ];
 
+  const unreadAdminMsgCount = (state.messages || []).filter(m => m.isUnread && (m.senderRole === 'FIELD_USER' || m.direction === 'TO_ADMIN')).length;
+  const pendingSurveysCount = (state.allSurveys || []).filter(s => s.status === 'PENDING_APPROVAL').length;
+
   const currentNavItem = navItems.find(i => i.id === activeTab) || navItems[0];
   const currentDateStr = new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' });
 
@@ -2179,7 +2186,17 @@ export function renderAdminView() {
             return `
               <button data-admin-tab="${item.id}" class="btn-admin-tab w-full flex items-center gap-3 px-3.5 py-2.5 rounded-[10px] text-left text-xs transition-all duration-150 relative cursor-pointer ${isActive ? 'text-[#01214A] bg-[#2A9D38]/10 font-semibold border-l-3 border-[#2A9D38]' : 'text-slate-400 hover:text-[#01214A] hover:bg-slate-50 font-normal'}">
                 ${iconSvg(item.icon, `w-4 h-4 ${isActive ? 'text-[#2A9D38]' : 'text-slate-400'}`)}
-                <span>${item.label}</span>
+                <span class="truncate">${item.label}</span>
+                ${item.id === 'messages' && unreadAdminMsgCount > 0 ? `
+                  <span class="ml-auto px-2 py-0.5 bg-red-500 text-white text-[10px] font-extrabold rounded-full animate-pulse shadow-xs shrink-0">
+                    ${unreadAdminMsgCount} Yeni
+                  </span>
+                ` : ''}
+                ${item.id === 'surveys' && pendingSurveysCount > 0 ? `
+                  <span class="ml-auto px-2 py-0.5 bg-amber-500 text-white text-[10px] font-extrabold rounded-full shadow-xs shrink-0">
+                    ${pendingSurveysCount} Onay
+                  </span>
+                ` : ''}
               </button>
             `;
           }).join('')}
@@ -2582,6 +2599,39 @@ function render4StepSurveyBuilder(state) {
                 </div>
               </div>
             `).join('')}
+          </div>
+
+          <!-- ALT BÖLÜM: YENİ SORU EKLEME PANELİ (TİP SEÇİCİ İLE) -->
+          <div class="bg-white p-4 sm:p-5 rounded-2xl border-2 border-dashed border-[#2A9D38]/50 hover:border-[#2A9D38] bg-emerald-50/20 shadow-card transition-all space-y-3">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-[#2A9D38] text-white flex items-center justify-center font-bold shadow-xs shrink-0">
+                  ${iconSvg('plus', 'w-5 h-5 text-white')}
+                </div>
+                <div>
+                  <h4 class="text-xs sm:text-sm font-extrabold text-[#01214A]">Listenin Sonuna Soru Ekle</h4>
+                  <p class="text-[11px] text-slate-500 font-medium">Aşağıdan soru türünü belirleyip "Soru Ekle" butonuna basınız.</p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2 w-full sm:w-auto">
+                <select id="select-bottom-q-type" class="h-10 px-3 bg-white border border-slate-300 rounded-xl text-xs font-bold text-[#01214A] focus:outline-none focus:border-[#2A9D38] cursor-pointer flex-1 sm:flex-initial shadow-2xs">
+                  <option value="text">Aa — Metin Sorusu</option>
+                  <option value="number">123 — Sayısal Soru</option>
+                  <option value="yesno">✓ / ✗ — Evet / Hayır</option>
+                  <option value="single">○ — Tek Seçim (Radyo)</option>
+                  <option value="multi">☑ — Çoklu Seçim (Kare)</option>
+                  <option value="date">📅 — Tarih Seçimi</option>
+                  <option value="photo">📷 — Fotoğraf Yükleme</option>
+                  <option value="gps">📍 — GPS Konum Alımı</option>
+                </select>
+
+                <button type="button" id="btn-bottom-add-question" class="h-10 px-4 bg-[#2A9D38] hover:bg-[#22822e] text-white font-extrabold text-xs rounded-xl transition-all shadow-sm hover:shadow flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer">
+                  ${iconSvg('plus', 'w-4 h-4 text-white')}
+                  <span>Soru Ekle</span>
+                </button>
+              </div>
+            </div>
           </div>
 
           <div class="flex flex-col sm:flex-row justify-end items-center gap-4 pt-4 border-t border-border">

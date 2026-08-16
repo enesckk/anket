@@ -1,7 +1,7 @@
 const API_BASE_URL = (typeof window !== 'undefined' && window.SAHA_ANKET_API_URL) 
   ? window.SAHA_ANKET_API_URL 
   : (typeof location !== 'undefined' && location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://anket-45so.onrender.com/api');
-const STORAGE_KEY = 'surveyadmin_pro_state_v6';
+const STORAGE_KEY = 'surveyadmin_pro_state_v7';
 
 // Pre-warm & Keep-Alive Render Cloud Backend in background
 if (typeof window !== 'undefined') {
@@ -501,6 +501,18 @@ class Store {
 
   setAdminTab(tab) {
     this.state.adminTab = tab;
+    if (tab === 'messages') {
+      (this.state.messages || []).forEach(m => {
+        if (m.senderRole === 'FIELD_USER' || m.direction === 'TO_ADMIN') {
+          m.isUnread = false;
+        }
+      });
+      (this.state.notifications || []).forEach(n => {
+        if (n.type === 'NEW_MESSAGE' && (n.targetRole === 'ADMIN' || n.targetRole === 'ALL')) {
+          n.isRead = true;
+        }
+      });
+    }
     this.saveState();
   }
 
@@ -1338,6 +1350,19 @@ class Store {
       this.markTaskViewed(params.taskId);
     }
 
+    if (screen === 'messages') {
+      (this.state.messages || []).forEach(m => {
+        if (m.senderRole === 'ADMIN' || m.direction === 'FROM_ADMIN' || !m.direction) {
+          m.isUnread = false;
+        }
+      });
+      (this.state.notifications || []).forEach(n => {
+        if (n.type === 'NEW_MESSAGE' && (n.targetRole === 'PWA' || n.targetRole === 'ALL')) {
+          n.isRead = true;
+        }
+      });
+    }
+
     if (params.messageId) {
       this.state.selectedMessageId = params.messageId;
       this.markMessageSeen(params.messageId);
@@ -1817,7 +1842,7 @@ class Store {
       direction: 'FROM_ADMIN', // Admin → PWA
       recipientUserIds: finalUserIds,
       date: 'Bugün ' + timeStr,
-      isUnread: false,
+      isUnread: true,
       status: 'SENT'
     };
 
