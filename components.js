@@ -565,7 +565,7 @@ export function renderCustomModals(state) {
 
               <div class="sm:col-span-2">
                 <label class="block text-xs font-bold text-on-surface mb-1">Güçlü Giriş Şifresi *</label>
-                <input type="password" id="personnel-password" required value="Saha123!" placeholder="Örn: Saha123! (Min 8 karakter, A-Z, a-z, 0-9, özel kar.)" class="w-full h-11 px-3 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary font-medium"/>
+                <input type="password" id="personnel-password" required placeholder="Güçlü şifre girin (Min 8 karakter, büyük/küçük harf, rakam, özel kar.)" class="w-full h-11 px-3 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary font-medium"/>
                 <span class="text-[10px] text-text-secondary mt-1 block">En az 8 karakter, 1 büyük harf, 1 küçük harf, 1 rakam ve 1 özel karakter içermelidir.</span>
               </div>
             </div>
