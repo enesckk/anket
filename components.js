@@ -933,8 +933,8 @@ export function renderCustomModals(state) {
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label class="block text-xs font-bold text-[#01214A] mb-1">Hedef Köy / Bölge *</label>
-                <input type="text" id="modal-assign-village" required value="Sinan Köyü / Merkez" placeholder="Örn: Sinan Köyü" class="w-full h-11 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#2A9D38]"/>
+                <label class="block text-xs font-bold text-[#01214A] mb-1">Hedef Köy / Mahalle / Bölge *</label>
+                <input type="text" id="modal-assign-village" required value="" placeholder="Örn: Mahalle / Köy Adı" class="w-full h-11 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#2A9D38]"/>
               </div>
 
               <div>
@@ -950,7 +950,7 @@ export function renderCustomModals(state) {
 
             <div>
               <label class="block text-xs font-bold text-[#01214A] mb-1">Yönetici Özel Talimatı / Notu</label>
-              <textarea id="modal-assign-note" rows="2" placeholder="Saha ekibinin dikkat edeceği noktalar..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-[#2A9D38]">Saha verilerini eksiksiz doldurunuz ve fotoğrafları ekleyiniz.</textarea>
+              <textarea id="modal-assign-note" rows="2" placeholder="Saha ekibinin dikkat edeceği not ve talimatlar..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-[#2A9D38]"></textarea>
             </div>
 
             <!-- DOWNWARD COLLAPSIBLE PERSONNEL SELECTION DROPDOWN WITH LIVE SEARCH -->
@@ -1332,16 +1332,20 @@ export function renderPwaHome() {
   const user = state.auth?.user || {};
   const unreadMsg = (state.messages || []).find(m => m.isUnread) || (state.messages || [])[0];
   
-  const mainTask = (state.assignedSurveys || [])[0] || {
-    id: '77777777-7777-7777-7777-777777777771',
-    title: 'Üretici İhtiyaç Anketi',
-    village: 'Sinan Köyü',
-    completed: 180,
-    target: 500,
-    priority: 'Yüksek Öncelik'
-  };
-
-  const progressPct = Math.round(((mainTask.completed || 180) / (mainTask.target || 500)) * 100);
+  const assignedList = Array.isArray(state.assignedSurveys) && state.assignedSurveys.length > 0
+    ? state.assignedSurveys
+    : (Array.isArray(state.allSurveys) && state.allSurveys.filter(s => s.status === 'ACTIVE').length > 0
+        ? state.allSurveys.filter(s => s.status === 'ACTIVE').map(s => ({
+            id: s.id,
+            title: s.title,
+            village: s.villageName || 'Saha Bölgesi',
+            completed: s.completedCount || 0,
+            target: s.targetCount || 100,
+            priority: 'Aktif Saha Anketi'
+          }))
+        : []);
+  const mainTask = assignedList[0] || null;
+  const progressPct = mainTask ? Math.min(100, Math.round(((mainTask.completed || 0) / (mainTask.target || 100)) * 100)) : 0;
   const currentDateStr = new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' });
 
   // Sync status
@@ -1379,7 +1383,7 @@ export function renderPwaHome() {
         
         <!-- MERHABA & SENKRONİZASYON DURUMU (SECTIONS 14-16) -->
         <section class="space-y-1">
-          <h1 class="text-2xl font-bold text-[#01214A] tracking-tight">Merhaba, ${user.fullName || 'Ahmet Yılmaz'}</h1>
+          <h1 class="text-2xl font-bold text-[#01214A] tracking-tight">Merhaba, ${user.fullName || 'Saha Görevlisi'}</h1>
           <p class="text-xs text-slate-400 font-normal">${currentDateStr}</p>
 
           <div class="pt-2">
@@ -1408,37 +1412,47 @@ export function renderPwaHome() {
             <h2 class="text-base font-semibold text-[#01214A]">Görevlerim</h2>
           </div>
 
-          <div class="bg-white rounded-[14px] p-5 border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-4">
-            <div class="flex justify-between items-start gap-2">
-              <div class="space-y-1">
-                <div class="inline-flex items-center gap-1 text-slate-500 text-xs font-normal">
-                  ${iconSvg('mapPin', 'w-3.5 h-3.5 text-[#2A9D38]')}
-                  <span>${mainTask.village || 'Sinan Köyü'}</span>
+          ${mainTask ? `
+            <div class="bg-white rounded-[14px] p-5 border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-4">
+              <div class="flex justify-between items-start gap-2">
+                <div class="space-y-1">
+                  <div class="inline-flex items-center gap-1 text-slate-500 text-xs font-normal">
+                    ${iconSvg('mapPin', 'w-3.5 h-3.5 text-[#2A9D38]')}
+                    <span>${mainTask.village || 'Saha Bölgesi'}</span>
+                  </div>
+                  <h3 class="font-bold text-[#01214A] text-base leading-snug">${mainTask.title}</h3>
                 </div>
-                <h3 class="font-bold text-[#01214A] text-base leading-snug">${mainTask.title || 'Üretici İhtiyaç Anketi'}</h3>
+                <span class="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-semibold px-2.5 py-0.5 rounded-[6px] shrink-0">
+                  ${mainTask.priority || 'Aktif'}
+                </span>
               </div>
-              <span class="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-semibold px-2.5 py-0.5 rounded-[6px] shrink-0">
-                ${mainTask.priority || 'Yüksek Öncelik'}
-              </span>
-            </div>
 
-            <!-- PROGRESS AREA (SECTION 18) -->
-            <div class="space-y-1.5 pt-1">
-              <div class="flex justify-between text-xs text-slate-500 font-normal">
-                <span>İlerleme</span>
-                <span class="font-semibold text-[#01214A]">${mainTask.completed || 180} / ${mainTask.target || 500} · %${progressPct}</span>
+              <!-- PROGRESS AREA (SECTION 18) -->
+              <div class="space-y-1.5 pt-1">
+                <div class="flex justify-between text-xs text-slate-500 font-normal">
+                  <span>İlerleme</span>
+                  <span class="font-semibold text-[#01214A]">${mainTask.completed || 0} / ${mainTask.target || 100} · %${progressPct}</span>
+                </div>
+                <div class="w-full bg-[#F1F5F9] h-1.5 rounded-full overflow-hidden">
+                  <div class="bg-[#2A9D38] h-full rounded-full transition-all duration-500" style="width: ${progressPct}%"></div>
+                </div>
               </div>
-              <div class="w-full bg-[#F1F5F9] h-1.5 rounded-full overflow-hidden">
-                <div class="bg-[#2A9D38] h-full rounded-full transition-all duration-500" style="width: ${progressPct}%"></div>
-              </div>
-            </div>
 
-            <!-- PRIMARY BUTTON CTA (SECTION 9 & 17) -->
-            <button data-task-id="${mainTask.id}" class="btn-start-survey-direct h-12 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-sm rounded-[12px] w-full flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98">
-              ${iconSvg('play', 'w-4 h-4 text-white')}
-              <span>${(mainTask.completed || 0) > 0 ? 'Devam Et' : 'Ankete Başla'}</span>
-            </button>
-          </div>
+              <!-- PRIMARY BUTTON CTA (SECTION 9 & 17) -->
+              <button data-task-id="${mainTask.id}" class="btn-start-survey-direct h-12 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-sm rounded-[12px] w-full flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98">
+                ${iconSvg('play', 'w-4 h-4 text-white')}
+                <span>${(mainTask.completed || 0) > 0 ? 'Devam Et' : 'Ankete Başla'}</span>
+              </button>
+            </div>
+          ` : `
+            <div class="bg-white rounded-[14px] p-8 border border-[#E9EDF2] text-center space-y-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+              <div class="w-12 h-12 rounded-full bg-emerald-50 text-[#2A9D38] mx-auto flex items-center justify-center">
+                ${iconSvg('poll', 'w-6 h-6 text-[#2A9D38]')}
+              </div>
+              <h3 class="font-bold text-[#01214A] text-sm">Aktif Saha Görevi Bekleniyor</h3>
+              <p class="text-xs text-slate-400 max-w-xs mx-auto">Yönetici tarafından size bir anket atandığında görev detayları burada listelenecektir.</p>
+            </div>
+          `}
 
           <!-- SECONDARY ACTION BUTTON (SECTION 20) -->
           <button id="btn-home-quick-builder" class="h-12 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 font-semibold text-sm rounded-[12px] w-full flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98">
@@ -3228,8 +3242,8 @@ function renderAdminTabContent(tab, state) {
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-[#667085] uppercase tracking-wider mb-1">Hedef Köy / Bölge *</label>
-              <input type="text" id="assign-village-name" required value="Sinan Köyü" class="w-full h-10 px-3 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-[#2A9D38] font-normal"/>
+              <label class="block text-xs font-semibold text-[#667085] uppercase tracking-wider mb-1">Hedef Köy / Mahalle / Bölge *</label>
+              <input type="text" id="assign-village-name" required value="" placeholder="Örn: Mahalle / Köy Adı" class="w-full h-10 px-3 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-[#2A9D38] font-normal"/>
             </div>
 
             <div>
@@ -3244,7 +3258,7 @@ function renderAdminTabContent(tab, state) {
 
             <div class="md:col-span-2">
               <label class="block text-xs font-semibold text-[#667085] uppercase tracking-wider mb-1">Yönetici Özel Notu *</label>
-              <textarea id="assign-note" required rows="2" placeholder="Örn: Sinan Köyü üreticileriyle görüşürken gübre ve ekipman ihtiyaçlarını detaylı not alınız." class="w-full p-3 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-[#2A9D38] font-normal leading-relaxed">Sinan Köyü üreticileriyle görüşürken gübre ve ekipman ihtiyaçlarını detaylı olarak not alınız.</textarea>
+              <textarea id="assign-note" required rows="2" placeholder="Saha personeline iletilecek çalışma talimatı ve notlar..." class="w-full p-3 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-[#2A9D38] font-normal leading-relaxed"></textarea>
             </div>
 
             <div class="md:col-span-2 relative">

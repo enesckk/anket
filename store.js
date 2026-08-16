@@ -1,7 +1,7 @@
 const API_BASE_URL = (typeof window !== 'undefined' && window.SAHA_ANKET_API_URL) 
   ? window.SAHA_ANKET_API_URL 
   : (typeof location !== 'undefined' && location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://anket-45so.onrender.com/api');
-const STORAGE_KEY = 'surveyadmin_pro_state_v7';
+const STORAGE_KEY = 'surveyadmin_pro_state_v8';
 
 // Pre-warm & Keep-Alive Render Cloud Backend in background
 if (typeof window !== 'undefined') {
@@ -91,29 +91,10 @@ const defaultState = {
     description: '',
     status: 'DRAFT',
     sections: [
-      { id: 'sec-1', title: 'Kişisel Bilgiler', order: 1 }
+      { id: 'sec-1', title: 'Genel Bilgiler', order: 1 }
     ],
-    questions: [
-      {
-        id: 'q-demo-1',
-        sectionId: 'sec-1',
-        title: 'Ad Soyad',
-        type: 'text',
-        isRequired: true,
-        expanded: false,
-        options: []
-      },
-      {
-        id: 'q-demo-2',
-        sectionId: 'sec-1',
-        title: 'Araziniz var mı?',
-        type: 'yesno',
-        isRequired: true,
-        expanded: true,
-        options: [{ id: 'opt-1', label: 'Evet', value: 'evet' }, { id: 'opt-2', label: 'Hayır', value: 'hayir' }]
-      }
-    ],
-    activeQuestionId: 'q-demo-2'
+    questions: [],
+    activeQuestionId: null
   },
 
   // Auth Session
@@ -134,11 +115,7 @@ const defaultState = {
   pwaInstallDismissed: false,
 
   // Real-Time Notification Center
-  notifications: [
-    { id: 'notif-1', type: 'NEW_SURVEY', title: 'Yeni Anket Onaya Sunuldu', message: '\'Hayvancılık & Yem Desteği Tespit Anketi\' yöneticinin onayını bekliyor.', createdAt: '5 dk önce', timestamp: Date.now() - 300000, isRead: false, targetRole: 'ADMIN', icon: 'poll', color: 'amber' },
-    { id: 'notif-2', type: 'NEW_MESSAGE', title: 'Yeni Yönetsel Mesaj', message: 'Saha Koordinatörü: "Sinan Köyü ziyaret fotoğraflarını eksiksiz ekleyiniz."', createdAt: '25 dk önce', timestamp: Date.now() - 1500000, isRead: false, targetRole: 'ALL', icon: 'mail', color: 'blue' },
-    { id: 'notif-3', type: 'NEW_ASSIGNMENT', title: 'Yeni Saha Görevi Atandı', message: 'Sinan Köyü / 50 Hedef Anket görevi saha ekibine atandı.', createdAt: '1 saat önce', timestamp: Date.now() - 3600000, isRead: true, targetRole: 'PWA', icon: 'assignment', color: 'emerald' }
-  ],
+  notifications: [],
 
   // Lists from Backend / IndexedDB
   newAssignments: [],
@@ -146,66 +123,8 @@ const defaultState = {
   myQuickSurveys: [],
   messages: [],
   submissions: [],
-  reports: [
-    {
-      id: 'rpt-100',
-      surveyId: 'srv-100',
-      surveyTitle: 'Şehitkamil Tarımsal İhtiyaç ve Arazi Değerlendirme Anketi',
-      villageName: 'Sinan Köyü',
-      category: 'Tarım',
-      targetCount: 100,
-      completedCount: 100,
-      completionRate: 100,
-      createdAt: '12 Ağustos 2026',
-      status: 'SAVED',
-      statusLabel: 'Kayıt Edildi / Hazır',
-      savedNotice: 'Kayıt Edildi',
-      questionsCount: 5,
-      validResponses: 100,
-      invalidResponses: 0,
-      summaryStats: [
-        { questionTitle: 'Faaliyet Alanınız Nedir?', topChoice: '%64 Besicilik & Hayvancılık', secondChoice: '%36 Tarımsal Çiftçilik' },
-        { questionTitle: 'Tohum / Gübre Desteğine İhtiyacınız Var mı?', topChoice: '%88 Evet, İhtiyaç Var', secondChoice: '%12 Kısmen' },
-        { questionTitle: 'Sulama Tesisatı Durumu', topChoice: '%72 Yetersiz Tesisat', secondChoice: '%28 Yeterli' }
-      ]
-    }
-  ],
-  allSurveys: [
-    {
-      id: 'srv-100',
-      title: 'Şehitkamil Tarımsal İhtiyaç ve Arazi Değerlendirme Anketi',
-      description: 'Sinan Köyü bölgesi 100 kişilik örnek saha anket çalışması (Saha verisi %100 tamamlandı).',
-      category: 'Tarım',
-      status: 'COMPLETED',
-      isArchived: false,
-      source: 'ADMIN',
-      createdBy: 'Saha Koordinatörü (Admin)',
-      createdAt: '12 Ağustos 2026',
-      completedCount: 100,
-      targetCount: 100,
-      villageName: 'Sinan Köyü',
-      isReportSaved: true,
-      reportSavedAt: '12 Ağustos 2026 - Raporlar Kısmında Kayıt Edildi',
-      questions: [
-        { id: 'q100-1', title: 'Faaliyet Gösterdiğiniz Temel Alan Nedir?', type: 'single', isRequired: true, options: [{ label: 'Besicilik / Hayvancılık (%64)', value: 'besicilik' }, { label: 'Tarımsal Çiftçilik (%36)', value: 'ciftcilik' }] },
-        { id: 'q100-2', title: 'Gübre ve Tohum Desteği Talep Ediyor musunuz?', type: 'yesno', isRequired: true },
-        { id: 'q100-3', title: 'Arazi Büyüklüğünüz (Dönüm)', type: 'number', isRequired: true },
-        { id: 'q100-4', title: 'Mevcut Sulama Sistemi Yeterli mi?', type: 'yesno', isRequired: true },
-        { id: 'q100-5', title: 'Saha Notlarınız ve Ek İhtiyaçlarınız', type: 'text', isRequired: false }
-      ]
-    },
-    { id: 'srv-1', title: 'Tarımsal Üretim & Arazi İhtiyaç Anketi', description: 'Köylülerle birebir yapılan tohum, gübre ve ekipman desteği tespiti.', category: 'Tarım', status: 'ACTIVE', isArchived: false, source: 'ADMIN', createdBy: 'Saha Koordinatörü (Admin)', createdAt: '10 Ağustos 2026', completedCount: 320, targetCount: 500, villageName: 'Sinan Köyü', questions: [
-        { id: 'q1-1', title: 'Faaliyet Alanınız Nedir?', type: 'single', isRequired: true, options: [{ label: 'Besicilik / Hayvancılık', value: 'besicilik' }, { label: 'Tarımsal Çiftçilik', value: 'ciftcilik' }] },
-        { id: 'q1-2', title: 'Gübre ve Tohum Desteği Talep Ediyor musunuz?', type: 'yesno', isRequired: true }
-      ] },
-    { id: 'srv-2', title: 'Hayvancılık & Yem Desteği Tespit Anketi', description: 'Köylerde besicilik yapan üreticilerin yem ve ilaç ihtiyacı.', category: 'Hayvancılık', status: 'PENDING_APPROVAL', isArchived: false, source: 'FIELD_USER', createdBy: 'Mustafa Yıldız (Saha Görevlisi)', createdAt: 'Bugün', completedCount: 0, targetCount: 50, villageName: 'Merkez Mahalle', questions: [
-        { id: 'q2-1', title: 'İşletmenizdeki büyükbaş/küçükbaş toplam hayvan sayısı nedir?', type: 'number', isRequired: true, reviewStatus: 'PENDING' },
-        { id: 'q2-2', title: 'En çok hangi yem türünde desteğe ihtiyaç duyuyorsunuz?', type: 'single', isRequired: true, reviewStatus: 'PENDING', options: [{ label: 'Kaba Yem (Yonca, Saman)', value: 'kaba' }, { label: 'Kesif Yem (Besi Yemi)', value: 'kesif' }, { label: 'Karma / Silaj', value: 'silaj' }] },
-        { id: 'q2-3', title: 'Aşılama ve belediye veterinerlik hizmetlerinden memnun musunuz?', type: 'yesno', isRequired: true, reviewStatus: 'PENDING' },
-        { id: 'q2-4', title: 'Talep ve önerileriniz nelerdir?', type: 'text', isRequired: false, reviewStatus: 'PENDING' }
-      ] },
-    { id: 'srv-3', title: 'Damla Sulama Sistemleri Durum Çalışması', description: 'Sulu tarım arazilerindeki boru ve hat bakımı gereksinimi.', category: 'Altyapı', status: 'DRAFT', isArchived: false, source: 'FIELD_USER', createdBy: 'Ahmet Yılmaz (Saha Görevlisi)', createdAt: 'Dün', completedCount: 0, targetCount: 100, villageName: 'Yeşilyurt', questions: [] }
-  ],
+  reports: [],
+  allSurveys: [],
   allAssignments: [],
   allPersonnel: [
     { id: 'usr-admin', fullName: 'Sistem Yöneticisi', email: 'admin@sahaanket.gov.tr', phone: '0500 000 00 00', role: 'ADMIN', isActive: true, password: 'Admin123!' },
@@ -1369,12 +1288,7 @@ class Store {
     }
     if (screen === 'survey_runner') {
       this.state.activeSectionIndex = 0;
-      this.state.activeFormAnswers = {
-        q1: '',
-        q4: 'evet',
-        q5: '',
-        q6: 'Buğday / Arpa'
-      };
+      this.state.activeFormAnswers = {};
       this.state.activePhotoUploaded = false;
       this.state.activeLocationAcquired = false;
     }
