@@ -1,6 +1,6 @@
 // SurveyAdmin Intelligence - Main PWA & Admin Application Controller
 
-import { store } from './store.js';
+import { store, compressImageFile } from './store.js';
 import {
   renderSystemBar,
   renderLoginScreen,
@@ -1614,7 +1614,34 @@ function attachPwaListeners() {
     });
   });
 
-  document.getElementById('btn-runner-photo')?.addEventListener('click', () => store.togglePhotoUpload());
+  // GERÇEK KAMERA / GALERİ AÇMA & OTOMATİK SIKIŞTIRMA MOTORU
+  const btnRunnerPhoto = document.getElementById('btn-runner-photo');
+  const fileInput = document.getElementById('runner-camera-file');
+  if (btnRunnerPhoto && fileInput) {
+    btnRunnerPhoto.addEventListener('click', () => {
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      store.setToast('⏳ Fotoğraf sıkıştırılıyor ve optimize ediliyor...', 'info');
+      try {
+        const compressed = await compressImageFile(file);
+        store.saveActivePhoto(compressed.base64, compressed.originalSizeKB + ' KB', compressed.compressedSizeKB + ' KB', compressed.ratio);
+        store.setToast(`⚡ Fotoğraf optimize edildi (${compressed.originalSizeKB} KB ➔ ${compressed.compressedSizeKB} KB · %${compressed.ratio} Tasarruf)`, 'success');
+      } catch (err) {
+        store.setToast('Fotoğraf işlenirken bir hata oluştu: ' + err.message, 'error');
+      }
+    });
+  }
+
+  document.getElementById('btn-remove-runner-photo')?.addEventListener('click', () => {
+    store.removeActivePhoto();
+    store.setToast('Fotoğraf kaldırıldı.', 'info');
+  });
+
   document.getElementById('btn-runner-location')?.addEventListener('click', () => store.acquireLocation());
 
   // Form Wizard Nav

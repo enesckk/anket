@@ -13,6 +13,62 @@ if (typeof window !== 'undefined') {
   setInterval(() => {
     fetch('https://anket-45so.onrender.com/swagger/v1/swagger.json', { method: 'GET', mode: 'cors' }).catch(() => {});
   }, 10 * 60 * 1000);
+// Smart High-Speed Client-Side Image Compression Engine (HTML5 Canvas)
+export async function compressImageFile(file, maxWidth = 1280, maxHeight = 1280, quality = 0.75) {
+  return new Promise((resolve, reject) => {
+    if (!file || !file.type.startsWith('image/')) {
+      return reject(new Error('Lütfen geçerli bir görsel dosyası seçin.'));
+    }
+
+    const originalSizeKB = (file.size / 1024).toFixed(1);
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        // Proportional aspect-ratio scaling
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Export as optimized JPEG
+        const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+        const head = 'data:image/jpeg;base64,';
+        const compressedSizeKB = Math.round((compressedBase64.length - head.length) * 3 / 4 / 1024);
+
+        resolve({
+          base64: compressedBase64,
+          originalSizeKB,
+          compressedSizeKB,
+          ratio: Math.max(0, Math.round((1 - (compressedSizeKB / originalSizeKB)) * 100))
+        });
+      };
+      img.onerror = () => reject(new Error('Görsel işlenemedi.'));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error('Dosya okunamadı.'));
+    reader.readAsDataURL(file);
+  });
 }
 
 const defaultState = {
@@ -1340,9 +1396,31 @@ class Store {
     this.saveState();
   }
 
-  togglePhotoUpload() {
-    this.state.activePhotoUploaded = !this.state.activePhotoUploaded;
+  saveActivePhoto(photoData, originalSizeKB, compressedSizeKB, ratio) {
+    this.state.activePhotoUploaded = true;
+    this.state.activePhotoData = photoData;
+    this.state.activePhotoInfo = {
+      originalSizeKB,
+      compressedSizeKB,
+      ratio
+    };
     this.saveState();
+  }
+
+  removeActivePhoto() {
+    this.state.activePhotoUploaded = false;
+    this.state.activePhotoData = null;
+    this.state.activePhotoInfo = null;
+    this.saveState();
+  }
+
+  togglePhotoUpload() {
+    if (this.state.activePhotoUploaded) {
+      this.removeActivePhoto();
+    } else {
+      this.state.activePhotoUploaded = true;
+      this.saveState();
+    }
   }
 
   acquireLocation() {

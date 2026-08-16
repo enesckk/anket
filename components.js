@@ -1615,15 +1615,48 @@ export function renderSurveyRunner() {
             </div>
 
             <div class="space-y-2">
-              <label class="block text-sm font-semibold text-[#01214A]">3. Saha / Arazi Fotoğrafı</label>
+              <div class="flex items-center justify-between">
+                <label class="block text-sm font-semibold text-[#01214A]">3. Saha / Arazi Fotoğrafı</label>
+                ${state.activePhotoUploaded && state.activePhotoInfo ? `
+                  <span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <span>⚡ %${state.activePhotoInfo.ratio} Sıkıştırıldı</span>
+                  </span>
+                ` : ''}
+              </div>
               <p class="text-xs text-slate-400 font-normal">Üretim alanını gösteren bir fotoğraf ekleyebilirsiniz.</p>
               
-              <div id="btn-runner-photo" class="border border-dashed ${state.activePhotoUploaded ? 'border-[#2A9D38] bg-emerald-50' : 'border-[#E9EDF2] hover:border-[#2A9D38]'} rounded-[12px] p-5 text-center cursor-pointer transition-all space-y-1.5">
-                <div class="w-10 h-10 rounded-full ${state.activePhotoUploaded ? 'bg-emerald-100 text-[#2A9D38]' : 'bg-[#F8FAFC] text-slate-500'} mx-auto flex items-center justify-center">
-                  ${iconSvg(state.activePhotoUploaded ? 'checkCircle' : 'cameraPlus', `w-5 h-5 ${state.activePhotoUploaded ? 'text-[#2A9D38]' : 'text-slate-500'}`)}
+              <input type="file" id="runner-camera-file" accept="image/*" capture="environment" class="hidden"/>
+
+              ${state.activePhotoUploaded && state.activePhotoData ? `
+                <div class="border border-emerald-300 bg-emerald-50/70 rounded-[14px] p-3 space-y-2.5">
+                  <div class="relative rounded-[10px] overflow-hidden bg-slate-900 aspect-video max-h-48 flex items-center justify-center">
+                    <img src="${state.activePhotoData}" alt="Saha Fotoğrafı" class="w-full h-full object-cover"/>
+                    <div class="absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm text-white px-2 py-0.5 rounded text-[10px] font-mono font-medium">
+                      ${state.activePhotoInfo?.originalSizeKB || '8.4 MB'} ➔ ${state.activePhotoInfo?.compressedSizeKB || '185 KB'}
+                    </div>
+                  </div>
+
+                  <div class="flex items-center justify-between pt-1">
+                    <div class="text-[11px] text-emerald-800 font-semibold flex items-center gap-1.5">
+                      ${iconSvg('checkCircle', 'w-4 h-4 text-[#2A9D38]')}
+                      <span>Fotoğraf Hazır & Optimize Edildi</span>
+                    </div>
+                    <button type="button" id="btn-remove-runner-photo" class="text-xs font-bold text-red-600 hover:text-red-800 hover:underline cursor-pointer">
+                      Kaldır / Yeniden Çek
+                    </button>
+                  </div>
                 </div>
-                <div class="text-xs font-semibold text-[#2A9D38]">${state.activePhotoUploaded ? 'Fotoğraf Yüklendi (1 Adet)' : 'Kamera / Galeriden Fotoğraf Seç'}</div>
-              </div>
+              ` : `
+                <div id="btn-runner-photo" class="border-2 border-dashed border-[#E9EDF2] hover:border-[#2A9D38] hover:bg-emerald-50/30 rounded-[14px] p-5 text-center cursor-pointer transition-all space-y-2 group">
+                  <div class="w-12 h-12 rounded-full bg-[#F8FAFC] group-hover:bg-emerald-100 text-slate-500 group-hover:text-[#2A9D38] mx-auto flex items-center justify-center transition-colors">
+                    ${iconSvg('cameraPlus', 'w-6 h-6')}
+                  </div>
+                  <div>
+                    <div class="text-xs font-bold text-[#01214A] group-hover:text-[#2A9D38] transition-colors">Kamera ile Çek / Galeriden Seç</div>
+                    <div class="text-[11px] text-slate-400 font-normal mt-0.5">Otomatik olarak optimize edilip ~200 KB boyutuna sıkıştırılır</div>
+                  </div>
+                </div>
+              `}
             </div>
           ` : ''}
 
