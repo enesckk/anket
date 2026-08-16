@@ -48,10 +48,10 @@ const defaultState = {
 
   // Auth Session
   auth: {
-    isLoggedIn: true,
+    isLoggedIn: false,
     token: null,
     refreshToken: null,
-    user: { id: '11111111-1111-1111-1111-111111111111', username: 'admin', phone: '05000000000', fullName: 'Saha Koordinatörü', role: 'ADMIN', isActive: true }
+    user: null
   },
 
   // Active Selected Item IDs for detail views
@@ -181,7 +181,8 @@ class Store {
       if (saved) {
         const parsed = JSON.parse(saved);
         const merged = { ...defaultState, ...parsed };
-        merged.auth = { ...defaultState.auth, ...(parsed.auth || {}) };
+        // Auth'u her zaman sıfırla — login ekranı her zaman gösterilsin
+        merged.auth = { ...defaultState.auth };
         merged.adminKpis = { ...defaultState.adminKpis, ...(parsed.adminKpis || {}) };
 
         if (!Array.isArray(merged.allSurveys) || merged.allSurveys.length === 0) merged.allSurveys = defaultState.allSurveys;
