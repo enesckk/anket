@@ -1,6 +1,6 @@
 const API_BASE_URL = (typeof window !== 'undefined' && window.SAHA_ANKET_API_URL) 
   ? window.SAHA_ANKET_API_URL 
-  : (location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://sahaanket-api.onrender.com/api');
+  : (location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://anket-45so.onrender.com/api');
 const STORAGE_KEY = 'surveyadmin_pro_state_v5';
 
 const defaultState = {
