@@ -3,6 +3,18 @@ const API_BASE_URL = (typeof window !== 'undefined' && window.SAHA_ANKET_API_URL
   : (location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://anket-45so.onrender.com/api');
 const STORAGE_KEY = 'surveyadmin_pro_state_v5';
 
+// Pre-warm & Keep-Alive Render Cloud Backend in background
+if (typeof window !== 'undefined') {
+  setTimeout(() => {
+    fetch('https://anket-45so.onrender.com/swagger/v1/swagger.json', { method: 'GET', mode: 'cors' }).catch(() => {});
+  }, 50);
+
+  // Periodic keep-alive heartbeat every 10 minutes to prevent Render free instance spin down
+  setInterval(() => {
+    fetch('https://anket-45so.onrender.com/swagger/v1/swagger.json', { method: 'GET', mode: 'cors' }).catch(() => {});
+  }, 10 * 60 * 1000);
+}
+
 const defaultState = {
   isOnline: true,
   currentRole: 'admin', // 'admin' | 'pwa'

@@ -27,14 +27,23 @@
   <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png?v=2"/>
   <link rel="icon" type="image/png" sizes="96x96" href="/icons/icon-96.png?v=2"/>
 
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-  
-  <!-- Google Fonts & Material Symbols -->
+  <!-- High-Speed Network Preconnections -->
+  <link rel="preconnect" href="https://anket-45so.onrender.com" crossorigin/>
+  <link rel="dns-prefetch" href="https://anket-45so.onrender.com"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  
+  <!-- Critical Module Preloads -->
+  <link rel="modulepreload" href="./store.js"/>
+  <link rel="modulepreload" href="./components.js"/>
+  <link rel="modulepreload" href="./app.js"/>
+
+  <!-- Google Fonts & Material Symbols (Display Swap for Instant Text Render) -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   
   <!-- Custom Styles -->
   <link rel="stylesheet" href="./styles.css"/>
