@@ -1,6 +1,6 @@
-// SurveyAdmin Intelligence - Real ASP.NET Core API + IndexedDB Sync Client
-
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = (typeof window !== 'undefined' && window.SAHA_ANKET_API_URL) 
+  ? window.SAHA_ANKET_API_URL 
+  : (location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://sahaanket-api.onrender.com/api');
 const STORAGE_KEY = 'surveyadmin_pro_state_v5';
 
 const defaultState = {

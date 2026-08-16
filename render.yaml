@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: sahaanket-api
+    env: docker
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
+    plan: free
+    region: frankfurt
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: UseSqlServer
+        value: "false"
+      - key: JwtSettings__Secret
+        value: SuperSecretKeySurveyAdmin2026!ProEnterpriseMasterSecret
+      - key: JwtSettings__Issuer
+        value: SurveyAdminApi
+      - key: JwtSettings__Audience
+        value: SurveyAdminClients
