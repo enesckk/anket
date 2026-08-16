@@ -495,6 +495,18 @@ if (!window.__globalListenersAttached) {
       return;
     }
 
+    // PERSONELİ AKTİF / PASİF YAP (TOGGLE STATUS)
+    const togglePersonnelBtn = e.target.closest('.btn-toggle-personnel-status');
+    if (togglePersonnelBtn) {
+      const userId = togglePersonnelBtn.getAttribute('data-user-id');
+      if (userId) {
+        await store.togglePersonnelStatus(userId);
+        const user = store.getState().allPersonnel.find(p => p.id === userId);
+        store.setToast(user?.isActive ? `✅ '${user.fullName}' hesabı AKTİF yapıldı.` : `⚠️ '${user?.fullName || 'Personel'}' hesabı PASİF yapıldı.`, user?.isActive ? 'success' : 'info');
+      }
+      return;
+    }
+
     // GÜÇLÜ ŞİFRE ÜRETİCİ
     const genPwdBtn = e.target.closest('#btn-generate-personnel-password');
     if (genPwdBtn) {
@@ -932,11 +944,26 @@ function validatePersonnelInput(email, phone, password, isPasswordOptional = fal
     });
   });
 
-  document.getElementById('btn-confirm-delete-personnel')?.addEventListener('click', async (e) => {
-    const userId = e.currentTarget.getAttribute('data-user-id');
-    if (userId) {
-      await store.deleteAdminPersonnel(userId);
-    }
+  const btnConfirmDelete = document.getElementById('btn-confirm-delete-personnel');
+  if (btnConfirmDelete) {
+    btnConfirmDelete.addEventListener('click', async (e) => {
+      const userId = e.currentTarget.getAttribute('data-user-id');
+      if (userId) {
+        await store.deleteAdminPersonnel(userId);
+      }
+    });
+  }
+
+  // PERSONELİ AKTİF / PASİF YAP DİREKT LISTENER
+  document.querySelectorAll('.btn-toggle-personnel-status').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const userId = e.currentTarget.getAttribute('data-user-id');
+      if (userId) {
+        await store.togglePersonnelStatus(userId);
+        const user = store.getState().allPersonnel.find(p => p.id === userId);
+        store.setToast(user?.isActive ? `✅ '${user.fullName}' hesabı AKTİF yapıldı.` : `⚠️ '${user?.fullName || 'Personel'}' hesabı PASİF yapıldı.`, user?.isActive ? 'success' : 'info');
+      }
+    });
   });
 
   document.getElementById('btn-confirm-delete-q')?.addEventListener('click', (e) => {
