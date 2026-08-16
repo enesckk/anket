@@ -283,11 +283,35 @@ class Store {
 
   // AUTH ACTIONS
   async login(usernameOrPhone, password) {
+    // ── Brute-force koruması: 5 başarısız denemede 30 saniyelik kilit ──
+    const now = Date.now();
+    const attempts = this._loginAttempts || 0;
+    const lockUntil = this._loginLockUntil || 0;
+    if (now < lockUntil) {
+      const secs = Math.ceil((lockUntil - now) / 1000);
+      this.setToast(`Çok fazla hatalı deneme. ${secs} saniye bekleyin.`, 'error');
+      return;
+    }
+
+    // ── Girdi validasyonu ──
+    if (!usernameOrPhone || !password) {
+      this.setToast('E-posta ve şifre zorunludur.', 'error');
+      return;
+    }
+    if (password.length < 6) {
+      this.setToast('Şifre en az 6 karakter olmalıdır.', 'error');
+      return;
+    }
+
     try {
       const res = await this.apiFetch('/auth/login', {
         method: 'POST',
         body: JSON.stringify({ usernameOrPhone, password })
       });
+
+      // Başarılı giriş — deneme sayacını sıfırla
+      this._loginAttempts = 0;
+      this._loginLockUntil = 0;
 
       this.state.auth = {
         isLoggedIn: true,
@@ -300,26 +324,39 @@ class Store {
       this.saveState();
       await this.fetchInitialData();
     } catch (e) {
+      // ── Personel listesinden e-posta ile eşleştir (şifre doğrulama ile) ──
       const inputStr = (usernameOrPhone || '').trim().toLowerCase();
       const allPersonnel = this.state.allPersonnel || [];
-      
-      const matchedPersonnel = allPersonnel.find(p => 
+
+      const matchedPersonnel = allPersonnel.find(p =>
         (p.email && p.email.trim().toLowerCase() === inputStr) ||
-        (p.phone && p.phone.replace(/\D/g, '') === inputStr.replace(/\D/g, '')) ||
-        (p.fullName && p.fullName.trim().toLowerCase() === inputStr)
+        (p.phone && p.phone.replace(/\D/g, '') === inputStr.replace(/\D/g, ''))
       );
 
       if (matchedPersonnel) {
         if (matchedPersonnel.isActive === false) {
-          this.setToast(`⚠️ '${matchedPersonnel.fullName}' hesabı dondurulmuş / pasif durumdadır! Giriş yapamazsınız.`, 'error');
+          this.setToast(`⚠️ Hesabınız dondurulmuş. Yönetici ile iletişime geçin.`, 'error');
+          return;
+        }
+        // Şifre kontrolü (demo: personnel objesinde password varsa karşılaştır)
+        if (matchedPersonnel.password && matchedPersonnel.password !== password) {
+          this._loginAttempts = (this._loginAttempts || 0) + 1;
+          if (this._loginAttempts >= 5) {
+            this._loginLockUntil = Date.now() + 30000;
+            this.setToast('5 hatalı deneme. 30 saniye beklemeniz gerekiyor.', 'error');
+          } else {
+            this.setToast(`Hatalı şifre. (${5 - this._loginAttempts} deneme hakkınız kaldı)`, 'error');
+          }
           return;
         }
 
         const isUserAdmin = matchedPersonnel.role === 'ADMIN';
+        this._loginAttempts = 0;
+        this._loginLockUntil = 0;
         this.state.auth = {
           isLoggedIn: true,
-          token: 'demo-token-' + matchedPersonnel.id,
-          refreshToken: 'demo-refresh',
+          token: 'offline-token-' + matchedPersonnel.id,
+          refreshToken: null,
           user: {
             id: matchedPersonnel.id,
             username: matchedPersonnel.email,
@@ -331,26 +368,18 @@ class Store {
         };
         this.state.currentRole = isUserAdmin ? 'admin' : 'pwa';
         this.state.pwaScreen = 'home';
-        this.setToast(`Giriş Başarılı! Hoş geldiniz, ${matchedPersonnel.fullName} (${isUserAdmin ? 'Yönetici' : 'Saha Görevlisi'})`, 'success');
+        this.setToast(`Hoş geldiniz, ${matchedPersonnel.fullName}!`, 'success');
+        this.saveState();
       } else {
-        const isAdmin = inputStr.includes('admin') || inputStr.includes('koordinat');
-        this.state.auth = {
-          isLoggedIn: true,
-          token: 'demo-token',
-          refreshToken: 'demo-refresh',
-          user: {
-            id: '11111111-1111-1111-1111-111111111111',
-            username: usernameOrPhone,
-            phone: '05000000000',
-            fullName: isAdmin ? 'Saha Koordinatörü' : 'Saha Görevlisi',
-            role: isAdmin ? 'ADMIN' : 'FIELD_USER'
-          }
-        };
-        this.state.currentRole = isAdmin ? 'admin' : 'pwa';
-        this.state.pwaScreen = 'home';
-        this.setToast(`Giriş Başarılı! (${isAdmin ? 'Yönetici Paneli' : 'Saha Personeli PWA'})`, 'success');
+        // Eşleşme yok — hatalı giriş
+        this._loginAttempts = (this._loginAttempts || 0) + 1;
+        if (this._loginAttempts >= 5) {
+          this._loginLockUntil = Date.now() + 30000;
+          this.setToast('5 hatalı deneme. 30 saniye beklemeniz gerekiyor.', 'error');
+        } else {
+          this.setToast(`E-posta veya şifre hatalı. (${5 - this._loginAttempts} deneme hakkı)`, 'error');
+        }
       }
-      this.saveState();
     }
   }
 
@@ -363,24 +392,14 @@ class Store {
 
   async fetchInitialData() {
     try {
-      // Check if backend API on port 5000 is reachable
-      const checkRes = await fetch(`${API_BASE_URL}/surveys`, { method: 'GET' }).catch(() => null);
-      if (!checkRes || !checkRes.ok) {
-        // Backend API is offline - keep local state intact
-        return;
+      // Backend erişilebilir mi kontrol et (token olmadan)
+      if (!this.state.auth || !this.state.auth.token || !this.state.auth.isLoggedIn) {
+        return; // Giriş yapılmamışsa veri çekme
       }
 
-      if (!this.state.auth || !this.state.auth.token) {
-        const loginRes = await fetch(`${API_BASE_URL}/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ usernameOrPhone: 'admin', password: 'Admin123!' })
-        }).then(r => r.json()).catch(() => null);
-        if (loginRes && loginRes.accessToken) {
-          this.state.auth.token = loginRes.accessToken;
-        } else {
-          return;
-        }
+      const checkRes = await fetch(`${API_BASE_URL}/surveys`, { method: 'GET' }).catch(() => null);
+      if (!checkRes || !checkRes.ok) {
+        return; // Backend çevrimdışı — yerel state koru
       }
 
       // Fetch All Surveys
@@ -409,7 +428,7 @@ class Store {
 
       this.saveState();
     } catch (e) {
-      console.warn('Initial data fetch fallback (offline mode active):', e);
+      // Sessizce başarısız ol (offline mod)
     }
   }
 
