@@ -683,11 +683,11 @@ function attachLoginListeners() {
 
   // Hızlı Demo Giriş Butonları
   document.getElementById('btn-quick-admin-login')?.addEventListener('click', async () => {
-    await store.login('admin@sahaanket.gov.tr', '123456');
+    await store.login('admin@sahaanket.gov.tr', 'Admin123!');
   });
 
   document.getElementById('btn-quick-field-login')?.addEventListener('click', async () => {
-    await store.login('ahmet@sahaanket.gov.tr', '123456');
+    await store.login('saha@sahaanket.gov.tr', 'Saha123!');
   });
 }
 

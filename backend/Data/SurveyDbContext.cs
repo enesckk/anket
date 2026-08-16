@@ -47,7 +47,7 @@ public class SurveyDbContext : DbContext
             Id = adminId,
             Username = "admin",
             Phone = "05000000000",
-            FullName = "Saha Koordinatörü",
+            FullName = "Sistem Yöneticisi",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!"),
             Role = UserRole.ADMIN,
             IsActive = true,
@@ -57,9 +57,9 @@ public class SurveyDbContext : DbContext
         var fieldUser = new User
         {
             Id = fieldUserId,
-            Username = "ahmet",
-            Phone = "05325554321",
-            FullName = "Ahmet Yılmaz",
+            Username = "saha",
+            Phone = "05551002030",
+            FullName = "Saha Yöneticisi",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword("Saha123!"),
             Role = UserRole.FIELD_USER,
             IsActive = true,

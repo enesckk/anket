@@ -1,7 +1,7 @@
 // SurveyAdmin Intelligence - Real ASP.NET Core API + IndexedDB Sync Client
 
 const API_BASE_URL = 'http://localhost:5000/api';
-const STORAGE_KEY = 'surveyadmin_pro_state_v4';
+const STORAGE_KEY = 'surveyadmin_pro_state_v5';
 
 const defaultState = {
   isOnline: true,
@@ -138,11 +138,8 @@ const defaultState = {
   ],
   allAssignments: [],
   allPersonnel: [
-    { id: 'usr-admin', fullName: 'Saha Koordinatörü', email: 'admin@sahaanket.gov.tr', phone: '0500 000 00 00', role: 'ADMIN', isActive: true },
-    { id: 'usr-1', fullName: 'Ahmet Yılmaz', email: 'ahmet@sahaanket.gov.tr', phone: '0532 100 20 30', role: 'FIELD_USER', isActive: true },
-    { id: 'usr-2', fullName: 'Mehmet Demir', email: 'mehmet@sahaanket.gov.tr', phone: '0533 200 30 40', role: 'FIELD_USER', isActive: true },
-    { id: 'usr-3', fullName: 'Ayşe Kaya', email: 'ayse@sahaanket.gov.tr', phone: '0535 300 40 50', role: 'ADMIN', isActive: true },
-    { id: 'usr-4', fullName: 'Fatma Şahin', email: 'fatma@sahaanket.gov.tr', phone: '0536 400 50 60', role: 'FIELD_USER', isActive: false }
+    { id: 'usr-admin', fullName: 'Sistem Yöneticisi', email: 'admin@sahaanket.gov.tr', phone: '0500 000 00 00', role: 'ADMIN', isActive: true, password: 'Admin123!' },
+    { id: 'usr-saha', fullName: 'Saha Yöneticisi', email: 'saha@sahaanket.gov.tr', phone: '0555 100 20 30', role: 'FIELD_USER', isActive: true, password: 'Saha123!' }
   ],
 
   // Active Form Runner State
