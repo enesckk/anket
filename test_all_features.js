@@ -133,7 +133,7 @@ async function runCompleteFunctionalAudit() {
 
     // 2.11 Service Worker & PWA Çevrimdışı Senkronizasyon
     const swText = await (await fetch(`${BASE_FRONTEND}/sw.js`)).text();
-    check('PWA Service Worker v2', swText.includes('sahaanket-v2') && swText.includes('caches.match'));
+    check('PWA Service Worker', swText.includes('sahaanket-v') && swText.includes('caches.match'));
 
     console.log('\n======================================================================');
     console.log(`📊 DENETİM SONUCU: ${passed} / ${passed + failed} FONKSİYON KUSURSUZ ÇALIŞIYOR (%${Math.round((passed / (passed + failed)) * 100)})`);

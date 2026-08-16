@@ -1,6 +1,6 @@
 // E2E System Integration Test Script (Node.js Fetch API)
 
-const API = 'http://localhost:5000/api';
+const API = process.env.API_URL || 'https://anket-45so.onrender.com/api';
 
 async function runTests() {
   console.log('==========================================================');

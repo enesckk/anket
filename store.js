@@ -1,7 +1,7 @@
 const API_BASE_URL = (typeof window !== 'undefined' && window.SAHA_ANKET_API_URL) 
   ? window.SAHA_ANKET_API_URL 
-  : (location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://anket-45so.onrender.com/api');
-const STORAGE_KEY = 'surveyadmin_pro_state_v5';
+  : (typeof location !== 'undefined' && location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://anket-45so.onrender.com/api');
+const STORAGE_KEY = 'surveyadmin_pro_state_v6';
 
 // Pre-warm & Keep-Alive Render Cloud Backend in background
 if (typeof window !== 'undefined') {
@@ -13,6 +13,8 @@ if (typeof window !== 'undefined') {
   setInterval(() => {
     fetch('https://anket-45so.onrender.com/swagger/v1/swagger.json', { method: 'GET', mode: 'cors' }).catch(() => {});
   }, 10 * 60 * 1000);
+}
+
 // Smart High-Speed Client-Side Image Compression Engine (HTML5 Canvas)
 export async function compressImageFile(file, maxWidth = 1280, maxHeight = 1280, quality = 0.75) {
   return new Promise((resolve, reject) => {
