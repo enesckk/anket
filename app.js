@@ -403,7 +403,7 @@ if (!window.__globalListenersAttached) {
       return;
     }
 
-    const downloadExcelBtn = e.target.closest('#btn-reports-tab-excel');
+    const downloadExcelBtn = e.target.closest('#btn-reports-tab-excel, #btn-reports-tab-csv, .btn-download-report-csv');
     if (downloadExcelBtn) {
       const csvContent = "Anket Adı,Bölge,Katılım,Tarih,Durum\nŞehitkamil Tarımsal İhtiyaç Anketi,Sinan Köyü,100/100,12.08.2026,Tamamlandı (%100)\n\nSoru,Yanıt Oranı,Yanıt Sayısı\nBesicilik / Hayvancılık,%64,64 Kişi\nTarımsal Çiftçilik,%36,36 Kişi\nTohum/Gübre İhtiyacı,%88,88 Kişi";
       const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
