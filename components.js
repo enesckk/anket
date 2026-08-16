@@ -1114,7 +1114,7 @@ export function renderLoginScreen() {
             <div class="space-y-1.5">
               <label for="login-email" class="block text-xs font-semibold text-[#1F2937]">E-posta adresi</label>
               <div class="relative">
-                <input type="email" id="login-email" value="ahmet@sahaanket.gov.tr" required placeholder="ahmet@sahaanket.gov.tr" class="w-full h-[50px] pl-11 pr-4 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-xs sm:text-sm font-medium text-slate-900 focus:outline-none focus:bg-white focus:border-[#0B315D] focus:ring-4 focus:ring-[#0B315D]/10 transition-all placeholder:text-slate-400"/>
+                <input type="email" id="login-email" required placeholder="E-posta adresinizi girin" class="w-full h-[50px] pl-11 pr-4 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-xs sm:text-sm font-medium text-slate-900 focus:outline-none focus:bg-white focus:border-[#0B315D] focus:ring-4 focus:ring-[#0B315D]/10 transition-all placeholder:text-slate-400"/>
                 <span class="absolute left-3.5 top-3.5 text-slate-400 pointer-events-none">
                   ${iconSvg('mail', 'w-5 h-5 text-slate-400')}
                 </span>
