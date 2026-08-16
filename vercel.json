@@ -18,28 +18,12 @@
         { "key": "Service-Worker-Allowed", "value": "/" },
         { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
       ]
-    },
-    {
-      "source": "/(.*\\.js)",
-      "headers": [
-        { "key": "Content-Type", "value": "application/javascript" }
-      ]
-    },
-    {
-      "source": "/(.*\\.css)",
-      "headers": [
-        { "key": "Content-Type", "value": "text/css" }
-      ]
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|json|txt|woff|woff2|ttf|eot))",
-      "dest": "/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/((?!index\\.html|app\\.js|components\\.js|store\\.js|styles\\.css|sw\\.js|manifest\\.json|icons/|logo_sehitkamil\\.png).*)",
+      "destination": "/index.html"
     }
   ]
 }
