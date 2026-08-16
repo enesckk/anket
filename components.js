@@ -1101,7 +1101,7 @@ export function renderLoginScreen() {
                 <label for="login-password" class="block text-xs font-semibold text-[#1F2937]">Şifre</label>
               </div>
               <div class="relative">
-                <input type="password" id="login-password" value="Saha123!" required placeholder="••••••••" class="w-full h-[50px] pl-4 pr-11 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-xs sm:text-sm font-medium text-slate-900 focus:outline-none focus:bg-white focus:border-[#0B315D] focus:ring-4 focus:ring-[#0B315D]/10 transition-all placeholder:text-slate-400"/>
+                <input type="password" id="login-password" required placeholder="Şifrenizi girin" class="w-full h-[50px] pl-4 pr-11 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-xs sm:text-sm font-medium text-slate-900 focus:outline-none focus:bg-white focus:border-[#0B315D] focus:ring-4 focus:ring-[#0B315D]/10 transition-all placeholder:text-slate-400"/>
                 <button type="button" id="btn-toggle-password" title="Şifreyi Göster / Gizle" class="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer focus:outline-none">
                   <span id="pwd-eye-icon">${iconSvg('eye', 'w-5 h-5 text-slate-400')}</span>
                 </button>
