@@ -1062,8 +1062,9 @@ export function renderSystemBar() {
 
   return `
     <header class="w-full h-14 bg-white border-b border-[#E9EDF2] flex items-center justify-between px-4 sticky top-0 z-50">
-      <div class="flex items-center gap-2">
-        <span class="text-xs font-bold text-[#01214A]">Şehitkamil Strateji Merkezi</span>
+      <div class="flex items-center gap-2.5">
+        <img src="./logo_saha_anket.png" alt="Saha Anket Logo" class="h-7 w-auto object-contain shrink-0">
+        <span class="text-xs font-bold text-[#01214A]">Saha Anket</span>
       </div>
 
       <div class="flex items-center gap-3">
@@ -1375,9 +1376,9 @@ export function renderPwaHome() {
       <!-- TOP PWA BRANDING HEADER (SECTIONS 4 & 13) -->
       <header class="bg-white border-b border-[#E9EDF2] px-4 py-3 sticky top-0 z-30 flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <img src="./logo_sehitkamil.png" alt="Şehitkamil Logo" class="h-9 w-auto object-contain shrink-0">
+          <img src="./logo_saha_anket.png" alt="Saha Anket Logo" class="h-9 w-auto object-contain shrink-0">
           <div class="flex flex-col min-w-0">
-            <span class="text-xs font-bold text-[#01214A] leading-tight tracking-tight truncate">Şehitkamil Strateji Merkezi</span>
+            <span class="text-xs font-bold text-[#01214A] leading-tight tracking-tight truncate">Saha Anket</span>
             <span class="text-[10px] font-normal text-slate-400 mt-0.5">Saha Uygulaması</span>
           </div>
         </div>
@@ -1898,7 +1899,7 @@ export function renderPwaSurveyBuilderContainer(state) {
         </button>
         <div class="text-center">
           <h1 class="text-xs font-bold text-[#01214A]">Saha Anket Oluşturucu</h1>
-          <span class="text-[10px] text-[#2A9D38] font-semibold">Şehitkamil Strateji Merkezi</span>
+          <span class="text-[10px] text-[#2A9D38] font-semibold">Saha Anket Platformu</span>
         </div>
         <div class="w-8"></div>
       </header>
@@ -2158,9 +2159,9 @@ export function renderAdminView() {
         
         <!-- SIDEBAR TOP BRANDING BLOCK -->
         <div class="h-[72px] px-4 border-b border-[#E9EDF2] flex items-center gap-3 shrink-0">
-          <img src="./logo_sehitkamil.png" alt="Şehitkamil Logo" class="h-9 w-auto object-contain shrink-0">
+          <img src="./logo_saha_anket.png" alt="Saha Anket Logo" class="h-9 w-auto object-contain shrink-0">
           <div class="flex flex-col min-w-0">
-            <span class="text-[13px] sm:text-[14px] font-semibold text-[#01214A] leading-snug tracking-tight truncate">Şehitkamil Strateji Merkezi</span>
+            <span class="text-[13px] sm:text-[14px] font-semibold text-[#01214A] leading-snug tracking-tight truncate">Saha Anket</span>
             <span class="text-[11px] font-normal text-slate-400 mt-0.5">Yönetim Paneli</span>
           </div>
         </div>
