@@ -46,7 +46,7 @@ for (const rView of reportViews) {
 const modalTypes = ['add_section', 'view_report', 'assign_survey', 'logout_confirm', 'view_live_survey_results', 'add_personnel'];
 for (const mType of modalTypes) {
   console.log(`Testing renderCustomModals with modal: ${mType}...`);
-  store.state.activeModal = { type: mType, survey: store.state.allSurveys[0], report: store.state.reports[0] };
+  store.state.activeModal = { type: mType, survey: store.state.allSurveys[0], report: (store.state.reports || [])[0] || null };
   const modalHtml = componentsModule.renderCustomModals(store.state);
   assert(typeof modalHtml === 'string');
 }

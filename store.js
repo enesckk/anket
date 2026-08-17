@@ -123,8 +123,51 @@ const defaultState = {
   myQuickSurveys: [],
   messages: [],
   submissions: [],
-  reports: [],
-  allSurveys: [],
+  allSurveys: [
+    {
+      id: 'srv-100',
+      title: 'Şehitkamil Tarımsal İhtiyaç ve Arazi Değerlendirme Anketi',
+      description: 'Köylerde çiftçilerin ve üreticilerin tohum, sulama ve ekipman taleplerini belirlemek için saha çalışması.',
+      category: 'Tarım',
+      villageName: 'Sinan Köyü',
+      targetCount: 100,
+      completedCount: 0,
+      status: 'ACTIVE',
+      createdBy: 'Sistem Yöneticisi',
+      createdAt: '12 Ağustos 2026',
+      questions: [
+        {
+          id: 'q-100-1',
+          title: 'Faaliyet gösterdiğiniz temel tarımsal veya hayvansal alan nedir?',
+          type: 'single',
+          isRequired: true,
+          options: [
+            { id: 'opt-1', label: 'Besicilik / Hayvancılık' },
+            { id: 'opt-2', label: 'Tarımsal Çiftçilik (Tahıl, Bakliyat)' },
+            { id: 'opt-3', label: 'Meyvecilik / Bağcılık' }
+          ]
+        },
+        {
+          id: 'q-100-2',
+          title: 'Gelecek ekim sezonu için tohum ve gübre desteği talep ediyor musunuz?',
+          type: 'yesno',
+          isRequired: true
+        },
+        {
+          id: 'q-100-3',
+          title: 'İşlediğiniz toplam arazi büyüklüğü (Dönüm cinsinden):',
+          type: 'number',
+          isRequired: false
+        },
+        {
+          id: 'q-100-4',
+          title: 'Bölgenizdeki sulama altyapısı ve diğer acil taleplerinizi belirtiniz:',
+          type: 'text',
+          isRequired: false
+        }
+      ]
+    }
+  ],
   allAssignments: [],
   allPersonnel: [
     { id: 'usr-admin', fullName: 'Sistem Yöneticisi', email: 'admin@sahaanket.gov.tr', phone: '0500 000 00 00', role: 'ADMIN', isActive: true, password: 'Admin123!' },
@@ -178,23 +221,35 @@ class Store {
       if (saved) {
         const parsed = JSON.parse(saved);
         const merged = { ...defaultState, ...parsed };
-        // Auth'u her zaman sıfırla — login ekranı her zaman gösterilsin
-        merged.auth = { ...defaultState.auth };
+
+        if (parsed.auth && parsed.auth.isLoggedIn && parsed.auth.token) {
+          merged.auth = parsed.auth;
+        } else {
+          merged.auth = { ...defaultState.auth };
+        }
+
         merged.adminKpis = { ...defaultState.adminKpis, ...(parsed.adminKpis || {}) };
 
-        if (!Array.isArray(merged.allSurveys) || merged.allSurveys.length === 0) merged.allSurveys = defaultState.allSurveys;
-        if (!Array.isArray(merged.allPersonnel) || merged.allPersonnel.length === 0) merged.allPersonnel = defaultState.allPersonnel;
-        if (!Array.isArray(merged.allAssignments)) merged.allAssignments = defaultState.allAssignments;
-        if (!Array.isArray(merged.assignedSurveys)) merged.assignedSurveys = defaultState.assignedSurveys;
-        if (!Array.isArray(merged.myQuickSurveys)) merged.myQuickSurveys = defaultState.myQuickSurveys;
-        if (!Array.isArray(merged.messages)) merged.messages = defaultState.messages;
-        if (!Array.isArray(merged.submissions)) merged.submissions = defaultState.submissions;
-        if (!Array.isArray(merged.reports) || merged.reports.length === 0) merged.reports = defaultState.reports;
-        if (!Array.isArray(merged.notifications)) merged.notifications = defaultState.notifications;
-
-        if (!merged.allSurveys.some(s => s.id === 'srv-100')) {
-          merged.allSurveys.unshift(defaultState.allSurveys[0]);
+        if (Array.isArray(parsed.allSurveys) && parsed.allSurveys.length > 0) {
+          merged.allSurveys = parsed.allSurveys.filter(Boolean);
+        } else {
+          merged.allSurveys = [...defaultState.allSurveys];
         }
+
+        if (Array.isArray(parsed.allPersonnel) && parsed.allPersonnel.length > 0) {
+          merged.allPersonnel = parsed.allPersonnel.filter(Boolean);
+        } else {
+          merged.allPersonnel = [...defaultState.allPersonnel];
+        }
+
+        if (Array.isArray(parsed.allAssignments)) merged.allAssignments = parsed.allAssignments.filter(Boolean);
+        if (Array.isArray(parsed.assignedSurveys)) merged.assignedSurveys = parsed.assignedSurveys.filter(Boolean);
+        if (Array.isArray(parsed.myQuickSurveys)) merged.myQuickSurveys = parsed.myQuickSurveys.filter(Boolean);
+        if (Array.isArray(parsed.messages)) merged.messages = parsed.messages.filter(Boolean);
+        if (Array.isArray(parsed.submissions)) merged.submissions = parsed.submissions.filter(Boolean);
+        if (Array.isArray(parsed.reports)) merged.reports = parsed.reports.filter(Boolean);
+        if (Array.isArray(parsed.notifications)) merged.notifications = parsed.notifications.filter(Boolean);
+
         return merged;
       }
     } catch (e) {
@@ -239,17 +294,17 @@ class Store {
     this.saveState();
   }
 
-  // API CALL HELPER WITH JWT & FAST TIMEOUT GUARD
+  // API CALL HELPER WITH JWT & ROBUST TIMEOUT GUARD
   async apiFetch(endpoint, options = {}) {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 1200); // 1.2s fast timeout
+    const timeoutId = setTimeout(() => controller.abort(), 12000); // 12s reliable timeout for Render DB
 
     const headers = {
       'Content-Type': 'application/json',
       ...options.headers
     };
 
-    if (this.state.auth.token) {
+    if (this.state.auth && this.state.auth.token) {
       headers['Authorization'] = `Bearer ${this.state.auth.token}`;
     }
 
@@ -375,66 +430,57 @@ class Store {
 
   async fetchInitialData() {
     try {
-      // Backend erişilebilir mi kontrol et (token olmadan)
       if (!this.state.auth || !this.state.auth.token || !this.state.auth.isLoggedIn) {
-        return; // Giriş yapılmamışsa veri çekme
+        return;
       }
 
-      const checkRes = await fetch(`${API_BASE_URL}/surveys`, { method: 'GET' }).catch(() => null);
-      if (!checkRes || !checkRes.ok) {
-        return; // Backend çevrimdışı — yerel state koru
-      }
+      // Fetch All Surveys from Backend DB
+      const surveys = await this.apiFetch('/surveys').catch(e => {
+        console.warn('Surveys fetch from DB note:', e.message);
+        return null;
+      });
 
-      // Fetch All Surveys
-      const surveys = await this.apiFetch('/surveys').catch(() => null);
       if (Array.isArray(surveys) && surveys.length > 0) {
-        this.state.allSurveys = surveys;
+        const backendIds = new Set(surveys.map(s => s.id));
+        const localSurveys = (this.state.allSurveys || []).filter(s => s && !backendIds.has(s.id));
+        this.state.allSurveys = [...surveys, ...localSurveys];
       }
 
       // Fetch All Submissions
       const submissions = await this.apiFetch('/submissions').catch(() => null);
-      if (Array.isArray(submissions)) {
-        this.state.submissions = submissions;
+      if (Array.isArray(submissions) && submissions.length > 0) {
+        const subIds = new Set(submissions.map(s => s.id));
+        const localSubs = (this.state.submissions || []).filter(s => s && !subIds.has(s.id));
+        this.state.submissions = [...submissions, ...localSubs];
       }
 
       // Fetch All Assignments
       const assignments = await this.apiFetch('/assignments').catch(() => null);
-      if (Array.isArray(assignments)) {
-        this.state.allAssignments = assignments;
+      if (Array.isArray(assignments) && assignments.length > 0) {
+        const asgIds = new Set(assignments.map(a => a.id));
+        const localAsgs = (this.state.allAssignments || []).filter(a => a && !asgIds.has(a.id));
+        this.state.allAssignments = [...assignments, ...localAsgs];
       }
 
       // Fetch Personnel
       const personnel = await this.apiFetch('/personnel').catch(() => null);
-      if (Array.isArray(personnel)) {
-        this.state.allPersonnel = personnel;
+      if (Array.isArray(personnel) && personnel.length > 0) {
+        const pIds = new Set(personnel.map(p => p.id));
+        const localP = (this.state.allPersonnel || []).filter(p => p && !pIds.has(p.id));
+        this.state.allPersonnel = [...personnel, ...localP];
       }
 
-      // Fetch Messages & check for new incoming unread messages
+      // Fetch Messages
       const messages = await this.apiFetch('/messages').catch(() => null);
-      if (Array.isArray(messages)) {
-        const existingIds = new Set((this.state.messages || []).map(m => m.id));
-        const newIncoming = messages.filter(m => !existingIds.has(m.id));
-        if (newIncoming.length > 0) {
-          newIncoming.forEach(msg => {
-            if (msg.isUnread) {
-              const targetRole = msg.direction === 'TO_ADMIN' ? 'ADMIN' : 'PWA';
-              this.addNotification(
-                'NEW_MESSAGE',
-                `Yeni Mesaj: ${msg.sender || 'Kullanıcı'}`,
-                msg.title || msg.content || 'Yeni bir mesajınız var.',
-                targetRole,
-                'mail',
-                'blue'
-              );
-            }
-          });
-        }
-        this.state.messages = messages;
+      if (Array.isArray(messages) && messages.length > 0) {
+        const mIds = new Set(messages.map(m => m.id));
+        const localM = (this.state.messages || []).filter(m => m && !mIds.has(m.id));
+        this.state.messages = [...messages, ...localM];
       }
 
       this.saveState();
     } catch (e) {
-      // Sessizce başarısız ol (offline mod)
+      console.warn('Initial data synchronization note:', e.message);
     }
   }
 
