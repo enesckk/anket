@@ -3234,19 +3234,23 @@ function renderAdminTabContent(tab, state) {
               </span>
             </div>
 
-            <div class="space-y-3">
+            <div class="space-y-2.5">
               ${(state.allPersonnel || []).map(p => `
                 <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-100">
                   <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-full ${p.role === 'ADMIN' ? 'bg-[#01214A]' : 'bg-[#2A9D38]'} text-white font-bold text-xs flex items-center justify-center">
+                    <div class="w-8 h-8 rounded-full ${p.role === 'ADMIN' ? 'bg-[#01214A]' : 'bg-[#2A9D38]'} text-white font-bold text-xs flex items-center justify-center font-mono">
                       ${p.fullName ? p.fullName.charAt(0).toUpperCase() : 'P'}
                     </div>
                     <div>
-                      <div class="text-xs font-bold text-[#01214A]">${p.fullName}</div>
-                      <div class="text-[10px] text-slate-400 font-normal">${p.role === 'ADMIN' ? 'Yönetici' : 'Saha Personeli'}</div>
+                      <div class="text-xs font-bold text-[#01214A] leading-snug">${p.fullName}</div>
+                      <div class="flex items-center gap-1.5 mt-0.5">
+                        <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold ${p.role === 'ADMIN' ? 'bg-slate-200 text-[#01214A]' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}">
+                          ${p.role === 'ADMIN' ? 'Yönetici' : 'Saha Personeli'}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <span class="w-2 h-2 rounded-full ${p.isActive ? 'bg-[#2A9D38]' : 'bg-red-500'}"></span>
+                  <span class="w-2 h-2 rounded-full ${p.isActive ? 'bg-[#2A9D38]' : 'bg-slate-300'}" title="${p.isActive ? 'Aktif' : 'Pasif'}"></span>
                 </div>
               `).join('')}
             </div>
