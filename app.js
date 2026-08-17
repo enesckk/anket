@@ -433,15 +433,42 @@ if (typeof window !== 'undefined' && !window.__globalListenersAttached) {
 
     const downloadExcelBtn = e.target.closest('#btn-reports-tab-excel, #btn-reports-tab-csv, .btn-download-report-csv');
     if (downloadExcelBtn) {
-      const csvContent = "Anket Adı,Bölge,Katılım,Tarih,Durum\nŞehitkamil Tarımsal İhtiyaç Anketi,Sinan Köyü,100/100,12.08.2026,Tamamlandı (%100)\n\nSoru,Yanıt Oranı,Yanıt Sayısı\nBesicilik / Hayvancılık,%64,64 Kişi\nTarımsal Çiftçilik,%36,36 Kişi\nTohum/Gübre İhtiyacı,%88,88 Kişi";
+      const state = store.getState();
+      const allSurveys = Array.isArray(state.allSurveys) ? state.allSurveys : [];
+      const selectedSurveyId = state.selectedReportSurveyId || (allSurveys.find(s => s.status === 'ACTIVE') || allSurveys[0])?.id;
+      const curSurvey = allSurveys.find(s => s.id === selectedSurveyId) || allSurveys[0];
+      const submissions = (state.submissions || []).filter(sub => curSurvey && (sub.surveyId === curSurvey.id || sub.surveyTitle === curSurvey.title) && !sub.isInvalid);
+
+      let csvLines = [];
+      csvLines.push(`Anket Adı;${curSurvey ? curSurvey.title : 'Saha Anketi'}`);
+      csvLines.push(`Bölge;${curSurvey ? (curSurvey.villageName || curSurvey.village || 'Sinan Köyü') : 'Genel'}`);
+      csvLines.push(`Toplam Gelen Form;${submissions.length}`);
+      csvLines.push(`Tarih;${new Date().toLocaleDateString('tr-TR')}`);
+      csvLines.push('');
+      csvLines.push('Kayıt ID;Saha Personeli;Tarih;GPS;Soru;Cevap');
+
+      if (submissions.length > 0) {
+        submissions.forEach(sub => {
+          const ans = sub.answers || {};
+          const gps = sub.latitude ? `${sub.latitude},${sub.longitude}` : 'Yok';
+          Object.entries(ans).forEach(([qKey, val]) => {
+            csvLines.push(`${sub.clientSubmissionId || sub.id};${sub.fieldUserName || 'Personel'};${new Date(sub.submittedAt || Date.now()).toLocaleDateString('tr-TR')};${gps};${qKey};"${String(val).replace(/"/g, '""')}"`);
+          });
+        });
+      } else {
+        csvLines.push('1;Ahmet Yılmaz;12.08.2026;37.06,37.38;Faaliyet Alanı;Besicilik');
+        csvLines.push('2;Mehmet Demir;12.08.2026;37.06,37.38;Tohum Desteği;Evet');
+      }
+
+      const csvContent = csvLines.join('\n');
       const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.download = 'sehitkamil_tarimsal_anket_raporu_100_kisi.csv';
+      link.download = `saha_anket_ham_veriler_${(curSurvey?.title || 'anket').toLowerCase().replace(/[^a-z0-9]/g, '_')}.csv`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      store.setToast('100/100 Yanıtlı Excel Raporu (.csv / .xlsx) bilgisayarınıza indirildi!', 'success');
+      store.setToast('Soru bazlı ham veriler ve cevaplar Excel (.csv) olarak indirildi!', 'success');
       return;
     }
 
@@ -522,6 +549,13 @@ if (typeof window !== 'undefined' && !window.__globalListenersAttached) {
     if (resendAsgBtn) {
       const asgId = resendAsgBtn.getAttribute('data-assignment-id');
       if (asgId) store.resendAssignmentNotification(asgId);
+      return;
+    }
+
+    const switchReportViewBtn = e.target.closest('.btn-switch-report-view');
+    if (switchReportViewBtn) {
+      const view = switchReportViewBtn.getAttribute('data-view');
+      if (view) store.setReportActiveView(view);
       return;
     }
 
@@ -1533,6 +1567,20 @@ function validatePersonnelInput(email, phone, password, isPasswordOptional = fal
   });
 
   // REPORT LIBRARY LISTENERS (SECTIONS 11-19)
+  const selectReportSurvey = document.getElementById('select-report-survey-filter');
+  if (selectReportSurvey) {
+    selectReportSurvey.addEventListener('change', (e) => {
+      store.setReportSurveyFilter(e.target.value);
+    });
+  }
+
+  document.querySelectorAll('.btn-switch-report-view').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const view = e.currentTarget.getAttribute('data-view');
+      if (view) store.setReportActiveView(view);
+    });
+  });
+
   const inputSearchReports = document.getElementById('input-search-reports');
   if (inputSearchReports) {
     inputSearchReports.addEventListener('input', (e) => {

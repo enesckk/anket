@@ -150,6 +150,8 @@ const defaultState = {
   showAdminNotifications: false, // Admin bildirim paneli açık/kapalı (state-driven)
   reportCategoryFilter: 'ALL',
   reportSearchQuery: '',
+  selectedReportSurveyId: null, // Specific survey selected in reports tab (null = auto / first active)
+  reportActiveView: 'questions', // 'questions' | 'submissions' | 'saved_reports'
   selectedReportDetailId: null, // When set, renders FULL Analytical Detail Page/Modal!
   builderPreviewAnswers: {},
 
@@ -596,6 +598,16 @@ class Store {
 
   setReportCategoryFilter(category) {
     this.state.reportCategoryFilter = category;
+    this.saveState();
+  }
+
+  setReportSurveyFilter(surveyId) {
+    this.state.selectedReportSurveyId = surveyId || null;
+    this.saveState();
+  }
+
+  setReportActiveView(viewName) {
+    this.state.reportActiveView = viewName || 'questions';
     this.saveState();
   }
 

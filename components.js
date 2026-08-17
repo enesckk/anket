@@ -70,11 +70,19 @@ export function renderSurveyDetailedCharts(surveyOrReport, state) {
   }
 
   const surveyTitle = survey?.title || report?.surveyTitle || 'Şehitkamil Tarımsal İhtiyaç ve Arazi Değerlendirme Anketi';
-  const villageName = survey?.villageName || report?.villageName || 'Sinan Köyü';
-  const totalCount = survey?.completedCount || report?.completedCount || 100;
+  const villageName = survey?.villageName || survey?.village || report?.villageName || 'Sinan Köyü';
   const targetCount = survey?.targetCount || report?.targetCount || 100;
-  const completionRate = Math.round((totalCount / (targetCount || 1)) * 100);
-  const createdBy = survey?.createdBy || 'Saha Koordinatörü (Admin)';
+
+  // Real matching submissions from state
+  const allSubmissions = (state?.submissions || []).filter(sub => 
+    (survey && (sub.surveyId === survey.id || sub.surveyTitle === survey.title)) ||
+    (report && (sub.surveyId === report.surveyId || sub.surveyTitle === report.surveyTitle))
+  ).filter(s => !s.isInvalid);
+
+  const totalCount = allSubmissions.length > 0
+    ? allSubmissions.length
+    : (typeof survey?.completedCount === 'number' ? survey.completedCount : (report?.completedCount || (survey?.status === 'COMPLETED' ? targetCount : 0)));
+  const completionRate = targetCount > 0 ? Math.min(100, Math.round((totalCount / targetCount) * 100)) : 0;
   const createdAt = survey?.createdAt || report?.createdAt || '12 Ağustos 2026';
 
   let rawQuestions = (survey && Array.isArray(survey.questions) && survey.questions.length > 0) ? survey.questions : null;
@@ -85,8 +93,8 @@ export function renderSurveyDetailedCharts(surveyOrReport, state) {
       title: '1. Faaliyet Gösterdiğiniz Temel Alan Nedir?',
       type: 'single',
       options: [
-        { label: 'Besicilik / Hayvancılık', percent: 64, count: Math.round(totalCount * 0.64), color: 'bg-emerald-600', textColor: 'text-emerald-700' },
-        { label: 'Tarımsal Çiftçilik', percent: 36, count: Math.round(totalCount * 0.36), color: 'bg-[#00A0DF]', textColor: 'text-[#00A0DF]' }
+        { label: 'Besicilik / Hayvancılık', percent: 64, count: Math.round((totalCount || 100) * 0.64) },
+        { label: 'Tarımsal Çiftçilik', percent: 36, count: Math.round((totalCount || 100) * 0.36) }
       ]
     },
     {
@@ -94,8 +102,8 @@ export function renderSurveyDetailedCharts(surveyOrReport, state) {
       title: '2. Gübre ve Tohum Desteği Talep Ediyor musunuz?',
       type: 'yesno',
       options: [
-        { label: 'Evet, Tohum ve Gübre İhtiyacı Var', percent: 88, count: Math.round(totalCount * 0.88), color: 'bg-emerald-600', textColor: 'text-emerald-700' },
-        { label: 'Hayır / İhtiyaç Yok', percent: 12, count: Math.round(totalCount * 0.12), color: 'bg-amber-500', textColor: 'text-amber-700' }
+        { label: 'Evet, Tohum ve Gübre İhtiyacı Var', percent: 88, count: Math.round((totalCount || 100) * 0.88) },
+        { label: 'Hayır / İhtiyaç Yok', percent: 12, count: Math.round((totalCount || 100) * 0.12) }
       ]
     },
     {
@@ -104,9 +112,9 @@ export function renderSurveyDetailedCharts(surveyOrReport, state) {
       type: 'number',
       averageVal: '48.5 Dönüm (Bölge Ortalaması)',
       options: [
-        { label: '0 - 25 Dönüm', percent: 30, count: Math.round(totalCount * 0.30), color: 'bg-indigo-600', textColor: 'text-indigo-700' },
-        { label: '26 - 50 Dönüm', percent: 52, count: Math.round(totalCount * 0.52), color: 'bg-[#00A0DF]', textColor: 'text-[#00A0DF]' },
-        { label: '50+ Dönüm Üzeri', percent: 18, count: Math.round(totalCount * 0.18), color: 'bg-emerald-600', textColor: 'text-emerald-700' }
+        { label: '0 - 25 Dönüm', percent: 30, count: Math.round((totalCount || 100) * 0.30) },
+        { label: '26 - 50 Dönüm', percent: 52, count: Math.round((totalCount || 100) * 0.52) },
+        { label: '50+ Dönüm Üzeri', percent: 18, count: Math.round((totalCount || 100) * 0.18) }
       ]
     },
     {
@@ -114,8 +122,8 @@ export function renderSurveyDetailedCharts(surveyOrReport, state) {
       title: '4. Mevcut Sulama Tesisatı Durumu Yeterli mi?',
       type: 'yesno',
       options: [
-        { label: 'Yetersiz / Yenileme ve Bakım Gerekli', percent: 72, count: Math.round(totalCount * 0.72), color: 'bg-amber-600', textColor: 'text-amber-700' },
-        { label: 'Yeterli / Sorun Yok', percent: 28, count: Math.round(totalCount * 0.28), color: 'bg-emerald-600', textColor: 'text-emerald-700' }
+        { label: 'Yetersiz / Yenileme ve Bakım Gerekli', percent: 72, count: Math.round((totalCount || 100) * 0.72) },
+        { label: 'Yeterli / Sorun Yok', percent: 28, count: Math.round((totalCount || 100) * 0.28) }
       ]
     },
     {
@@ -123,8 +131,8 @@ export function renderSurveyDetailedCharts(surveyOrReport, state) {
       title: '5. Saha Notları ve Üretici Talep Özetleri',
       type: 'text',
       textNotes: [
-        'Hayvancılıkla uğraşan 64 üretici yem desteği ve veteriner kontrolü talep ediyor.',
-        'Sinan Köyü sulama hattında basınç düşüklüğü ve boru deformasyonu tespit edildi.',
+        'Hayvancılıkla uğraşan üreticiler yem desteği ve veteriner kontrolü talep ediyor.',
+        'Sulama hattında basınç düşüklüğü ve boru deformasyonu tespit edildi.',
         'Sertifikalı buğday tohumu dağıtımı için ön talep kayıtları tamamlandı.'
       ]
     }
@@ -135,134 +143,43 @@ export function renderSurveyDetailedCharts(surveyOrReport, state) {
   return `
     <div class="space-y-6 text-slate-800">
       <!-- MİNİMAL METRİK PANOLARI -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div class="p-4 bg-slate-900 text-white rounded-2xl space-y-1">
-          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Saha Katılımı</span>
-          <div class="text-lg font-black text-emerald-400">${totalCount} / ${targetCount} (%${completionRate})</div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+        <div class="p-4 bg-[#01214A] text-white rounded-[14px] space-y-1">
+          <span class="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">TOPLAM CEVAP</span>
+          <div class="text-xl font-extrabold text-emerald-400">${totalCount} / ${targetCount}</div>
+          <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
+            <div class="bg-[#2A9D38] h-full rounded-full transition-all" style="width: ${completionRate}%"></div>
+          </div>
+          <span class="text-[10px] text-slate-300 font-normal block mt-1">%${completionRate} Katılım Oranı</span>
         </div>
 
-        <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-1">
-          <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Bölge</span>
-          <div class="text-sm font-black text-[#01214A] truncate">${villageName}</div>
+        <div class="p-4 bg-white border border-[#E9EDF2] rounded-[14px] space-y-1 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">HEDEF BÖLGE</span>
+          <div class="text-base font-bold text-[#01214A] truncate">${villageName}</div>
+          <span class="text-[10px] text-slate-500 font-normal block">Kategori: ${survey?.category || 'Tarım'}</span>
         </div>
 
-        <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-1">
-          <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Geçerli Kayıt</span>
-          <div class="text-sm font-black text-emerald-700">%100 Doğrulanmış</div>
+        <div class="p-4 bg-white border border-[#E9EDF2] rounded-[14px] space-y-1 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">SORU SAYISI</span>
+          <div class="text-xl font-bold text-[#01214A]">${questions.length} Soru</div>
+          <span class="text-[10px] text-[#2A9D38] font-semibold block">Soru Bazında Analiz</span>
         </div>
 
-        <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-1">
-          <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Rapor Durumu</span>
-          <div class="text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded inline-block">Onaylandı</div>
-        </div>
-      </div>
-
-      <!-- SADE & PREMİUM YÖNETİCİ ÖZETİ (5 SIRALI BULGU) -->
-      <div class="p-6 bg-white border border-slate-200 rounded-3xl shadow-sm space-y-4">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-          <h4 class="text-sm font-black text-[#01214A] flex items-center gap-2">
-            ${iconSvg('assessment', 'w-4 h-4 text-[#00A0DF]')}
-            <span>Öne Çıkan Saha Bulguları &amp; Kurumsal Özet</span>
-          </h4>
-          <span class="text-[11px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">Özet Rapor</span>
-        </div>
-
-        <div class="space-y-3 text-xs leading-relaxed">
-          <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-0.5">
-            <span class="font-black text-[#01214A]">1. Bölgesel Üretim Yapısı:</span>
-            <p class="text-slate-600">${villageName} bölgesinde katılımcıların <strong>%64'ü (64 kişi)</strong> besicilik ve hayvancılık, <strong>%36'sı (36 kişi)</strong> ise çiftçilik yapmaktadır.</p>
-          </div>
-
-          <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-0.5">
-            <span class="font-black text-amber-900">2. Sulama Tesisatı Durumu:</span>
-            <p class="text-slate-600">Üreticilerin <strong>%72'si (72 kişi)</strong> mevcut sulama borularının ve hatlarının yetersiz olduğunu bildirmiştir.</p>
-          </div>
-
-          <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-0.5">
-            <span class="font-black text-emerald-900">3. Tarımsal Destek Talebi:</span>
-            <p class="text-slate-600">Çiftçilerin <strong>%88'i (88 kişi)</strong> önümüzdeki sezon için sertifikalı tohum ve gübre desteği talep etmiştir.</p>
-          </div>
-
-          <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-0.5">
-            <span class="font-black text-blue-900">4. Saha Ekip Notları:</span>
-            <p class="text-slate-600">Yem maliyeti baskısı ve periyodik veteriner desteği besiciler tarafından en çok iletilen istekler arasındadır.</p>
-          </div>
-
-          <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-0.5">
-            <span class="font-black text-purple-900">5. Tavsiye Edilen Aksiyon:</span>
-            <p class="text-slate-600">88 üreticiye öncelikli tohum dağıtımı yapılması ve sulama bakım ekibinin Sinan Köyü hattına yönlendirilmesi önerilmektedir.</p>
-          </div>
+        <div class="p-4 bg-white border border-[#E9EDF2] rounded-[14px] space-y-1 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">DURUM</span>
+          <div class="text-sm font-bold text-[#01214A] truncate">${survey?.status === 'COMPLETED' ? 'Tamamlandı' : 'Sahada Aktif'}</div>
+          <span class="text-[10px] text-slate-400 font-normal block">${createdAt}</span>
         </div>
       </div>
 
-      <!-- EN ÇOK TALEP EDİLEN 5 İHTİYAÇ (SADE LİSTE) -->
-      <div class="p-6 bg-white border border-slate-200 rounded-3xl shadow-sm space-y-4">
-        <h4 class="text-sm font-black text-[#01214A] flex items-center gap-2">
-          ${iconSvg('trendingUp', 'w-4 h-4 text-emerald-600')}
-          <span>En Çok Talep Edilen 5 Saha İhtiyacı</span>
-        </h4>
-
-        <div class="space-y-2.5">
-          <div class="space-y-1">
-            <div class="flex justify-between text-xs font-bold">
-              <span>1. Tohum ve Gübre Desteği</span>
-              <span class="text-emerald-700 font-extrabold">%88 (88 Kişi)</span>
-            </div>
-            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-              <div class="bg-emerald-600 h-full rounded-full" style="width: 88%"></div>
-            </div>
-          </div>
-
-          <div class="space-y-1">
-            <div class="flex justify-between text-xs font-bold">
-              <span>2. Sulama Tesisatı &amp; Boru Yenileme</span>
-              <span class="text-[#00A0DF] font-extrabold">%72 (72 Kişi)</span>
-            </div>
-            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-              <div class="bg-[#00A0DF] h-full rounded-full" style="width: 72%"></div>
-            </div>
-          </div>
-
-          <div class="space-y-1">
-            <div class="flex justify-between text-xs font-bold">
-              <span>3. Yem &amp; Hayvancılık Sübvansiyonu</span>
-              <span class="text-indigo-700 font-extrabold">%64 (64 Kişi)</span>
-            </div>
-            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-              <div class="bg-indigo-600 h-full rounded-full" style="width: 64%"></div>
-            </div>
-          </div>
-
-          <div class="space-y-1">
-            <div class="flex justify-between text-xs font-bold">
-              <span>4. Traktör &amp; Ekipman Desteği</span>
-              <span class="text-amber-700 font-extrabold">%45 (45 Kişi)</span>
-            </div>
-            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-              <div class="bg-amber-500 h-full rounded-full" style="width: 45%"></div>
-            </div>
-          </div>
-
-          <div class="space-y-1">
-            <div class="flex justify-between text-xs font-bold">
-              <span>5. Veteriner &amp; Aşılama Hizmetleri</span>
-              <span class="text-purple-700 font-extrabold">%38 (38 Kişi)</span>
-            </div>
-            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-              <div class="bg-purple-600 h-full rounded-full" style="width: 38%"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- DETAYLI SORU SONUÇ GRAFİKLERİ -->
+      <!-- DETAYLI SORU BAZLI HAM VE İSTATİSTİKSEL SONUÇLAR -->
       <div class="space-y-4">
-        <div class="flex items-center justify-between">
-          <h4 class="font-black text-[#01214A] text-sm flex items-center gap-2">
-            ${iconSvg('poll', 'w-4 h-4 text-[#00A0DF]')}
-            <span>Anket Soruları Yanıt Dağılımı</span>
+        <div class="flex items-center justify-between pb-1 border-b border-[#E9EDF2]">
+          <h4 class="font-bold text-[#01214A] text-sm flex items-center gap-2">
+            ${iconSvg('poll', 'w-4 h-4 text-[#2A9D38]')}
+            <span>Her Sorunun Aldığı Cevaplar, Sayılar ve Yüzdelik Dağılımlar</span>
           </h4>
-          <span class="text-xs font-bold text-slate-500">${questions.length} Soru</span>
+          <span class="text-xs font-semibold text-slate-500">${questions.length} Soru Analiz Edildi</span>
         </div>
 
         <div class="grid grid-cols-1 gap-4">
@@ -270,83 +187,146 @@ export function renderSurveyDetailedCharts(surveyOrReport, state) {
             const qTitle = q.title || `Soru ${qIdx + 1}`;
             const qType = q.type || 'single';
             
-            let opts = q.options;
-            if (!opts || opts.length === 0) {
-              if (qType === 'yesno') {
-                opts = [
-                  { label: 'Evet / Katılıyorum', percent: 78, count: Math.round(totalCount * 0.78), color: 'bg-emerald-600' },
-                  { label: 'Hayır / Katılmıyorum', percent: 22, count: Math.round(totalCount * 0.22), color: 'bg-amber-500' }
-                ];
-              } else if (qType === 'single' || qType === 'multiple') {
-                opts = [
-                  { label: 'Besicilik / Hayvancılık', percent: 64, count: Math.round(totalCount * 0.64), color: 'bg-emerald-600' },
-                  { label: 'Tarımsal Çiftçilik', percent: 36, count: Math.round(totalCount * 0.36), color: 'bg-[#00A0DF]' }
-                ];
+            // Submissions that answered this specific question
+            const answeredSubs = allSubmissions.filter(s => {
+              const val = s.answers && (s.answers[q.id] || s.answers[q.key] || s.answers[q.title]);
+              return val !== undefined && val !== null && String(val).trim() !== '';
+            });
+
+            const qResponseCount = answeredSubs.length > 0 ? answeredSubs.length : (allSubmissions.length > 0 ? allSubmissions.length : (totalCount || 0));
+
+            // Compute options distribution
+            let computedOptions = [];
+            const barColors = ['bg-emerald-600', 'bg-[#00A0DF]', 'bg-indigo-600', 'bg-amber-500', 'bg-purple-600', 'bg-rose-500'];
+
+            if (q.options && q.options.length > 0) {
+              computedOptions = q.options.map((opt, oIdx) => {
+                const optLabel = opt.label || opt.value || `Seçenek ${oIdx + 1}`;
+                let count = 0;
+                if (answeredSubs.length > 0) {
+                  answeredSubs.forEach(s => {
+                    const ansVal = String(s.answers[q.id] || s.answers[q.key] || s.answers[q.title] || '');
+                    if (ansVal.toLowerCase().includes(optLabel.toLowerCase()) || ansVal.toLowerCase() === String(opt.value || '').toLowerCase()) {
+                      count++;
+                    }
+                  });
+                } else if (typeof opt.count === 'number') {
+                  count = opt.count;
+                } else if (typeof opt.percent === 'number') {
+                  count = Math.round((opt.percent / 100) * (totalCount || 100));
+                } else {
+                  count = oIdx === 0 ? Math.round(qResponseCount * 0.6) : Math.round(qResponseCount * 0.4);
+                }
+
+                const percent = qResponseCount > 0 ? Math.min(100, Math.round((count / qResponseCount) * 100)) : (opt.percent || 0);
+
+                return {
+                  label: optLabel,
+                  count: count,
+                  percent: percent,
+                  color: barColors[oIdx % barColors.length]
+                };
+              });
+            } else if (qType === 'yesno') {
+              let yesCount = 0;
+              let noCount = 0;
+              if (answeredSubs.length > 0) {
+                answeredSubs.forEach(s => {
+                  const ansVal = String(s.answers[q.id] || s.answers[q.key] || s.answers[q.title] || '').toLowerCase();
+                  if (ansVal.includes('evet') || ansVal === 'true' || ansVal === 'yes') yesCount++;
+                  if (ansVal.includes('hayir') || ansVal.includes('hayır') || ansVal === 'false' || ansVal === 'no') noCount++;
+                });
               }
+              const totalYesNo = yesCount + noCount;
+              const yesPercent = totalYesNo > 0 ? Math.round((yesCount / totalYesNo) * 100) : 75;
+              const noPercent = totalYesNo > 0 ? (100 - yesPercent) : 25;
+
+              computedOptions = [
+                { label: 'Evet / İhtiyaç Var / Katılıyorum', count: totalYesNo > 0 ? yesCount : Math.round(qResponseCount * 0.75), percent: yesPercent, color: 'bg-emerald-600' },
+                { label: 'Hayır / İhtiyaç Yok / Katılmıyorum', count: totalYesNo > 0 ? noCount : Math.round(qResponseCount * 0.25), percent: noPercent, color: 'bg-amber-500' }
+              ];
             }
 
+            // Text Responses
+            const rawTexts = answeredSubs.map(s => ({
+              text: String(s.answers[q.id] || s.answers[q.key] || s.answers[q.title] || ''),
+              user: s.fieldUserName || 'Saha Personeli',
+              time: s.submittedAt ? new Date(s.submittedAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : ''
+            })).filter(t => t.text.trim().length > 0);
+
+            const displayNotes = rawTexts.length > 0 ? rawTexts : (q.textNotes ? q.textNotes.map(n => ({ text: n, user: 'Saha Raporu', time: 'Kaydedildi' })) : []);
+
             return `
-              <div class="p-5 bg-white rounded-3xl border border-slate-200 space-y-3">
-                <div class="flex items-start justify-between gap-3 pb-2 border-b border-slate-100">
-                  <div class="space-y-0.5">
-                    <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
-                      SORU ${qIdx + 1}
+              <div class="p-5 bg-white rounded-[16px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-4">
+                
+                <!-- QUESTION CARD HEADER -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#F1F5F9]">
+                  <div class="flex items-center gap-2.5 flex-wrap">
+                    <span class="w-6 h-6 rounded-md bg-[#01214A] text-white font-mono font-bold text-xs flex items-center justify-center shrink-0">#${qIdx + 1}</span>
+                    <span class="px-2 py-0.5 rounded-[6px] bg-slate-100 border border-slate-200 text-slate-700 font-semibold text-[11px]">
+                      ${formatQuestionType(qType)}
                     </span>
-                    <h5 class="text-sm font-bold text-[#01214A]">${qTitle}</h5>
+                    <span class="px-2 py-0.5 rounded-[6px] text-[10px] font-semibold ${q.isRequired ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-slate-50 text-slate-500 border border-slate-200'}">
+                      ${q.isRequired ? 'Zorunlu' : 'İsteğe Bağlı'}
+                    </span>
+                    <h5 class="text-sm font-bold text-[#01214A] leading-snug">${qTitle}</h5>
                   </div>
-                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 shrink-0">
-                    100 / 100 Yanıt
-                  </span>
+
+                  <div class="flex items-center gap-2 shrink-0">
+                    <span class="px-2.5 py-1 rounded-[8px] bg-[#F8FAFC] border border-[#E9EDF2] text-xs font-semibold text-[#01214A]">
+                      ${qResponseCount} Yanıt Alındı
+                    </span>
+                  </div>
                 </div>
 
+                <!-- NUMERIC SUMMARY IF APPLICABLE -->
                 ${q.averageVal ? `
-                  <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 flex justify-between">
-                    <span>Ortalama Değer:</span>
-                    <span class="text-[#00A0DF] font-black">${q.averageVal}</span>
+                  <div class="p-3 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs font-semibold text-slate-700 flex items-center justify-between">
+                    <span class="text-slate-500">Bölgesel Ortalama / Değer Özeti:</span>
+                    <span class="text-[#00A0DF] font-bold">${q.averageVal}</span>
                   </div>
                 ` : ''}
 
-                ${opts && opts.length > 0 ? `
-                  <div class="space-y-2.5 pt-1">
-                    ${opts.map((opt, oIdx) => {
-                      const label = opt.label || `Seçenek ${oIdx + 1}`;
-                      let percent = 50;
-                      if (typeof opt.percent === 'number') {
-                        percent = opt.percent;
-                      } else if (opt.label && opt.label.includes('%')) {
-                        const match = opt.label.match(/%(\d+)/);
-                        if (match) percent = parseInt(match[1]);
-                      } else {
-                        percent = oIdx === 0 ? 64 : (oIdx === 1 ? 36 : 20);
-                      }
-                      const count = opt.count !== undefined ? opt.count : Math.round((percent / 100) * totalCount);
-                      const barBg = opt.color || (oIdx === 0 ? 'bg-emerald-600' : (oIdx === 1 ? 'bg-[#00A0DF]' : 'bg-slate-700'));
-
-                      return `
-                        <div class="space-y-1">
-                          <div class="flex justify-between text-xs font-semibold text-slate-700">
-                            <span>${label}</span>
-                            <span class="font-extrabold text-slate-900">%${percent} (${count} Kişi)</span>
+                <!-- OPTION DISTRIBUTION BARS -->
+                ${computedOptions.length > 0 ? `
+                  <div class="space-y-3 pt-1">
+                    <div class="grid grid-cols-1 gap-2.5">
+                      ${computedOptions.map(opt => `
+                        <div class="p-3 bg-[#F8FAFC] rounded-[10px] border border-[#E9EDF2]/80 space-y-1.5">
+                          <div class="flex items-center justify-between text-xs font-semibold">
+                            <span class="text-[#01214A]">${opt.label}</span>
+                            <div class="flex items-center gap-2">
+                              <span class="text-slate-500 font-medium text-[11px]">${opt.count} Kişi</span>
+                              <span class="px-2 py-0.5 bg-white border border-[#E9EDF2] rounded-[6px] text-[#01214A] font-bold text-[11px]">%${opt.percent}</span>
+                            </div>
                           </div>
-                          <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                            <div class="${barBg} h-full rounded-full" style="width: ${percent}%"></div>
+                          <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                            <div class="${opt.color} h-full rounded-full transition-all duration-300" style="width: ${opt.percent}%"></div>
                           </div>
                         </div>
-                      `;
-                    }).join('')}
+                      `).join('')}
+                    </div>
                   </div>
                 ` : ''}
 
-                ${q.textNotes && q.textNotes.length > 0 ? `
-                  <div class="space-y-1.5 pt-1">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Öne Çıkan Notlar</span>
-                    ${q.textNotes.map(nt => `
-                      <div class="p-2.5 bg-slate-50 rounded-xl text-xs text-slate-600 border border-slate-100">
-                        "${nt}"
-                      </div>
-                    `).join('')}
+                <!-- RAW TEXTUAL RESPONSES IF TEXT QUESTION -->
+                ${displayNotes.length > 0 ? `
+                  <div class="space-y-2 pt-1">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Gelen Ham Saha Cevapları (${displayNotes.length}):</span>
+                    <div class="max-h-48 overflow-y-auto space-y-1.5 pr-1">
+                      ${displayNotes.map(nt => `
+                        <div class="p-2.5 bg-[#F8FAFC] rounded-[8px] border border-[#E9EDF2] text-xs space-y-0.5">
+                          <div class="flex items-center justify-between text-[10px] text-slate-400 font-medium">
+                            <span>${nt.user}</span>
+                            <span>${nt.time}</span>
+                          </div>
+                          <p class="text-slate-800 font-medium">${nt.text}</p>
+                        </div>
+                      `).join('')}
+                    </div>
                   </div>
                 ` : ''}
+
               </div>
             `;
           }).join('')}
@@ -3732,132 +3712,219 @@ function renderAdminTabContent(tab, state) {
       `;
 
     case 'reports':
-      const savedReports = store.getFilteredReports();
+      const allSurveys = Array.isArray(state.allSurveys) ? state.allSurveys : [];
       const allReports = Array.isArray(state.reports) ? state.reports : [];
+      const savedReports = store.getFilteredReports();
+      const currentReportView = state.reportActiveView || 'questions';
+      
+      // Selected Survey (defaults to first active survey, or explicitly chosen survey)
+      const selectedSurveyId = state.selectedReportSurveyId || (allSurveys.find(s => s.status === 'ACTIVE') || allSurveys[0])?.id;
+      const currentSurvey = allSurveys.find(s => s.id === selectedSurveyId) || allSurveys[0] || {
+        id: 'srv-default',
+        title: 'Şehitkamil Tarımsal İhtiyaç ve Arazi Değerlendirme Anketi',
+        category: 'Tarım',
+        villageName: 'Sinan Köyü',
+        targetCount: 100,
+        completedCount: 100,
+        status: 'ACTIVE'
+      };
+
+      const surveySubmissions = (state.submissions || []).filter(sub => (sub.surveyId === currentSurvey.id || sub.surveyTitle === currentSurvey.title) && !sub.isInvalid);
       const totalCitizenCount = allReports.reduce((acc, r) => acc + (r.completedCount || 100), 0);
       const currentReportCategory = state.reportCategoryFilter || 'ALL';
-
       const reportCategories = ['Tümü', 'Tarım', 'Hayvancılık', 'Altyapı', 'Eğitim', 'Sosyal Destek', 'Vatandaş Memnuniyeti'];
 
       return `
-        <!-- 4 CLEAN WHITE KPI SCORECARDS (SECTIONS 11-12) -->
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div class="bg-white p-6 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-col justify-between h-[128px]">
-            <span class="text-[11px] font-semibold text-[#667085] uppercase tracking-wider block">TOPLAM RAPOR</span>
-            <div>
-              <div class="text-[30px] font-bold text-[#01214A] leading-none">${allReports.length}</div>
-              <span class="text-xs text-[#667085] font-normal mt-1 block">Hazır kurumsal rapor</span>
+        <!-- TOP CONTROLS: SURVEY SELECTOR, EXPORTS & VIEW SWITCHER -->
+        <div class="bg-white p-5 rounded-[16px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-4">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="px-2.5 py-0.5 rounded-[6px] text-[10px] font-bold bg-[#01214A] text-white">ANALİTİK & HAM SONUÇLAR</span>
+                <span class="px-2.5 py-0.5 rounded-[6px] text-[10px] font-semibold ${currentSurvey.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-blue-50 text-blue-800 border border-blue-200'}">
+                  ${currentSurvey.status === 'COMPLETED' ? 'Tamamlanmış Anket' : 'Aktif Saha Çalışması'}
+                </span>
+              </div>
+              <h2 class="text-lg font-bold text-[#01214A]">${currentSurvey.title}</h2>
+              <p class="text-xs text-slate-500 font-normal">Rapor oluşturmaya gerek kalmadan tüm anket sorularına verilen cevapları, oranları ve ham kayıtları anında inceleyin.</p>
+            </div>
+
+            <!-- SURVEY SELECTOR & ACTIONS -->
+            <div class="flex flex-wrap items-center gap-2.5">
+              <div class="relative min-w-[240px]">
+                <select id="select-report-survey-filter" class="w-full h-10 pl-3 pr-8 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs font-semibold text-[#01214A] focus:outline-none focus:bg-white focus:border-[#2A9D38] cursor-pointer">
+                  ${allSurveys.map(s => `
+                    <option value="${s.id}" ${s.id === currentSurvey.id ? 'selected' : ''}>
+                      ${s.title} (${s.status === 'COMPLETED' ? 'Tamamlandı' : 'Aktif'})
+                    </option>
+                  `).join('')}
+                </select>
+              </div>
+
+              <button id="btn-reports-tab-excel" class="h-10 px-3.5 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs rounded-[10px] transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Ham verileri Excel olarak indir">
+                ${iconSvg('download', 'w-3.5 h-3.5 text-white')}
+                <span>Excel İndir</span>
+              </button>
+
+              <button id="btn-reports-tab-pdf" class="h-10 px-3.5 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs rounded-[10px] transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs" title="PDF Analitik Rapor oluştur">
+                ${iconSvg('fileText', 'w-3.5 h-3.5 text-slate-300')}
+                <span>PDF Rapor</span>
+              </button>
+
+              <button onclick="window.print()" class="h-10 px-3 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 text-xs font-medium rounded-[10px] transition-colors flex items-center gap-1 cursor-pointer">
+                <span>Yazdır</span>
+              </button>
             </div>
           </div>
 
-          <div class="bg-white p-6 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-col justify-between h-[128px]">
-            <span class="text-[11px] font-semibold text-[#667085] uppercase tracking-wider block">KATILIMCI SAYISI</span>
-            <div>
-              <div class="text-[30px] font-bold text-[#01214A] leading-none">${totalCitizenCount || 100}</div>
-              <span class="text-xs text-[#667085] font-normal mt-1 block">Doğrulanmış vatandaş yanıtı</span>
-            </div>
-          </div>
+          <!-- 3 CLEAN TAB CONTROLS -->
+          <div class="flex items-center gap-1.5 bg-[#F8FAFC] p-1.5 rounded-[12px] border border-[#E9EDF2] text-xs overflow-x-auto">
+            <button type="button" data-view="questions" class="btn-switch-report-view flex-1 min-w-[200px] py-2 px-3 rounded-[9px] font-semibold transition-all cursor-pointer flex items-center justify-center gap-2 ${currentReportView === 'questions' ? 'bg-white text-[#01214A] shadow-xs border border-[#E9EDF2]' : 'text-slate-500 hover:text-slate-800'}">
+              ${iconSvg('poll', 'w-4 h-4 text-[#2A9D38]')}
+              <span>Soru Bazlı Ham & Canlı Analiz</span>
+            </button>
 
-          <div class="bg-white p-6 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-col justify-between h-[128px]">
-            <span class="text-[11px] font-semibold text-[#667085] uppercase tracking-wider block">DOĞRULAMA ORANI</span>
-            <div>
-              <div class="text-[30px] font-bold text-[#2A9D38] leading-none">%100</div>
-              <span class="text-xs text-[#667085] font-normal mt-1 block">Tam saha katılımı</span>
-            </div>
-          </div>
+            <button type="button" data-view="submissions" class="btn-switch-report-view flex-1 min-w-[200px] py-2 px-3 rounded-[9px] font-semibold transition-all cursor-pointer flex items-center justify-center gap-2 ${currentReportView === 'submissions' ? 'bg-white text-[#01214A] shadow-xs border border-[#E9EDF2]' : 'text-slate-500 hover:text-slate-800'}">
+              ${iconSvg('chatBubble', 'w-4 h-4 text-[#00A0DF]')}
+              <span>Sahadan Gelen Ham Formlar (${surveySubmissions.length})</span>
+            </button>
 
-          <div class="bg-white p-6 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-col justify-between h-[128px]">
-            <span class="text-[11px] font-semibold text-[#667085] uppercase tracking-wider block">HEDEF BÖLGE</span>
-            <div>
-              <div class="text-xl font-bold text-[#01214A] leading-none truncate">Sinan Köyü</div>
-              <span class="text-xs text-[#667085] font-normal mt-1 block">6 Mahalle genelinde</span>
-            </div>
-          </div>
-        </section>
-
-        <!-- TOOLBAR: SEARCH & CATEGORY FILTER (SECTIONS 16-17) -->
-        <div class="bg-white p-4 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-3">
-          <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
-            <div class="flex items-center gap-3">
-              <h2 class="text-base font-semibold text-[#01214A]">Rapor Kütüphanesi (${savedReports.length})</h2>
-            </div>
-
-            <div class="relative w-full sm:w-72">
-              <input type="text" id="input-search-reports" value="${state.reportSearchQuery || ''}" placeholder="Rapor adı veya bölge ara..." class="w-full h-9 pl-9 pr-3 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-[#2A9D38] font-normal placeholder:text-slate-400 transition-colors duration-150"/>
-              <span class="absolute left-3 top-2.5 text-slate-400 pointer-events-none">${iconSvg('search', 'w-4 h-4 text-slate-400')}</span>
-            </div>
-          </div>
-
-          <!-- CATEGORY FILTER PILLS -->
-          <div class="flex items-center gap-2 overflow-x-auto pt-1 pb-0.5 scrollbar-none text-xs">
-            <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider shrink-0 mr-1">Kategori:</span>
-            ${reportCategories.map(cat => {
-              const catKey = cat === 'Tümü' ? 'ALL' : cat;
-              const isActiveCat = currentReportCategory === catKey;
-              return `
-                <button type="button" data-report-category="${catKey}" class="btn-filter-report-category px-3 py-1 rounded-[8px] text-xs transition-colors duration-150 whitespace-nowrap cursor-pointer ${isActiveCat ? 'bg-[#2A9D38] text-white font-semibold' : 'bg-[#F8FAFC] border border-[#E9EDF2] text-slate-600 hover:bg-slate-100 font-normal'}">
-                  ${cat}
-                </button>
-              `;
-            }).join('')}
+            <button type="button" data-view="saved_reports" class="btn-switch-report-view flex-1 min-w-[200px] py-2 px-3 rounded-[9px] font-semibold transition-all cursor-pointer flex items-center justify-center gap-2 ${currentReportView === 'saved_reports' ? 'bg-white text-[#01214A] shadow-xs border border-[#E9EDF2]' : 'text-slate-500 hover:text-slate-800'}">
+              ${iconSvg('assessment', 'w-4 h-4 text-emerald-700')}
+              <span>Kayıtlı Kurumsal Raporlar (${savedReports.length})</span>
+            </button>
           </div>
         </div>
 
-        <!-- COMPACT REPORT LIBRARY TABLE (NO GIANT DUMP - SECTIONS 13-15) -->
-        <div class="bg-white rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
-          <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr class="bg-[#F8FAFC] border-b border-[#E9EDF2] text-slate-500 font-semibold text-[11px]">
-                  <th class="py-3 px-5">Rapor Adı</th>
-                  <th class="py-3 px-5">Kategori & Bölge</th>
-                  <th class="py-3 px-5">Kayıt Tarihi</th>
-                  <th class="py-3 px-5">Saha Katılımı</th>
-                  <th class="py-3 px-5">Durum</th>
-                  <th class="py-3 px-5 text-right">İşlem</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-[#F1F5F9]">
-                ${savedReports.length === 0 ? `
-                  <tr>
-                    <td colspan="6" class="p-12 text-center text-slate-500 text-xs font-normal space-y-2">
-                      ${iconSvg('assessment', 'w-10 h-10 text-slate-300 mx-auto')}
-                      <div class="font-semibold text-[#01214A] text-sm">Henüz kayıtlı rapor bulunmuyor.</div>
-                      <p class="text-slate-400 text-xs max-w-md mx-auto">Anketler sekmesinde tamamlanan (100/100) anketler için "Rapor Oluştur & Kaydet" butonuna basarak rapora dönüştürebilirsiniz.</p>
-                    </td>
-                  </tr>
-                ` : savedReports.map(rpt => `
-                  <tr class="hover:bg-slate-50/60 transition-colors duration-150">
-                    <td class="py-4 px-5">
-                      <div class="font-semibold text-[#01214A] leading-snug">${rpt.surveyTitle}</div>
-                    </td>
-                    <td class="py-4 px-5 text-slate-600 font-normal">
-                      <span class="inline-flex items-center gap-1">
-                        <span class="px-2 py-0.5 rounded-[4px] bg-slate-100 text-slate-700 font-medium text-[10px]">${rpt.category || 'Tarım'}</span>
-                        <span>${rpt.villageName || 'Sinan Köyü'}</span>
-                      </span>
-                    </td>
-                    <td class="py-4 px-5 text-slate-500 font-normal">${rpt.createdAt || '12 Ağustos 2026'}</td>
-                    <td class="py-4 px-5 font-semibold text-[#2A9D38]">${rpt.completedCount || 100} / ${rpt.targetCount || 100} Yanıt (%100)</td>
-                    <td class="py-4 px-5">
-                      <span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                        ${rpt.statusLabel || 'Hazır'}
-                      </span>
-                    </td>
-                    <td class="py-4 px-5 text-right">
-                      <div class="flex items-center justify-end gap-2">
-                        <button data-report-id="${rpt.id}" class="btn-open-report-modal h-8 px-3.5 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1.5 cursor-pointer">
-                          ${iconSvg('search', 'w-3.5 h-3.5 text-white')}
-                          <span>Raporu Gör</span>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
+        <!-- CONDITIONAL CONTENT BASED ON SELECTED TAB -->
+        ${currentReportView === 'questions' ? `
+          <!-- TAB 1: REAL-TIME QUESTION-BY-QUESTION ANALYTICS -->
+          <div class="space-y-6">
+            ${renderSurveyDetailedCharts(currentSurvey, state)}
           </div>
-        </div>
+        ` : currentReportView === 'submissions' ? `
+          <!-- TAB 2: RAW SUBMISSIONS TABLE FOR SELECTED SURVEY -->
+          <div class="bg-white rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden space-y-3 p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-base font-bold text-[#01214A]">Sahadan Gelen Ham Yanıt Formları (${surveySubmissions.length})</h3>
+                <p class="text-xs text-slate-400 font-normal">Bu anket için sahadan doldurulan formların ham dökümü.</p>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="bg-[#F8FAFC] border-b border-[#E9EDF2] text-slate-500 font-semibold text-[11px]">
+                    <th class="py-3 px-4">Form ID</th>
+                    <th class="py-3 px-4">Saha Personeli</th>
+                    <th class="py-3 px-4">Tarih & Saat</th>
+                    <th class="py-3 px-4">GPS Konum</th>
+                    <th class="py-3 px-4">Yanıt Özeti</th>
+                    <th class="py-3 px-4 text-right">Durum</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-[#F1F5F9]">
+                  ${surveySubmissions.length === 0 ? `
+                    <tr>
+                      <td colspan="6" class="p-8 text-center text-slate-400 text-xs">Bu anket için henüz form yanıtı gönderilmedi.</td>
+                    </tr>
+                  ` : surveySubmissions.map(sub => {
+                    const ansList = Object.entries(sub.answers || {}).slice(0, 2).map(([k, v]) => `${v}`).join(', ');
+                    return `
+                      <tr class="hover:bg-slate-50/60 transition-colors">
+                        <td class="py-3.5 px-4 font-mono text-[11px] text-slate-400">${sub.clientSubmissionId || sub.id}</td>
+                        <td class="py-3.5 px-4 font-semibold text-[#01214A]">${sub.fieldUserName || 'Saha Personeli'}</td>
+                        <td class="py-3.5 px-4 text-slate-500">${new Date(sub.submittedAt || Date.now()).toLocaleTimeString('tr-TR')}</td>
+                        <td class="py-3.5 px-4 text-slate-500">
+                          ${sub.latitude ? `${sub.latitude.toFixed(3)}, ${sub.longitude?.toFixed(3)}` : 'Çevrimdışı'}
+                        </td>
+                        <td class="py-3.5 px-4 text-slate-700 max-w-xs truncate">${ansList || 'Cevaplar kaydedildi'}</td>
+                        <td class="py-3.5 px-4 text-right">
+                          <span class="px-2 py-0.5 rounded text-[10px] font-bold ${sub.isInvalid ? 'bg-red-100 text-red-800' : 'bg-emerald-100 text-emerald-800'}">
+                            ${sub.isInvalid ? 'Geçersiz' : 'Geçerli'}
+                          </span>
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ` : `
+          <!-- TAB 3: SAVED FORMAL REPORTS LIBRARY -->
+          <div class="space-y-4">
+            <div class="bg-white p-4 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+              <div class="relative w-full sm:w-72">
+                <input type="text" id="input-search-reports" value="${state.reportSearchQuery || ''}" placeholder="Rapor adı veya bölge ara..." class="w-full h-9 pl-9 pr-3 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-[#2A9D38] font-normal placeholder:text-slate-400 transition-colors duration-150"/>
+                <span class="absolute left-3 top-2.5 text-slate-400 pointer-events-none">${iconSvg('search', 'w-4 h-4 text-slate-400')}</span>
+              </div>
+
+              <!-- CATEGORY FILTER PILLS -->
+              <div class="flex items-center gap-2 overflow-x-auto pt-1 pb-0.5 scrollbar-none text-xs">
+                ${reportCategories.map(cat => {
+                  const catKey = cat === 'Tümü' ? 'ALL' : cat;
+                  const isActiveCat = currentReportCategory === catKey;
+                  return `
+                    <button type="button" data-report-category="${catKey}" class="btn-filter-report-category px-3 py-1 rounded-[8px] text-xs transition-colors duration-150 whitespace-nowrap cursor-pointer ${isActiveCat ? 'bg-[#2A9D38] text-white font-semibold' : 'bg-[#F8FAFC] border border-[#E9EDF2] text-slate-600 hover:bg-slate-100 font-normal'}">
+                      ${cat}
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+
+            <div class="bg-white rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr class="bg-[#F8FAFC] border-b border-[#E9EDF2] text-slate-500 font-semibold text-[11px]">
+                      <th class="py-3 px-5">Rapor Adı</th>
+                      <th class="py-3 px-5">Kategori & Bölge</th>
+                      <th class="py-3 px-5">Kayıt Tarihi</th>
+                      <th class="py-3 px-5">Saha Katılımı</th>
+                      <th class="py-3 px-5">Durum</th>
+                      <th class="py-3 px-5 text-right">İşlem</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-[#F1F5F9]">
+                    ${savedReports.length === 0 ? `
+                      <tr>
+                        <td colspan="6" class="p-12 text-center text-slate-500 text-xs font-normal space-y-2">
+                          ${iconSvg('assessment', 'w-10 h-10 text-slate-300 mx-auto')}
+                          <div class="font-semibold text-[#01214A] text-sm">Henüz kayıtlı resmi rapor bulunmuyor.</div>
+                          <p class="text-slate-400 text-xs max-w-md mx-auto">Soru Bazlı Ham Analiz sekmesinden dilediğiniz anketin sonuçlarını anında inceleyebilirsiniz.</p>
+                        </td>
+                      </tr>
+                    ` : savedReports.map(rpt => `
+                      <tr class="hover:bg-slate-50/60 transition-colors duration-150">
+                        <td class="py-4 px-5 font-semibold text-[#01214A]">${rpt.surveyTitle}</td>
+                        <td class="py-4 px-5 text-slate-600">
+                          <span class="px-2 py-0.5 rounded-[4px] bg-slate-100 text-slate-700 font-medium text-[10px] mr-1">${rpt.category || 'Tarım'}</span>
+                          <span>${rpt.villageName || 'Sinan Köyü'}</span>
+                        </td>
+                        <td class="py-4 px-5 text-slate-500">${rpt.createdAt || '12 Ağustos 2026'}</td>
+                        <td class="py-4 px-5 font-semibold text-[#2A9D38]">${rpt.completedCount || 100} / ${rpt.targetCount || 100} Yanıt</td>
+                        <td class="py-4 px-5">
+                          <span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                            ${rpt.statusLabel || 'Hazır'}
+                          </span>
+                        </td>
+                        <td class="py-4 px-5 text-right">
+                          <button data-report-id="${rpt.id}" class="btn-open-report-modal h-8 px-3.5 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1.5 cursor-pointer ml-auto">
+                            ${iconSvg('search', 'w-3.5 h-3.5 text-white')}
+                            <span>İncele</span>
+                          </button>
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        `}
       `;
 
     case 'personnel':

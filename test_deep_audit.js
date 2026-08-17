@@ -179,6 +179,32 @@ assert(store.state.searchSubmissionsQuery === 'Sinan Tarım Anketi', 'searchSubm
 
 console.log('✅ [6/6] Soru Zorunluluk Kutucuğu ve Anket Devam Ederken Canlı Sonuçları & Cevapları İzleme özelliği eksiksiz çalışıyor.');
 
+// 6. Question-by-Question Raw Results & Simplified Reports Tab
+console.log('🔬 [7/7] Soru Bazlı Ham Sonuçlar ve Sadeleştirilmiş Rapor/Analiz Merkezi Test Ediliyor...');
+
+store.state.adminTab = 'reports';
+store.state.selectedReportSurveyId = 'srv-live-100';
+store.state.reportActiveView = 'questions';
+
+const renderedReportsQuestions = componentsModule.renderAdminView();
+assert(renderedReportsQuestions.includes('Soru Bazlı Ham & Canlı Analiz'), 'Raporlar sekmesinde Soru Bazlı Ham & Canlı Analiz görünümü yer almalı');
+assert(renderedReportsQuestions.includes('Her Sorunun Aldığı Cevaplar, Sayılar ve Yüzdelik Dağılımlar'), 'Her sorunun aldığı cevaplar ve yüzdelik dağılımlar başlığı görünmeli');
+assert(renderedReportsQuestions.includes('select-report-survey-filter'), 'Anket seçici dropdown mevcut olmalı');
+assert(renderedReportsQuestions.includes('Arazi Büyüklüğü'), 'Seçilen anketin soru başlığı yer almalı');
+assert(renderedReportsQuestions.includes('50 Dönüm'), 'Sahadan gelen gerçek cevap metni yer almalı');
+
+// Test switching to raw submissions view in reports tab
+store.setReportActiveView('submissions');
+const renderedReportsSubs = componentsModule.renderAdminView();
+assert(renderedReportsSubs.includes('Sahadan Gelen Ham Yanıt Formları'), 'Ham form dökümü görünümü doğru render edilmeli');
+
+// Test switching to saved reports view
+store.setReportActiveView('saved_reports');
+const renderedReportsSaved = componentsModule.renderAdminView();
+assert(renderedReportsSaved.includes('Kayıtlı Kurumsal Raporlar'), 'Kayıtlı kurumsal raporlar görünümü doğru render edilmeli');
+
+console.log('✅ [7/7] Rapor oluşturmadan soru bazlı ham sonuçları görme ve sadeleştirilmiş Analitik Merkezi başarıyla doğrulandı.');
+
 console.log('\n======================================================================');
 console.log('🎉 TÜM DENETİMLER BAŞARIYLA GEÇTİ! HİÇBİR HATA VEYA KOPUKLUK YOKTUR.');
 console.log('======================================================================');
