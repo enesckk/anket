@@ -95,14 +95,23 @@ assert(!renderedAdmin.includes('320 / 500'), 'Statik fake 320 / 500 metni arayü
 
 console.log('✅ [4/5] Anket ilerleme oranları dinamik olarak hesaplanıyor, statik/sahte veri kalmadı.');
 
-// 4. Notification UI Render Check
+// 4. Notification UI & Sidebar Message Badge Render Check
+testState.messages = [{ id: 'm-1', title: 'Saha Raporu', content: 'Geldik', isUnread: true, direction: 'TO_ADMIN', senderRole: 'FIELD_USER' }];
+store.state = testState;
+
+const renderedAdminWithUnread = componentsModule.renderAdminView();
+assert(renderedAdminWithUnread.includes('1 Yeni'), 'Sol paneldeki Mesajlar sekmesinde okunmamış mesaj rozeti ("1 Yeni") görünmeli');
+
+const renderedBottomNav = componentsModule.renderBottomNav();
+assert(renderedBottomNav.includes('nav-messages'), 'PWA alt menüsünde Mesajlar navigasyonu mevcut');
+
 const renderedNotifCenter = componentsModule.renderNotificationCenter(testState);
 assert(renderedNotifCenter.includes('btn-toggle-notifications-dropdown'), 'Bildirim merkezi butonu mevcut');
 
 const renderedPwaBell = componentsModule.renderPwaNotificationBell(testState);
 assert(renderedPwaBell.includes('btn-toggle-pwa-notifications'), 'PWA bildirim butonu mevcut');
 
-console.log('✅ [5/5] Bildirim bileşenleri (Admin & PWA) arayüzde eksiksiz render ediliyor.');
+console.log('✅ [5/5] Bildirim bileşenleri ve Sol Panel "Mesajlar" okunmamış rozeti arayüzde eksiksiz render ediliyor.');
 
 console.log('\n======================================================================');
 console.log('🎉 TÜM DENETİMLER BAŞARIYLA GEÇTİ! HİÇBİR HATA VEYA KOPUKLUK YOKTUR.');

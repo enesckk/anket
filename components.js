@@ -2215,17 +2215,32 @@ export function renderAdminView() {
         <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
           ${navItems.map(item => {
             const isActive = activeTab === item.id || (activeTab === 'builder' && item.id === 'surveys');
+            const isMsg = item.id === 'messages';
+            const isSurvey = item.id === 'surveys';
+            const showMsgBadge = isMsg && unreadAdminMsgCount > 0;
+            const showSurveyBadge = isSurvey && pendingSurveysCount > 0;
+
             return `
-              <button data-admin-tab="${item.id}" class="btn-admin-tab w-full flex items-center gap-3 px-3.5 py-2.5 rounded-[10px] text-left text-xs transition-all duration-150 relative cursor-pointer ${isActive ? 'text-[#01214A] bg-[#2A9D38]/10 font-semibold border-l-3 border-[#2A9D38]' : 'text-slate-400 hover:text-[#01214A] hover:bg-slate-50 font-normal'}">
-                ${iconSvg(item.icon, `w-4 h-4 ${isActive ? 'text-[#2A9D38]' : 'text-slate-400'}`)}
-                <span class="truncate">${item.label}</span>
-                ${item.id === 'messages' && unreadAdminMsgCount > 0 ? `
-                  <span class="ml-auto px-2 py-0.5 bg-red-500 text-white text-[10px] font-extrabold rounded-full animate-pulse shadow-xs shrink-0">
-                    ${unreadAdminMsgCount} Yeni
+              <button data-admin-tab="${item.id}" class="btn-admin-tab w-full flex items-center justify-between px-3.5 py-2.5 rounded-[10px] text-left text-xs transition-all duration-150 relative cursor-pointer ${isActive ? 'text-[#01214A] bg-[#2A9D38]/10 font-semibold border-l-3 border-[#2A9D38]' : 'text-slate-500 hover:text-[#01214A] hover:bg-slate-50 font-normal'}">
+                <div class="flex items-center gap-3 min-w-0">
+                  <div class="relative flex items-center justify-center shrink-0">
+                    ${iconSvg(item.icon, `w-4 h-4 ${isActive ? 'text-[#2A9D38]' : 'text-slate-400'}`)}
+                    ${showMsgBadge ? `
+                      <span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white animate-ping"></span>
+                      <span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white"></span>
+                    ` : ''}
+                  </div>
+                  <span class="truncate font-medium">${item.label}</span>
+                </div>
+
+                ${showMsgBadge ? `
+                  <span class="ml-2 px-2 py-0.5 bg-red-500 text-white text-[10px] font-extrabold rounded-full animate-bounce shadow-xs shrink-0 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                    <span>${unreadAdminMsgCount} Yeni</span>
                   </span>
                 ` : ''}
-                ${item.id === 'surveys' && pendingSurveysCount > 0 ? `
-                  <span class="ml-auto px-2 py-0.5 bg-amber-500 text-white text-[10px] font-extrabold rounded-full shadow-xs shrink-0">
+                ${showSurveyBadge ? `
+                  <span class="ml-2 px-2 py-0.5 bg-amber-500 text-white text-[10px] font-extrabold rounded-full shadow-xs shrink-0">
                     ${pendingSurveysCount} Onay
                   </span>
                 ` : ''}
