@@ -338,7 +338,7 @@ class Store {
       }
 
       if (matched.isActive === false) {
-        this.setToast(`⚠️ '${matched.fullName}' hesabı pasif durumdadır!`, 'error');
+        this.setToast(`'${matched.fullName}' hesabı pasif durumdadır!`, 'error');
         return;
       }
 
@@ -418,7 +418,7 @@ class Store {
               const targetRole = msg.direction === 'TO_ADMIN' ? 'ADMIN' : 'PWA';
               this.addNotification(
                 'NEW_MESSAGE',
-                `📩 Yeni Mesaj: ${msg.sender || 'Kullanıcı'}`,
+                `Yeni Mesaj: ${msg.sender || 'Kullanıcı'}`,
                 msg.title || msg.content || 'Yeni bir mesajınız var.',
                 targetRole,
                 'mail',
@@ -651,7 +651,7 @@ class Store {
     this.setToast(`'${fullName}' personeli başarıyla sisteme eklendi ve aktif edildi.`, 'success');
     this.addNotification(
       'SYSTEM',
-      '👤 Yeni Personel Kaydı',
+      'Yeni Personel Kaydı',
       `"${fullName}" (${role === 'ADMIN' ? 'Yönetici' : 'Saha Personeli'}) hesabı sisteme başarıyla kaydedildi.`,
       'ADMIN',
       'person',
@@ -1167,11 +1167,46 @@ class Store {
 
   setToast(message, type = 'success') {
     this.state.toast = { message, type, id: Date.now() };
-    this.saveState();
-    setTimeout(() => {
-      this.state.toast = null;
-      this.saveState();
-    }, 3500);
+    if (typeof document !== 'undefined') {
+      let toastContainer = document.getElementById('global-toast-container');
+      if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'global-toast-container';
+        toastContainer.className = 'fixed top-5 right-5 z-[99999] pointer-events-none flex flex-col gap-2 max-w-sm w-full';
+        document.body.appendChild(toastContainer);
+      }
+      const isSuccess = type === 'success';
+      const isError = type === 'error';
+
+      const bgClass = isSuccess 
+        ? 'bg-[#01214A] border-[#2A9D38] text-white shadow-xl' 
+        : (isError ? 'bg-red-950 border-red-600 text-white shadow-xl' : 'bg-[#01214A] border-slate-600 text-white shadow-xl');
+
+      const iconColor = isSuccess ? 'text-[#2A9D38]' : (isError ? 'text-red-400' : 'text-blue-400');
+      const iconPath = isSuccess 
+        ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>' 
+        : (isError 
+            ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>' 
+            : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>');
+
+      const toastItem = document.createElement('div');
+      toastItem.className = `px-4 py-3 rounded-xl flex items-center gap-3 border text-xs font-semibold ${bgClass} transition-all duration-200 transform translate-y-0 opacity-100`;
+      toastItem.innerHTML = `
+        <svg class="w-4 h-4 ${iconColor} shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          ${iconPath}
+        </svg>
+        <span class="leading-snug">${message}</span>
+      `;
+      toastContainer.appendChild(toastItem);
+
+      setTimeout(() => {
+        toastItem.style.opacity = '0';
+        toastItem.style.transform = 'translateY(-10px)';
+        setTimeout(() => {
+          if (toastItem.parentNode) toastItem.parentNode.removeChild(toastItem);
+        }, 300);
+      }, 3500);
+    }
   }
 
   async submitForApproval() {
@@ -1249,7 +1284,7 @@ class Store {
     // Admin paneli için bildirim oluştur (targetRole: 'ADMIN')
     this.addNotification(
       'NEW_MESSAGE',
-      `📩 Yeni Mesaj: ${senderName}`,
+      `Yeni Mesaj: ${senderName}`,
       `"${title.substring(0, 60)}${title.length > 60 ? '...' : ''}" — ${senderName} yöneticiye mesaj gönderdi.`,
       'ADMIN',
       'mail',
@@ -1817,7 +1852,7 @@ class Store {
 
     this.addNotification(
       'NEW_ASSIGNMENT',
-      `📢 Saha Görevi Hatırlatması: ${asg.surveyTitle}`,
+      `Saha Görevi Hatırlatması: ${asg.surveyTitle}`,
       `"${asg.villageName}" bölgesi saha görevi için hedef: ${asg.targetCount} anket. Lütfen verileri tamamlayınız.`,
       'ALL',
       'assignment',
@@ -1830,7 +1865,7 @@ class Store {
     this.requestNotificationPermission();
     this.addNotification(
       'SYSTEM',
-      '🔔 Test Bildirimi Başarılı',
+      'Test Bildirimi Başarılı',
       'Sistem anlık bildirimleri (Windows, Apple, Android) kusursuz şekilde aktif ve çalışıyor.',
       'ALL',
       'bell',
@@ -1939,7 +1974,7 @@ class Store {
     // PWA kullanıcıları için bildirim oluştur
     this.addNotification(
       'NEW_MESSAGE',
-      `📢 Yönetici Mesajı: ${title.substring(0, 40)}`,
+      `Yönetici Mesajı: ${title.substring(0, 40)}`,
       content.substring(0, 80) + (content.length > 80 ? '...' : ''),
       'PWA',
       'mail',

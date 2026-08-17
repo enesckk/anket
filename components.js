@@ -575,7 +575,7 @@ export function renderCustomModals(state) {
                   <input type="text" id="personnel-password" required value="Saha*${Math.floor(1000 + Math.random() * 9000)}!xK" placeholder="Güçlü şifre" class="w-full h-11 pl-3 pr-24 bg-surface-container-low border border-border rounded-xl text-xs focus:outline-none focus:border-primary font-mono font-bold text-[#01214A]"/>
                   <div class="absolute right-2 flex items-center gap-1">
                     <button type="button" id="btn-copy-personnel-password" title="Şifreyi Kopyala" class="px-2.5 py-1 bg-slate-100 hover:bg-[#01214A] hover:text-white text-slate-700 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer">
-                      <span>📋 Kopyala</span>
+                      <span>Kopyala</span>
                     </button>
                     <button type="button" id="btn-toggle-personnel-pwd-visibility" title="Göster / Gizle" class="p-1 text-slate-400 hover:text-slate-700 cursor-pointer">
                       ${iconSvg('eye', 'w-4 h-4')}
@@ -1655,7 +1655,7 @@ export function renderSurveyRunner() {
                 <label class="block text-sm font-semibold text-[#01214A]">3. Saha / Arazi Fotoğrafı</label>
                 ${state.activePhotoUploaded && state.activePhotoInfo ? `
                   <span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-1">
-                    <span>⚡ %${state.activePhotoInfo.ratio} Sıkıştırıldı</span>
+                    <span>%${state.activePhotoInfo.ratio} Sıkıştırıldı</span>
                   </span>
                 ` : ''}
               </div>
@@ -1668,7 +1668,7 @@ export function renderSurveyRunner() {
                   <div class="relative rounded-[10px] overflow-hidden bg-slate-900 aspect-video max-h-48 flex items-center justify-center">
                     <img src="${state.activePhotoData}" alt="Saha Fotoğrafı" class="w-full h-full object-cover"/>
                     <div class="absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm text-white px-2 py-0.5 rounded text-[10px] font-mono font-medium">
-                      ${state.activePhotoInfo?.originalSizeKB || '8.4 MB'} ➔ ${state.activePhotoInfo?.compressedSizeKB || '185 KB'}
+                      ${state.activePhotoInfo?.originalSizeKB || '8.4 MB'} / ${state.activePhotoInfo?.compressedSizeKB || '185 KB'}
                     </div>
                   </div>
 
@@ -2663,14 +2663,14 @@ function render4StepSurveyBuilder(state) {
 
               <div class="flex items-center gap-2 w-full sm:w-auto">
                 <select id="select-bottom-q-type" class="h-10 px-3 bg-white border border-slate-300 rounded-xl text-xs font-bold text-[#01214A] focus:outline-none focus:border-[#2A9D38] cursor-pointer flex-1 sm:flex-initial shadow-2xs">
-                  <option value="text">Aa — Metin Sorusu</option>
-                  <option value="number">123 — Sayısal Soru</option>
-                  <option value="yesno">✓ / ✗ — Evet / Hayır</option>
-                  <option value="single">○ — Tek Seçim (Radyo)</option>
-                  <option value="multi">☑ — Çoklu Seçim (Kare)</option>
-                  <option value="date">📅 — Tarih Seçimi</option>
-                  <option value="photo">📷 — Fotoğraf Yükleme</option>
-                  <option value="gps">📍 — GPS Konum Alımı</option>
+                  <option value="text">Metin Sorusu (Aa)</option>
+                  <option value="number">Sayısal Soru (123)</option>
+                  <option value="yesno">Evet / Hayır</option>
+                  <option value="single">Tek Seçim (Radyo)</option>
+                  <option value="multi">Çoklu Seçim (Kare)</option>
+                  <option value="date">Tarih Seçimi</option>
+                  <option value="photo">Fotoğraf Yükleme</option>
+                  <option value="gps">GPS Konum Alımı</option>
                 </select>
 
                 <button type="button" id="btn-bottom-add-question" class="h-10 px-4 bg-[#2A9D38] hover:bg-[#22822e] text-white font-extrabold text-xs rounded-xl transition-all shadow-sm hover:shadow flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer">
@@ -3060,7 +3060,7 @@ function renderAdminTabContent(tab, state) {
                     </div>
                     <div>
                       <div class="text-xs font-bold text-[#01214A]">${p.fullName}</div>
-                      <div class="text-[10px] text-slate-400 font-normal">${p.role === 'ADMIN' ? '🏢 Yönetici' : '📱 Saha Personeli'}</div>
+                      <div class="text-[10px] text-slate-400 font-normal">${p.role === 'ADMIN' ? 'Yönetici' : 'Saha Personeli'}</div>
                     </div>
                   </div>
                   <span class="w-2 h-2 rounded-full ${p.isActive ? 'bg-[#2A9D38]' : 'bg-red-500'}"></span>

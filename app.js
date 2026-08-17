@@ -162,7 +162,9 @@ function renderApp() {
     } catch(e) {}
     root.innerHTML = `
       <div class="min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-6 text-center space-y-4">
-        <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-2xl">✓</div>
+        <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+          <svg class="w-8 h-8 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        </div>
         <h1 class="text-xl font-bold">Şehitkamil Strateji Geliştirme Portalı</h1>
         <p class="text-xs text-slate-300 max-w-md">Sistem önbelleği temizlendi. Lütfen aşağıdaki butona basarak paneli başlatınız.</p>
         <button onclick="window.location.reload()" class="px-6 py-3 bg-[#2A9D38] hover:bg-[#22822e] text-white font-extrabold text-xs rounded-xl shadow-lg transition-all">
@@ -532,7 +534,7 @@ if (typeof window !== 'undefined' && !window.__globalListenersAttached) {
       if (userId) {
         await store.togglePersonnelStatus(userId);
         const user = store.getState().allPersonnel.find(p => p.id === userId);
-        store.setToast(user?.isActive ? `✅ '${user.fullName}' hesabı AKTİF yapıldı.` : `⚠️ '${user?.fullName || 'Personel'}' hesabı PASİF yapıldı.`, user?.isActive ? 'success' : 'info');
+        store.setToast(user?.isActive ? `'${user.fullName}' hesabı aktif yapıldı.` : `'${user?.fullName || 'Personel'}' hesabı pasif yapıldı.`, user?.isActive ? 'success' : 'info');
       }
       return;
     }
@@ -540,12 +542,14 @@ if (typeof window !== 'undefined' && !window.__globalListenersAttached) {
     // GÜÇLÜ ŞİFRE ÜRETİCİ
     const genPwdBtn = e.target.closest('#btn-generate-personnel-password');
     if (genPwdBtn) {
+      e.preventDefault();
+      e.stopPropagation();
       const pwdInput = document.getElementById('personnel-password');
       if (pwdInput) {
         const strongPwd = generateRandomStrongPassword();
         pwdInput.value = strongPwd;
         pwdInput.type = 'text';
-        store.setToast('🎲 Yeni güçlü şifre oluşturuldu!', 'info');
+        store.setToast('Yeni güçlü şifre oluşturuldu.', 'info');
       }
       return;
     }
@@ -553,11 +557,22 @@ if (typeof window !== 'undefined' && !window.__globalListenersAttached) {
     // ŞİFREYİ PANOMA KOPYALA
     const copyPwdBtn = e.target.closest('#btn-copy-personnel-password');
     if (copyPwdBtn) {
+      e.preventDefault();
+      e.stopPropagation();
       const pwdInput = document.getElementById('personnel-password');
       const val = pwdInput ? pwdInput.value : '';
       if (val) {
         navigator.clipboard.writeText(val).then(() => {
-          store.setToast('📋 Şifre panoya kopyalandı! Personele iletebilirsiniz.', 'success');
+          const originalText = copyPwdBtn.innerHTML;
+          copyPwdBtn.innerHTML = '<span>Kopyalandı</span>';
+          copyPwdBtn.classList.add('bg-emerald-100', 'text-emerald-800');
+          setTimeout(() => {
+            if (copyPwdBtn) {
+              copyPwdBtn.innerHTML = originalText;
+              copyPwdBtn.classList.remove('bg-emerald-100', 'text-emerald-800');
+            }
+          }, 2000);
+          store.setToast('Şifre panoya kopyalandı.', 'success');
         }).catch(() => {
           store.setToast('Şifre: ' + val, 'info');
         });
@@ -882,17 +897,17 @@ function validatePersonnelInput(email, phone, password, isPasswordOptional = fal
   // 1. BENZERSİZ E-POSTA KONTROLÜ
   const emailExists = allPersonnel.some(p => p.email && p.email.trim().toLowerCase() === email.trim().toLowerCase() && p.id !== userIdToExclude);
   if (emailExists) {
-    return `⚠️ '${email.trim()}' e-posta adresi sistemde zaten kayıtlı! Başka bir e-posta adresi giriniz.`;
+    return `'${email.trim()}' e-posta adresi sistemde zaten kayıtlı! Başka bir e-posta adresi giriniz.`;
   }
 
   // 2. TÜRKİYE TELEFON FORMATI KONTROLÜ (0 olmadan 5xx xxx xx xx, 10 hane)
   const trimmedPhone = phone.trim();
   if (trimmedPhone.startsWith('0')) {
-    return '⚠️ Telefon numarası başında 0 OLMADAN 5xx xxx xx xx formatında girilmelidir! (Örn: 5359998877)';
+    return 'Telefon numarası başında 0 OLMADAN 5xx xxx xx xx formatında girilmelidir! (Örn: 5359998877)';
   }
   const cleanPhone = trimmedPhone.replace(/\D/g, '');
   if (!/^5\d{9}$/.test(cleanPhone)) {
-    return '⚠️ Geçerli bir cep telefonu giriniz! 0 olmadan 5xx xxx xx xx (10 haneli) olmalıdır.';
+    return 'Geçerli bir cep telefonu giriniz! 0 olmadan 5xx xxx xx xx (10 haneli) olmalıdır.';
   }
 
   // 3. GÜÇLÜ ŞİFRE KONTROLÜ (Min 8 karakter, büyük harf, küçük harf, rakam, özel karakter)
@@ -900,7 +915,7 @@ function validatePersonnelInput(email, phone, password, isPasswordOptional = fal
     const pwd = password ? password.trim() : '';
     const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
     if (!strongPasswordRegex.test(pwd)) {
-      return '⚠️ Güçlü şifre gereklidir: En az 8 karakter, 1 büyük harf (A-Z), 1 küçük harf (a-z), 1 rakam (0-9) ve 1 özel karakter (!@#$%^&*) içermelidir.';
+      return 'Güçlü şifre gereklidir: En az 8 karakter, 1 büyük harf (A-Z), 1 küçük harf (a-z), 1 rakam (0-9) ve 1 özel karakter (!@#$%^&*) içermelidir.';
     }
   }
 
@@ -996,7 +1011,7 @@ function validatePersonnelInput(email, phone, password, isPasswordOptional = fal
       if (userId) {
         await store.togglePersonnelStatus(userId);
         const user = store.getState().allPersonnel.find(p => p.id === userId);
-        store.setToast(user?.isActive ? `✅ '${user.fullName}' hesabı AKTİF yapıldı.` : `⚠️ '${user?.fullName || 'Personel'}' hesabı PASİF yapıldı.`, user?.isActive ? 'success' : 'info');
+        store.setToast(user?.isActive ? `'${user.fullName}' hesabı aktif yapıldı.` : `'${user?.fullName || 'Personel'}' hesabı pasif yapıldı.`, user?.isActive ? 'success' : 'info');
       }
     });
   });
@@ -1661,11 +1676,11 @@ function attachPwaListeners() {
       const file = e.target.files?.[0];
       if (!file) return;
 
-      store.setToast('⏳ Fotoğraf sıkıştırılıyor ve optimize ediliyor...', 'info');
+      store.setToast('Fotoğraf sıkıştırılıyor ve optimize ediliyor...', 'info');
       try {
         const compressed = await compressImageFile(file);
         store.saveActivePhoto(compressed.base64, compressed.originalSizeKB + ' KB', compressed.compressedSizeKB + ' KB', compressed.ratio);
-        store.setToast(`⚡ Fotoğraf optimize edildi (${compressed.originalSizeKB} KB ➔ ${compressed.compressedSizeKB} KB · %${compressed.ratio} Tasarruf)`, 'success');
+        store.setToast(`Fotoğraf optimize edildi (${compressed.originalSizeKB} KB / ${compressed.compressedSizeKB} KB · %${compressed.ratio} Tasarruf)`, 'success');
       } catch (err) {
         store.setToast('Fotoğraf işlenirken bir hata oluştu: ' + err.message, 'error');
       }
@@ -1686,7 +1701,7 @@ function attachPwaListeners() {
     const answers = state.activeFormAnswers || {};
 
     if (curIndex === 0 && (!answers['q1'] || !answers['q1'].trim())) {
-      store.setToast('⚠️ Lütfen devam etmeden önce üreticinin Ad Soyad bilgisini giriniz.', 'error');
+      store.setToast('Lütfen devam etmeden önce üreticinin Ad Soyad bilgisini giriniz.', 'error');
       return;
     }
 
@@ -1937,8 +1952,8 @@ function showPwaInstallBanner() {
       <div style="font-weight:600; color:white;">Saha Anket'i Yükle</div>
       <div style="color:rgba(255,255,255,0.65); font-size:12px; margin-top:2px;">Masaüstüne ekle, çevrimdışı çalış</div>
     </div>
-    <button id="pwa-install-btn">📲 Yükle</button>
-    <button id="pwa-install-dismiss" title="Kapat">✕</button>
+    <button id="pwa-install-btn">Yükle</button>
+    <button id="pwa-install-dismiss" title="Kapat">Kapat</button>
   `;
 
   document.body.appendChild(banner);
@@ -1993,7 +2008,7 @@ function showPwaInstalledToast() {
     align-items: center;
     gap: 8px;
   `;
-  toast.innerHTML = `<span style="font-size:18px;">✅</span> Saha Anket masaüstüne eklendi!`;
+  toast.innerHTML = `Saha Anket masaüstüne eklendi!`;
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 3500);
 }
