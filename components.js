@@ -69,7 +69,7 @@ export function renderSurveyDetailedCharts(surveyOrReport, state) {
     survey = ((state && state.allSurveys) || []).find(s => s.id === report.surveyId || s.title === report.surveyTitle) || null;
   }
 
-  const surveyTitle = survey?.title || report?.surveyTitle || 'Şehitkamil Tarımsal İhtiyaç ve Arazi Değerlendirme Anketi';
+  const surveyTitle = survey?.title || report?.surveyTitle || 'Saha Anketi';
   const villageName = survey?.villageName || survey?.village || report?.villageName || 'Sinan Köyü';
   const targetCount = survey?.targetCount || report?.targetCount || 100;
 
@@ -79,76 +79,58 @@ export function renderSurveyDetailedCharts(surveyOrReport, state) {
     (report && (sub.surveyId === report.surveyId || sub.surveyTitle === report.surveyTitle))
   ).filter(s => !s.isInvalid);
 
-  const totalCount = allSubmissions.length > 0
-    ? allSubmissions.length
-    : (typeof survey?.completedCount === 'number' ? survey.completedCount : (report?.completedCount || (survey?.status === 'COMPLETED' ? targetCount : 0)));
+  const totalCount = allSubmissions.length;
   const completionRate = targetCount > 0 ? Math.min(100, Math.round((totalCount / targetCount) * 100)) : 0;
-  const createdAt = survey?.createdAt || report?.createdAt || '12 Ağustos 2026';
+  const createdAt = survey?.createdAt || report?.createdAt || 'Bugün';
 
   let rawQuestions = (survey && Array.isArray(survey.questions) && survey.questions.length > 0) ? survey.questions : null;
+  if (!rawQuestions && survey) {
+    const found = (state?.allSurveys || []).find(s => s.id === survey.id || s.title === survey.title);
+    if (found && Array.isArray(found.questions) && found.questions.length > 0) {
+      rawQuestions = found.questions;
+    }
+  }
 
   const defaultQuestions = [
     {
-      id: 'q100-1',
+      id: 'q-default-1',
       title: '1. Faaliyet Gösterdiğiniz Temel Alan Nedir?',
       type: 'single',
       options: [
-        { label: 'Besicilik / Hayvancılık', percent: 64, count: Math.round((totalCount || 100) * 0.64) },
-        { label: 'Tarımsal Çiftçilik', percent: 36, count: Math.round((totalCount || 100) * 0.36) }
+        { label: 'Besicilik / Hayvancılık' },
+        { label: 'Tarımsal Çiftçilik' },
+        { label: 'Diğer' }
       ]
     },
     {
-      id: 'q100-2',
+      id: 'q-default-2',
       title: '2. Gübre ve Tohum Desteği Talep Ediyor musunuz?',
-      type: 'yesno',
-      options: [
-        { label: 'Evet, Tohum ve Gübre İhtiyacı Var', percent: 88, count: Math.round((totalCount || 100) * 0.88) },
-        { label: 'Hayır / İhtiyaç Yok', percent: 12, count: Math.round((totalCount || 100) * 0.12) }
-      ]
+      type: 'yesno'
     },
     {
-      id: 'q100-3',
+      id: 'q-default-3',
       title: '3. Arazi Büyüklüğünüz (Dönüm)',
-      type: 'number',
-      averageVal: '48.5 Dönüm (Bölge Ortalaması)',
-      options: [
-        { label: '0 - 25 Dönüm', percent: 30, count: Math.round((totalCount || 100) * 0.30) },
-        { label: '26 - 50 Dönüm', percent: 52, count: Math.round((totalCount || 100) * 0.52) },
-        { label: '50+ Dönüm Üzeri', percent: 18, count: Math.round((totalCount || 100) * 0.18) }
-      ]
+      type: 'number'
     },
     {
-      id: 'q100-4',
-      title: '4. Mevcut Sulama Tesisatı Durumu Yeterli mi?',
-      type: 'yesno',
-      options: [
-        { label: 'Yetersiz / Yenileme ve Bakım Gerekli', percent: 72, count: Math.round((totalCount || 100) * 0.72) },
-        { label: 'Yeterli / Sorun Yok', percent: 28, count: Math.round((totalCount || 100) * 0.28) }
-      ]
-    },
-    {
-      id: 'q100-5',
-      title: '5. Saha Notları ve Üretici Talep Özetleri',
-      type: 'text',
-      textNotes: [
-        'Hayvancılıkla uğraşan üreticiler yem desteği ve veteriner kontrolü talep ediyor.',
-        'Sulama hattında basınç düşüklüğü ve boru deformasyonu tespit edildi.',
-        'Sertifikalı buğday tohumu dağıtımı için ön talep kayıtları tamamlandı.'
-      ]
+      id: 'q-default-4',
+      title: '4. Saha Gözlem ve Talep Notları',
+      type: 'text'
     }
   ];
 
-  const questions = rawQuestions || defaultQuestions;
+  const questions = (rawQuestions && rawQuestions.length > 0) ? rawQuestions : defaultQuestions;
 
   return `
-    <div class="space-y-6 text-slate-800">
-      <!-- MİNİMAL METRİK PANOLARI -->
+    <div class="space-y-6 text-slate-800 font-sans">
+      
+      <!-- CANLI İLERLEME METRİK PANOLARI -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
         <div class="p-4 bg-[#01214A] text-white rounded-[14px] space-y-1">
           <span class="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">TOPLAM CEVAP</span>
           <div class="text-xl font-extrabold text-emerald-400">${totalCount} / ${targetCount}</div>
           <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
-            <div class="bg-[#2A9D38] h-full rounded-full transition-all" style="width: ${completionRate}%"></div>
+            <div class="bg-[#2A9D38] h-full rounded-full transition-all duration-300" style="width: ${completionRate}%"></div>
           </div>
           <span class="text-[10px] text-slate-300 font-normal block mt-1">%${completionRate} Katılım Oranı</span>
         </div>
@@ -156,21 +138,38 @@ export function renderSurveyDetailedCharts(surveyOrReport, state) {
         <div class="p-4 bg-white border border-[#E9EDF2] rounded-[14px] space-y-1 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
           <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">HEDEF BÖLGE</span>
           <div class="text-base font-bold text-[#01214A] truncate">${villageName}</div>
-          <span class="text-[10px] text-slate-500 font-normal block">Kategori: ${survey?.category || 'Tarım'}</span>
+          <span class="text-[10px] text-slate-500 font-normal block">Kategori: ${survey?.category || report?.category || 'Tarım'}</span>
         </div>
 
         <div class="p-4 bg-white border border-[#E9EDF2] rounded-[14px] space-y-1 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
           <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">SORU SAYISI</span>
           <div class="text-xl font-bold text-[#01214A]">${questions.length} Soru</div>
-          <span class="text-[10px] text-[#2A9D38] font-semibold block">Soru Bazında Analiz</span>
+          <span class="text-[10px] text-[#2A9D38] font-semibold block">Soru Bazlı Canlı Analiz</span>
         </div>
 
         <div class="p-4 bg-white border border-[#E9EDF2] rounded-[14px] space-y-1 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
-          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">DURUM</span>
-          <div class="text-sm font-bold text-[#01214A] truncate">${survey?.status === 'COMPLETED' ? 'Tamamlandı' : 'Sahada Aktif'}</div>
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">SAHA DURUMU</span>
+          <div class="text-sm font-bold ${totalCount === 0 ? 'text-amber-700' : 'text-emerald-700'} truncate">
+            ${totalCount === 0 ? 'Yanıt Bekleniyor' : (completionRate >= 100 ? 'Tamamlandı (%100)' : `Sahada Toplanıyor (%${completionRate})`)}
+          </div>
           <span class="text-[10px] text-slate-400 font-normal block">${createdAt}</span>
         </div>
       </div>
+
+      ${totalCount === 0 ? `
+        <!-- BILGILENDIRME: HENUZ YANIT YOKSA GORUNECEK TEMIZ KART -->
+        <div class="p-4 bg-slate-50 border border-slate-200/80 rounded-[12px] flex items-center justify-between text-xs">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center font-bold shrink-0">
+              ${iconSvg('poll', 'w-4 h-4 text-slate-600')}
+            </div>
+            <div>
+              <strong class="text-[#01214A] font-bold block">Henüz Sahadan Yanıt Toplanmadı (0 / ${targetCount} Yanıt - %0)</strong>
+              <span class="text-slate-500 font-normal">Saha personelleri bu anketi mobil cihazlarından vatandaşlara uyguladıkça soruların aldığı cevaplar, sayılar ve yüzdelik oranlar burada anlık olarak canlı güncellenecektir.</span>
+            </div>
+          </div>
+        </div>
+      ` : ''}
 
       <!-- DETAYLI SORU BAZLI HAM VE İSTATİSTİKSEL SONUÇLAR -->
       <div class="space-y-4">
@@ -179,21 +178,22 @@ export function renderSurveyDetailedCharts(surveyOrReport, state) {
             ${iconSvg('poll', 'w-4 h-4 text-[#2A9D38]')}
             <span>Her Sorunun Aldığı Cevaplar, Sayılar ve Yüzdelik Dağılımlar</span>
           </h4>
-          <span class="text-xs font-semibold text-slate-500">${questions.length} Soru Analiz Edildi</span>
+          <span class="text-xs font-semibold text-slate-500">${questions.length} Soru Bulunuyor</span>
         </div>
 
         <div class="grid grid-cols-1 gap-4">
           ${questions.map((q, qIdx) => {
             const qTitle = q.title || `Soru ${qIdx + 1}`;
-            const qType = q.type || 'single';
+            const qType = q.type || ((q.options && q.options.length > 0) ? 'single' : 'text');
             
             // Submissions that answered this specific question
             const answeredSubs = allSubmissions.filter(s => {
-              const val = s.answers && (s.answers[q.id] || s.answers[q.key] || s.answers[q.title]);
+              if (!s || !s.answers) return false;
+              const val = s.answers[q.id] || s.answers[q.key] || s.answers[q.title] || s.answers[String(qIdx + 1)];
               return val !== undefined && val !== null && String(val).trim() !== '';
             });
 
-            const qResponseCount = answeredSubs.length > 0 ? answeredSubs.length : (allSubmissions.length > 0 ? allSubmissions.length : (totalCount || 0));
+            const qResponseCount = answeredSubs.length;
 
             // Compute options distribution
             let computedOptions = [];
@@ -201,24 +201,18 @@ export function renderSurveyDetailedCharts(surveyOrReport, state) {
 
             if (q.options && q.options.length > 0) {
               computedOptions = q.options.map((opt, oIdx) => {
-                const optLabel = opt.label || opt.value || `Seçenek ${oIdx + 1}`;
+                const optLabel = typeof opt === 'string' ? opt : (opt.label || opt.value || `Seçenek ${oIdx + 1}`);
                 let count = 0;
-                if (answeredSubs.length > 0) {
+                if (qResponseCount > 0) {
                   answeredSubs.forEach(s => {
-                    const ansVal = String(s.answers[q.id] || s.answers[q.key] || s.answers[q.title] || '');
+                    const ansVal = String(s.answers[q.id] || s.answers[q.key] || s.answers[q.title] || s.answers[String(qIdx + 1)] || '');
                     if (ansVal.toLowerCase().includes(optLabel.toLowerCase()) || ansVal.toLowerCase() === String(opt.value || '').toLowerCase()) {
                       count++;
                     }
                   });
-                } else if (typeof opt.count === 'number') {
-                  count = opt.count;
-                } else if (typeof opt.percent === 'number') {
-                  count = Math.round((opt.percent / 100) * (totalCount || 100));
-                } else {
-                  count = oIdx === 0 ? Math.round(qResponseCount * 0.6) : Math.round(qResponseCount * 0.4);
                 }
 
-                const percent = qResponseCount > 0 ? Math.min(100, Math.round((count / qResponseCount) * 100)) : (opt.percent || 0);
+                const percent = qResponseCount > 0 ? Math.min(100, Math.round((count / qResponseCount) * 100)) : 0;
 
                 return {
                   label: optLabel,
@@ -230,31 +224,40 @@ export function renderSurveyDetailedCharts(surveyOrReport, state) {
             } else if (qType === 'yesno') {
               let yesCount = 0;
               let noCount = 0;
-              if (answeredSubs.length > 0) {
+              if (qResponseCount > 0) {
                 answeredSubs.forEach(s => {
-                  const ansVal = String(s.answers[q.id] || s.answers[q.key] || s.answers[q.title] || '').toLowerCase();
+                  const ansVal = String(s.answers[q.id] || s.answers[q.key] || s.answers[q.title] || s.answers[String(qIdx + 1)] || '').toLowerCase();
                   if (ansVal.includes('evet') || ansVal === 'true' || ansVal === 'yes') yesCount++;
                   if (ansVal.includes('hayir') || ansVal.includes('hayır') || ansVal === 'false' || ansVal === 'no') noCount++;
                 });
               }
               const totalYesNo = yesCount + noCount;
-              const yesPercent = totalYesNo > 0 ? Math.round((yesCount / totalYesNo) * 100) : 75;
-              const noPercent = totalYesNo > 0 ? (100 - yesPercent) : 25;
+              const yesPercent = totalYesNo > 0 ? Math.round((yesCount / totalYesNo) * 100) : 0;
+              const noPercent = totalYesNo > 0 ? Math.round((noCount / totalYesNo) * 100) : 0;
 
               computedOptions = [
-                { label: 'Evet / İhtiyaç Var / Katılıyorum', count: totalYesNo > 0 ? yesCount : Math.round(qResponseCount * 0.75), percent: yesPercent, color: 'bg-emerald-600' },
-                { label: 'Hayır / İhtiyaç Yok / Katılmıyorum', count: totalYesNo > 0 ? noCount : Math.round(qResponseCount * 0.25), percent: noPercent, color: 'bg-amber-500' }
+                { label: 'Evet / Katılıyorum / İhtiyaç Var', count: yesCount, percent: yesPercent, color: 'bg-emerald-600' },
+                { label: 'Hayır / Katılmıyorum / İhtiyaç Yok', count: noCount, percent: noPercent, color: 'bg-amber-500' }
               ];
+            }
+
+            // Numeric average calculation
+            let calculatedAverage = null;
+            if (qType === 'number' && qResponseCount > 0) {
+              const numericValues = answeredSubs.map(s => parseFloat(s.answers[q.id] || s.answers[q.key] || s.answers[q.title] || s.answers[String(qIdx + 1)])).filter(n => !isNaN(n));
+              if (numericValues.length > 0) {
+                const sum = numericValues.reduce((a, b) => a + b, 0);
+                const avg = (sum / numericValues.length).toFixed(1);
+                calculatedAverage = `${avg} (Bölgesel Ortalama - ${numericValues.length} Katılımcı)`;
+              }
             }
 
             // Text Responses
             const rawTexts = answeredSubs.map(s => ({
-              text: String(s.answers[q.id] || s.answers[q.key] || s.answers[q.title] || ''),
+              text: String(s.answers[q.id] || s.answers[q.key] || s.answers[q.title] || s.answers[String(qIdx + 1)] || ''),
               user: s.fieldUserName || 'Saha Personeli',
               time: s.submittedAt ? new Date(s.submittedAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : ''
             })).filter(t => t.text.trim().length > 0);
-
-            const displayNotes = rawTexts.length > 0 ? rawTexts : (q.textNotes ? q.textNotes.map(n => ({ text: n, user: 'Saha Raporu', time: 'Kaydedildi' })) : []);
 
             return `
               <div class="p-5 bg-white rounded-[16px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-4">
@@ -273,17 +276,17 @@ export function renderSurveyDetailedCharts(surveyOrReport, state) {
                   </div>
 
                   <div class="flex items-center gap-2 shrink-0">
-                    <span class="px-2.5 py-1 rounded-[8px] bg-[#F8FAFC] border border-[#E9EDF2] text-xs font-semibold text-[#01214A]">
+                    <span class="px-2.5 py-1 rounded-[8px] ${qResponseCount > 0 ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-[#F8FAFC] text-slate-500 border border-[#E9EDF2]'} text-xs font-semibold">
                       ${qResponseCount} Yanıt Alındı
                     </span>
                   </div>
                 </div>
 
                 <!-- NUMERIC SUMMARY IF APPLICABLE -->
-                ${q.averageVal ? `
+                ${calculatedAverage ? `
                   <div class="p-3 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs font-semibold text-slate-700 flex items-center justify-between">
                     <span class="text-slate-500">Bölgesel Ortalama / Değer Özeti:</span>
-                    <span class="text-[#00A0DF] font-bold">${q.averageVal}</span>
+                    <span class="text-[#00A0DF] font-bold">${calculatedAverage}</span>
                   </div>
                 ` : ''}
 
@@ -310,20 +313,24 @@ export function renderSurveyDetailedCharts(surveyOrReport, state) {
                 ` : ''}
 
                 <!-- RAW TEXTUAL RESPONSES IF TEXT QUESTION -->
-                ${displayNotes.length > 0 ? `
+                ${(qType === 'text' || computedOptions.length === 0) ? `
                   <div class="space-y-2 pt-1">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Gelen Ham Saha Cevapları (${displayNotes.length}):</span>
-                    <div class="max-h-48 overflow-y-auto space-y-1.5 pr-1">
-                      ${displayNotes.map(nt => `
-                        <div class="p-2.5 bg-[#F8FAFC] rounded-[8px] border border-[#E9EDF2] text-xs space-y-0.5">
-                          <div class="flex items-center justify-between text-[10px] text-slate-400 font-medium">
-                            <span>${nt.user}</span>
-                            <span>${nt.time}</span>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Gelen Ham Saha Cevapları (${rawTexts.length}):</span>
+                    ${rawTexts.length === 0 ? `
+                      <p class="text-xs text-slate-400 font-normal italic">Bu açık uçlu soru için henüz saha yanıtı girilmedi.</p>
+                    ` : `
+                      <div class="max-h-48 overflow-y-auto space-y-1.5 pr-1">
+                        ${rawTexts.map(nt => `
+                          <div class="p-2.5 bg-[#F8FAFC] rounded-[8px] border border-[#E9EDF2] text-xs space-y-0.5">
+                            <div class="flex items-center justify-between text-[10px] text-slate-400 font-medium">
+                              <span>${nt.user}</span>
+                              <span>${nt.time}</span>
+                            </div>
+                            <p class="text-slate-800 font-medium">${nt.text}</p>
                           </div>
-                          <p class="text-slate-800 font-medium">${nt.text}</p>
-                        </div>
-                      `).join('')}
-                    </div>
+                        `).join('')}
+                      </div>
+                    `}
                   </div>
                 ` : ''}
 
@@ -1029,6 +1036,11 @@ export function renderCustomModals(state) {
   if (state.activeModal.type === 'view_report') {
     const report = state.activeModal.report || (state.reports || [])[0];
     const survey = state.activeModal.survey || (state.allSurveys || []).find(s => s.id === report?.surveyId) || (state.allSurveys || [])[0];
+    const allSubs = (state.submissions || []).filter(sub => (survey && (sub.surveyId === survey.id || sub.surveyTitle === survey.title)) || (report && (sub.surveyId === report.surveyId || sub.surveyTitle === report.surveyTitle))).filter(s => !s.isInvalid);
+    const target = survey?.targetCount || report?.targetCount || 100;
+    const completed = allSubs.length;
+    const percent = target > 0 ? Math.min(100, Math.round((completed / target) * 100)) : 0;
+    const isCompleted = survey?.status === 'COMPLETED' || percent >= 100;
 
     return `
       <div class="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-4">
@@ -1043,12 +1055,14 @@ export function renderCustomModals(state) {
               <div class="space-y-0.5">
                 <div class="flex items-center gap-2 flex-wrap">
                   <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-[#01214A] text-white uppercase tracking-wider">T.C. ŞEHİTKAMİL BELEDİYESİ</span>
-                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">%100 SAHA KATILIMI • ONAYLI RAPOR</span>
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${isCompleted ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-blue-100 text-blue-800 border border-blue-300'}">
+                    ${isCompleted ? '%100 SAHA KATILIMI • ONAYLI RAPOR' : `CANLI SAHA TAKİBİ • %${percent} (${completed}/${target} YANIT)`}
+                  </span>
                 </div>
-                <h3 class="text-lg font-black text-[#01214A] leading-snug tracking-tight">${survey ? survey.title : (report ? report.surveyTitle : 'Şehitkamil Tarımsal İhtiyaç Anketi')}</h3>
+                <h3 class="text-lg font-black text-[#01214A] leading-snug tracking-tight">${survey ? survey.title : (report ? report.surveyTitle : 'Saha Anketi')}</h3>
               </div>
             </div>
-            <button type="button" id="btn-close-custom-modal" class="p-2 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition-colors">
+            <button type="button" id="btn-close-custom-modal" class="p-2 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer">
               ${iconSvg('close', 'w-5 h-5')}
             </button>
           </div>
@@ -3456,10 +3470,10 @@ function renderAdminTabContent(tab, state) {
                   <p class="text-xs text-slate-500 font-normal leading-relaxed">${s.description || 'Açıklama belirtilmedi.'}</p>
                 </div>
 
-                <div class="space-y-1.5 pt-2">
+                <div data-survey-id="${s.id}" class="btn-view-live-results space-y-1.5 pt-2 cursor-pointer group" title="Canlı soru dağılımlarını ve gelen cevapları gör">
                   <div class="flex justify-between text-xs text-slate-500 font-normal">
-                    <span>İlerleme</span>
-                    <span class="font-semibold text-[#01214A]">${completed} / ${target} · %${percent}</span>
+                    <span class="group-hover:text-[#2A9D38] transition-colors font-medium">İlerleme & Canlı Yanıtlar</span>
+                    <span class="font-semibold text-[#01214A] group-hover:text-[#2A9D38] transition-colors">${completed} / ${target} · %${percent}</span>
                   </div>
                   <div class="w-full bg-[#F1F5F9] h-1.5 rounded-full overflow-hidden">
                     <div class="bg-[#2A9D38] h-full rounded-full transition-all duration-300" style="width: ${percent}%"></div>
@@ -3467,17 +3481,30 @@ function renderAdminTabContent(tab, state) {
                 </div>
 
                 <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-[#F1F5F9]">
-                  <button data-survey-id="${s.id}" class="btn-view-live-results h-9 px-3 bg-emerald-50 hover:bg-[#2A9D38] text-[#2A9D38] hover:text-white border border-emerald-200 font-semibold text-xs rounded-[10px] transition-colors flex items-center gap-1.5 cursor-pointer">
+                  <button type="button" data-survey-id="${s.id}" class="btn-view-live-results h-9 px-3 bg-emerald-50 hover:bg-[#2A9D38] text-[#2A9D38] hover:text-white border border-emerald-200 font-semibold text-xs rounded-[10px] transition-colors flex items-center gap-1.5 cursor-pointer" title="Soru bazlı canlı cevapları gör">
                     ${iconSvg('poll', 'w-3.5 h-3.5')}
                     <span>Cevapları Gör</span>
                   </button>
-                  <div class="flex items-center gap-2">
+                  <div class="flex items-center gap-1.5">
                     ${s.status === 'ACTIVE' ? `
-                      <button data-survey-id="${s.id}" class="btn-open-assign-survey-modal h-9 px-3 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[10px] flex items-center gap-1">Atama Yap</button>
+                      <button type="button" data-survey-id="${s.id}" class="btn-open-assign-survey-modal h-9 px-3 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[10px] flex items-center gap-1 cursor-pointer">
+                        ${iconSvg('send', 'w-3.5 h-3.5 text-white')}
+                        <span>Atama Yap</span>
+                      </button>
+                    ` : s.status === 'COMPLETED' ? `
+                      <button type="button" data-survey-id="${s.id}" class="btn-view-survey-report h-9 px-3 bg-[#01214A] hover:bg-[#082d5e] text-white font-semibold text-xs rounded-[10px] transition-colors cursor-pointer flex items-center gap-1">
+                        ${iconSvg('assessment', 'w-3.5 h-3.5 text-white')}
+                        <span>Rapor</span>
+                      </button>
                     ` : `
-                      <button data-survey-id="${s.id}" class="btn-view-survey-report h-9 px-3.5 bg-[#2A9D38] text-white font-semibold text-xs rounded-[10px]">Raporu Gör</button>
+                      <button type="button" data-survey-id="${s.id}" class="btn-open-review-survey-modal h-9 px-3 bg-[#01214A] hover:bg-[#082d5e] text-white font-semibold text-xs rounded-[10px] cursor-pointer">İncele</button>
                     `}
-                    <button data-survey-id="${s.id}" class="btn-admin-clone-survey h-9 px-3 bg-white border border-[#E9EDF2] text-slate-700 text-xs rounded-[10px]">Kopyala</button>
+                    <button type="button" data-survey-id="${s.id}" class="btn-admin-clone-survey h-9 px-2.5 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 text-xs rounded-[10px] cursor-pointer">Kopyala</button>
+                    ${s.isArchived ? `
+                      <button type="button" data-survey-id="${s.id}" class="btn-unarchive-survey h-9 px-2.5 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 text-xs rounded-[10px] cursor-pointer">Yayına Al</button>
+                    ` : `
+                      <button type="button" data-survey-id="${s.id}" class="btn-archive-survey h-9 px-2.5 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-500 hover:text-slate-800 text-xs rounded-[10px] cursor-pointer">Arşivle</button>
+                    `}
                   </div>
                 </div>
               </div>
