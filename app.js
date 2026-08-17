@@ -201,8 +201,17 @@ function attachGlobalSystemListeners() {
 }
 
 // GLOBAL DELEGATED DOCUMENT LISTENERS (GUARANTEES DYNAMIC MODALS WORK 100%)
-if (!window.__globalListenersAttached) {
+if (typeof window !== 'undefined' && !window.__globalListenersAttached) {
   window.__globalListenersAttached = true;
+
+  // Handle background/OS notification clicks relayed by Service Worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'NOTIFICATION_CLICKED' && event.data.notifId) {
+        store.handleNotificationClick(event.data.notifId);
+      }
+    });
+  }
 
   document.addEventListener('click', async (e) => {
     const logoutBtn = e.target.closest('#btn-global-logout, #btn-logout');
@@ -476,7 +485,7 @@ if (!window.__globalListenersAttached) {
       return;
     }
 
-    const notifItem = e.target.closest('.notif-item');
+    const notifItem = e.target.closest('.notif-item, .pwa-notif-item');
     if (notifItem) {
       const notifId = notifItem.getAttribute('data-notif-id');
       if (notifId) store.handleNotificationClick(notifId);
@@ -1830,20 +1839,22 @@ function attachPwaListeners() {
 // ─── PWA Install Prompt ──────────────────────────────────────────────────────
 let _pwaInstallPrompt = null;
 
-window.addEventListener('beforeinstallprompt', (e) => {
-  // Tarayıcının varsayılan mini-banner'ını engelle
-  e.preventDefault();
-  _pwaInstallPrompt = e;
-  console.log('[PWA] Install prompt captured. Showing install button...');
-  showPwaInstallBanner();
-});
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeinstallprompt', (e) => {
+    // Tarayıcının varsayılan mini-banner'ını engelle
+    e.preventDefault();
+    _pwaInstallPrompt = e;
+    console.log('[PWA] Install prompt captured. Showing install button...');
+    showPwaInstallBanner();
+  });
 
-window.addEventListener('appinstalled', () => {
-  console.log('[PWA] App installed successfully!');
-  _pwaInstallPrompt = null;
-  hidePwaInstallBanner();
-  showPwaInstalledToast();
-});
+  window.addEventListener('appinstalled', () => {
+    console.log('[PWA] App installed successfully!');
+    _pwaInstallPrompt = null;
+    hidePwaInstallBanner();
+    showPwaInstalledToast();
+  });
+}
 
 function showPwaInstallBanner() {
   // Eğer zaten varsa tekrar ekleme
@@ -2000,9 +2011,11 @@ function boot() {
   }
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', boot);
-} else {
-  boot();
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
 }
 

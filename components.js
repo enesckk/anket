@@ -3126,7 +3126,15 @@ function renderAdminTabContent(tab, state) {
                         <p class="text-slate-400 text-xs">Filtreleri değiştirerek farklı anketleri görüntüleyebilirsiniz.</p>
                       </td>
                     </tr>
-                  ` : filteredSurveys.map(s => `
+                  ` : filteredSurveys.map(s => {
+                    const surveySubmissions = (state.submissions || []).filter(sub => (sub.surveyId === s.id || sub.surveyTitle === s.title) && !sub.isInvalid);
+                    const target = s.targetCount || 100;
+                    const completed = surveySubmissions.length > 0
+                      ? surveySubmissions.length
+                      : (typeof s.completedCount === 'number' ? s.completedCount : (s.status === 'COMPLETED' ? target : 0));
+                    const percent = target > 0 ? Math.min(100, Math.round((completed / target) * 100)) : 0;
+
+                    return `
                     <tr class="hover:bg-slate-50/60 transition-colors duration-150">
                       <td class="py-4 px-5">
                         <div class="font-semibold text-[#01214A] leading-snug">${s.title}</div>
@@ -3148,9 +3156,9 @@ function renderAdminTabContent(tab, state) {
                       </td>
                       <td class="py-4 px-5">
                         <div class="space-y-1 max-w-[140px]">
-                          <div class="text-[11px] font-semibold text-[#01214A]">${s.status === 'COMPLETED' ? '100 / 100 · %100' : '320 / 500 · %64'}</div>
+                          <div class="text-[11px] font-semibold text-[#01214A]">${completed} / ${target} · %${percent}</div>
                           <div class="w-full bg-[#F1F5F9] h-1 rounded-full overflow-hidden">
-                            <div class="bg-[#2A9D38] h-full rounded-full" style="width: ${s.status === 'COMPLETED' ? 100 : 64}%"></div>
+                            <div class="bg-[#2A9D38] h-full rounded-full transition-all duration-300" style="width: ${percent}%"></div>
                           </div>
                         </div>
                       </td>
@@ -3188,7 +3196,8 @@ function renderAdminTabContent(tab, state) {
                         </div>
                       </td>
                     </tr>
-                  `).join('')}
+                  `;
+                  }).join('')}
                 </tbody>
               </table>
             </div>
@@ -3196,7 +3205,15 @@ function renderAdminTabContent(tab, state) {
         ` : `
           <!-- SECONDARY CARD GRID VIEW (SECTION 8) -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            ${filteredSurveys.map(s => `
+            ${filteredSurveys.map(s => {
+              const surveySubmissions = (state.submissions || []).filter(sub => (sub.surveyId === s.id || sub.surveyTitle === s.title) && !sub.isInvalid);
+              const target = s.targetCount || 100;
+              const completed = surveySubmissions.length > 0
+                ? surveySubmissions.length
+                : (typeof s.completedCount === 'number' ? s.completedCount : (s.status === 'COMPLETED' ? target : 0));
+              const percent = target > 0 ? Math.min(100, Math.round((completed / target) * 100)) : 0;
+
+              return `
               <div class="bg-white p-6 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-4 flex flex-col justify-between hover:border-[#D0D5DD] transition-colors duration-150">
                 <div class="space-y-2">
                   <div class="flex justify-between items-start gap-3">
@@ -3214,12 +3231,23 @@ function renderAdminTabContent(tab, state) {
                   <p class="text-xs text-slate-500 font-normal leading-relaxed">${s.description || 'Açıklama belirtilmedi.'}</p>
                 </div>
 
+                <div class="space-y-1.5 pt-2">
+                  <div class="flex justify-between text-xs text-slate-500 font-normal">
+                    <span>İlerleme</span>
+                    <span class="font-semibold text-[#01214A]">${completed} / ${target} · %${percent}</span>
+                  </div>
+                  <div class="w-full bg-[#F1F5F9] h-1.5 rounded-full overflow-hidden">
+                    <div class="bg-[#2A9D38] h-full rounded-full transition-all duration-300" style="width: ${percent}%"></div>
+                  </div>
+                </div>
+
                 <div class="flex items-center justify-between gap-2 pt-3 border-t border-[#F1F5F9]">
                   <button data-survey-id="${s.id}" class="btn-view-survey-report h-9 px-3.5 bg-[#2A9D38] text-white font-semibold text-xs rounded-[10px]">Raporu Gör</button>
                   <button data-survey-id="${s.id}" class="btn-admin-clone-survey h-9 px-3 bg-white border border-[#E9EDF2] text-slate-700 text-xs rounded-[10px]">Kopyala</button>
                 </div>
               </div>
-            `).join('')}
+            `;
+            }).join('')}
           </div>
         `}
       `;

@@ -360,6 +360,7 @@ class Store {
       this.state.pwaScreen = 'home';
       this.setToast(`Giriş Başarılı! Hoş geldiniz, ${matched.fullName} (${isUserAdmin ? 'Yönetici Paneli' : 'Saha Personeli PWA'})`, 'success');
       this.saveState();
+      this.requestNotificationPermission();
     }
   }
 
@@ -406,6 +407,29 @@ class Store {
         this.state.allPersonnel = personnel;
       }
 
+      // Fetch Messages & check for new incoming unread messages
+      const messages = await this.apiFetch('/messages').catch(() => null);
+      if (Array.isArray(messages)) {
+        const existingIds = new Set((this.state.messages || []).map(m => m.id));
+        const newIncoming = messages.filter(m => !existingIds.has(m.id));
+        if (newIncoming.length > 0) {
+          newIncoming.forEach(msg => {
+            if (msg.isUnread) {
+              const targetRole = msg.direction === 'TO_ADMIN' ? 'ADMIN' : 'PWA';
+              this.addNotification(
+                'NEW_MESSAGE',
+                `📩 Yeni Mesaj: ${msg.sender || 'Kullanıcı'}`,
+                msg.title || msg.content || 'Yeni bir mesajınız var.',
+                targetRole,
+                'mail',
+                'blue'
+              );
+            }
+          });
+        }
+        this.state.messages = messages;
+      }
+
       this.saveState();
     } catch (e) {
       // Sessizce başarısız ol (offline mod)
@@ -415,6 +439,7 @@ class Store {
   setRole(role) {
     this.state.currentRole = role;
     this.saveState();
+    this.requestNotificationPermission();
     this.fetchInitialData();
   }
 
@@ -905,6 +930,74 @@ class Store {
     this.saveState();
   }
 
+  async requestNotificationPermission() {
+    if (typeof window === 'undefined' || !('Notification' in window)) return 'unsupported';
+    if (Notification.permission === 'granted') return 'granted';
+    try {
+      const permission = await Notification.requestPermission();
+      return permission;
+    } catch (e) {
+      return 'denied';
+    }
+  }
+
+  showNativeOsNotification(newNotif) {
+    if (typeof window === 'undefined' || !('Notification' in window)) return;
+    if (Notification.permission !== 'granted') {
+      // If default, ask politely in supported user contexts
+      return;
+    }
+
+    const title = newNotif.title || 'Saha Anket Bildirimi';
+    const options = {
+      body: newNotif.message || '',
+      icon: './logo_saha_anket.png',
+      badge: './logo_saha_anket.png',
+      tag: newNotif.id || ('notif-' + Date.now()),
+      renotify: true,
+      vibrate: [200, 100, 200],
+      data: {
+        notifId: newNotif.id,
+        type: newNotif.type,
+        url: typeof window !== 'undefined' ? window.location.href : '/'
+      }
+    };
+
+    // Priority 1: Service Worker showNotification (Windows, Android, Apple iOS 16.4+ PWA)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(reg => {
+        if (reg && reg.showNotification) {
+          reg.showNotification(title, options);
+        } else {
+          this._fallbackWindowNotification(title, options, newNotif.id);
+        }
+      }).catch(() => {
+        this._fallbackWindowNotification(title, options, newNotif.id);
+      });
+    } else {
+      this._fallbackWindowNotification(title, options, newNotif.id);
+    }
+  }
+
+  _fallbackWindowNotification(title, options, notifId) {
+    try {
+      const n = new Notification(title, {
+        body: options.body,
+        icon: options.icon,
+        tag: options.tag
+      });
+      n.onclick = () => {
+        if (typeof window !== 'undefined') {
+          window.focus();
+          this.handleNotificationClick(notifId);
+        }
+        n.close();
+      };
+    } catch (e) {
+      // Ignored for environments requiring ServiceWorker showNotification
+    }
+  }
+
   addNotification(type, title, message, targetRole = 'ALL', icon = 'bell', color = 'emerald') {
     if (!Array.isArray(this.state.notifications)) {
       this.state.notifications = [];
@@ -923,18 +1016,25 @@ class Store {
     };
     this.state.notifications.unshift(newNotif);
     this.playNotificationChime();
+    this.showNativeOsNotification(newNotif);
     this.saveState();
   }
 
   togglePwaNotifications() {
     this.state.showPwaNotifications = !this.state.showPwaNotifications;
     this.state.showAdminNotifications = false;
+    if (this.state.showPwaNotifications) {
+      this.requestNotificationPermission();
+    }
     this.notify();
   }
 
   toggleAdminNotifications() {
     this.state.showAdminNotifications = !this.state.showAdminNotifications;
     this.state.showPwaNotifications = false;
+    if (this.state.showAdminNotifications) {
+      this.requestNotificationPermission();
+    }
     this.notify();
   }
 
@@ -968,7 +1068,14 @@ class Store {
     const notifType = notif.type;
     const role = this.state.currentRole;
 
-    if (notifType === 'NEW_SURVEY' || notifType === 'SURVEY_REVISED') {
+    if (notifType === 'NEW_MESSAGE' || notifType === 'MESSAGE') {
+      if (role === 'admin') {
+        this.state.adminTab = 'messages';
+      } else {
+        this.state.pwaScreen = 'messages';
+      }
+      this.setToast('Yönetsel mesajlara yönlendirildiniz.', 'info');
+    } else if (notifType === 'NEW_SURVEY' || notifType === 'SURVEY_REVISED' || notifType === 'SURVEY_PENDING') {
       // İlgili onay bekleyen anketi bul
       const targetSurvey = (this.state.allSurveys || []).find(s => 
         (notif.surveyId && s.id === notif.surveyId) ||
@@ -986,19 +1093,47 @@ class Store {
       } else {
         this.state.pwaScreen = 'my_surveys';
       }
-    } else if (notifType === 'NEW_MESSAGE') {
-      if (role === 'admin') {
-        this.state.adminTab = 'messages';
-      } else {
-        this.state.pwaScreen = 'messages';
-      }
-      this.setToast('Yönetsel mesajlara yönlendirildiniz.', 'info');
-    } else if (notifType === 'NEW_ASSIGNMENT') {
-      this.state.pwaScreen = 'home';
-      this.setToast('Yeni saha göreviniz görüntülendi.', 'info');
     } else if (notifType === 'SURVEY_APPROVED') {
-      this.state.pwaScreen = 'my_surveys';
+      if (role === 'admin') {
+        this.state.adminTab = 'surveys';
+      } else {
+        this.state.pwaScreen = 'my_surveys';
+      }
       this.setToast('Onaylanan anketleriniz listeleniyor.', 'success');
+    } else if (notifType === 'SURVEY_REJECTED') {
+      if (role === 'admin') {
+        this.state.adminTab = 'surveys';
+      } else {
+        this.state.pwaScreen = 'my_surveys';
+      }
+      this.setToast('Anketleriniz listeleniyor.', 'info');
+    } else if (notifType === 'NEW_ASSIGNMENT' || notifType === 'ASSIGNMENT') {
+      if (role === 'admin') {
+        this.state.adminTab = 'assignments';
+      } else {
+        this.state.pwaScreen = 'home';
+      }
+      this.setToast('Saha görevleri ekranına yönlendirildiniz.', 'info');
+    } else if (notifType === 'NEW_SUBMISSION' || notifType === 'SUBMISSION') {
+      if (role === 'admin') {
+        this.state.adminTab = 'responses';
+      } else {
+        this.state.pwaScreen = 'home';
+      }
+      this.setToast('Anket yanıtları ekranına yönlendirildiniz.', 'info');
+    } else if (notifType === 'REPORT_GENERATED' || notifType === 'NEW_REPORT') {
+      if (role === 'admin') {
+        this.state.adminTab = 'reports';
+      } else {
+        this.state.pwaScreen = 'home';
+      }
+      this.setToast('Analitik raporlara yönlendirildiniz.', 'info');
+    } else {
+      if (role === 'admin') {
+        this.state.adminTab = 'dashboard';
+      } else {
+        this.state.pwaScreen = 'home';
+      }
     }
 
     this.saveState();

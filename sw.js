@@ -144,33 +144,66 @@ async function syncOfflineSurveys() {
   }
 }
 
-// ─── PUSH NOTIFICATIONS (Gelecek özellik) ──────────────────────────────────
+// ─── PUSH & NATIVE WEB NOTIFICATIONS (Cross-Platform: Windows, Android, Apple) ──
 self.addEventListener('push', (event) => {
-  if (!event.data) return;
-  const data = event.data.json();
+  let data = {};
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch (e) {
+      data = { body: event.data.text() };
+    }
+  }
+
   const options = {
-    body: data.body || 'Yeni bildirim',
-    icon: '/icons/icon-192.png',
-    badge: '/icons/icon-72.png',
-    vibrate: [100, 50, 100],
-    data: { url: data.url || '/' },
+    body: data.body || data.message || 'Yeni bildiriminiz var.',
+    icon: data.icon || '/logo_saha_anket.png',
+    badge: data.badge || '/logo_saha_anket.png',
+    vibrate: [200, 100, 200],
+    data: {
+      url: data.url || '/',
+      notifId: data.notifId,
+      type: data.type || 'SYSTEM'
+    },
     actions: [
-      { action: 'open', title: 'Aç' },
+      { action: 'open', title: 'Görüntüle' },
       { action: 'close', title: 'Kapat' }
     ]
   };
+
   event.waitUntil(
-    self.registration.showNotification(data.title || 'Saha Anket', options)
+    self.registration.showNotification(data.title || 'Saha Anket Bildirimi', options)
   );
 });
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  if (event.action === 'open' || !event.action) {
-    event.waitUntil(
-      clients.openWindow(event.notification.data?.url || '/')
-    );
-  }
+  if (event.action === 'close') return;
+
+  const notifData = event.notification.data || {};
+  const urlToOpen = notifData.url || '/';
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Zaten açık olan bir sekme/pencere varsa ona odaklan ve mesaj gönder
+      for (const client of clientList) {
+        if ('focus' in client) {
+          client.focus();
+          client.postMessage({
+            type: 'NOTIFICATION_CLICKED',
+            notifId: notifData.notifId,
+            notifType: notifData.type,
+            url: urlToOpen
+          });
+          return;
+        }
+      }
+      // Hiç pencere açık değilse yeni pencere aç
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(urlToOpen);
+      }
+    })
+  );
 });
 
 console.log('[SW] SurveyAdmin Service Worker loaded.');
