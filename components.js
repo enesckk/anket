@@ -851,6 +851,201 @@ export function renderCustomModals(state) {
     `;
   }
 
+  if (state.activeModal.type === 'view_live_survey_results') {
+    const survey = state.activeModal.survey || (state.allSurveys || [])[0];
+    if (!survey) return '';
+
+    const allSubmissions = (state.submissions || []).filter(sub => (sub.surveyId === survey.id || sub.surveyTitle === survey.title));
+    const validSubmissions = allSubmissions.filter(sub => !sub.isInvalid);
+    const target = survey.targetCount || 100;
+    const completed = validSubmissions.length > 0
+      ? validSubmissions.length
+      : (typeof survey.completedCount === 'number' ? survey.completedCount : (survey.status === 'COMPLETED' ? target : 0));
+    const percent = target > 0 ? Math.min(100, Math.round((completed / target) * 100)) : 0;
+
+    const personnelNames = [...new Set(allSubmissions.map(s => s.fieldUserName).filter(Boolean))];
+    const lastSub = allSubmissions[0];
+    const lastSubTime = lastSub ? new Date(lastSub.submittedAt || Date.now()).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : 'Kayıt Bekleniyor';
+
+    const questions = Array.isArray(survey.questions) ? survey.questions : [];
+
+    return `
+      <div class="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div class="bg-white rounded-[20px] border border-[#E9EDF2] max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150 font-sans">
+          
+          <!-- TOP HEADER -->
+          <div class="p-5 sm:p-6 border-b border-[#E9EDF2] flex flex-col sm:flex-row sm:items-center justify-between gap-4 sticky top-0 bg-white z-10">
+            <div class="space-y-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="px-2.5 py-0.5 rounded-[6px] text-[10px] font-bold bg-[#01214A] text-white">CANLI SAHA TAKİBİ</span>
+                <span class="px-2.5 py-0.5 rounded-[6px] text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                  ${survey.status === 'COMPLETED' ? 'Tamamlandı' : 'Aktif - Sahada Toplanıyor'}
+                </span>
+                <span class="text-xs text-slate-400 font-normal">Kategori: <strong class="text-slate-700">${survey.category || 'Tarım'}</strong></span>
+              </div>
+              <h2 class="text-lg sm:text-xl font-bold text-[#01214A] leading-snug truncate">${survey.title}</h2>
+              <p class="text-xs text-slate-500 font-normal truncate">${survey.description || 'Saha araştırması canlı bulguları ve gelen anket cevapları.'}</p>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+              <button data-survey-title="${survey.title}" class="btn-navigate-to-filtered-responses h-9 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-[8px] transition-colors cursor-pointer flex items-center gap-1.5" title="Tüm cevaplar tablosunda aç">
+                ${iconSvg('chatBubble', 'w-3.5 h-3.5 text-slate-600')}
+                <span>Cevaplar Sekmesinde Aç</span>
+              </button>
+              <button id="btn-reports-tab-excel" class="h-9 px-3 bg-[#2A9D38] hover:bg-[#22822e] text-white text-xs font-semibold rounded-[8px] transition-colors cursor-pointer flex items-center gap-1.5" title="Excel formatında indir">
+                ${iconSvg('download', 'w-3.5 h-3.5 text-white')}
+                <span>Excel İndir</span>
+              </button>
+              <button type="button" id="btn-close-custom-modal" class="p-2 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer">
+                ${iconSvg('close', 'w-5 h-5')}
+              </button>
+            </div>
+          </div>
+
+          <!-- MODAL BODY -->
+          <div class="p-6 overflow-y-auto space-y-6 flex-1">
+            
+            <!-- LIVE PROGRESS & KPI SCORECARDS -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+              <div class="p-4 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[12px] space-y-1">
+                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">ANLIK İLERLEME</span>
+                <div class="text-xl font-bold text-[#01214A] leading-tight">${completed} / ${target}</div>
+                <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden mt-1.5">
+                  <div class="bg-[#2A9D38] h-full rounded-full transition-all duration-300" style="width: ${percent}%"></div>
+                </div>
+                <span class="text-[10px] text-[#2A9D38] font-bold block mt-1">%${percent} Tamamlandı</span>
+              </div>
+
+              <div class="p-4 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[12px] space-y-1">
+                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">TOPLAM CEVAP</span>
+                <div class="text-xl font-bold text-[#01214A] leading-tight">${allSubmissions.length} Form</div>
+                <span class="text-[10px] text-slate-500 font-normal block mt-1">${validSubmissions.length} Geçerli, ${allSubmissions.length - validSubmissions.length} Geçersiz</span>
+              </div>
+
+              <div class="p-4 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[12px] space-y-1">
+                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">SAHA PERSONELİ</span>
+                <div class="text-sm font-bold text-[#01214A] leading-snug truncate">${personnelNames.length > 0 ? personnelNames.join(', ') : (survey.assignedTo || 'Saha Ekibi')}</div>
+                <span class="text-[10px] text-slate-500 font-normal block mt-1">${personnelNames.length || 1} Aktif Görevli</span>
+              </div>
+
+              <div class="p-4 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[12px] space-y-1">
+                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">SON YANIT ZAMANI</span>
+                <div class="text-sm font-bold text-[#01214A] leading-snug">${lastSubTime}</div>
+                <span class="text-[10px] text-emerald-700 font-semibold block mt-1">Canlı Senkronizasyon</span>
+              </div>
+            </div>
+
+            <!-- SECTION: GELEN SAHA CEVAPLARI DETAY LİSTESİ -->
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <h3 class="text-sm font-bold text-[#01214A] flex items-center gap-2">
+                  ${iconSvg('chatBubble', 'w-4 h-4 text-[#2A9D38]')}
+                  <span>Sahadan Gelen Form Yanıtları (${allSubmissions.length})</span>
+                </h3>
+                <span class="text-xs text-slate-400 font-normal">Anlık olarak doldurulan kayıtlar listelenir</span>
+              </div>
+
+              ${allSubmissions.length === 0 ? `
+                <div class="p-8 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[12px] text-center space-y-2">
+                  <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+                    ${iconSvg('chatBubble', 'w-5 h-5 text-slate-400')}
+                  </div>
+                  <h4 class="text-xs font-bold text-[#01214A]">Henüz Bu Ankete Ait Form Yanıtı Gönderilmedi</h4>
+                  <p class="text-[11px] text-slate-400 max-w-sm mx-auto">Saha personeli mobil uygulamadan (PWA) bu anketi doldurup gönderdikçe cevaplar anında burada belirecektir.</p>
+                </div>
+              ` : `
+                <div class="space-y-3">
+                  ${allSubmissions.map((sub, sIdx) => {
+                    const ans = sub.answers || {};
+                    const photo = sub.photoData || null;
+                    return `
+                      <div class="bg-[#F8FAFC] border border-[#E9EDF2] rounded-[12px] p-4 space-y-3 hover:border-slate-300 transition-colors">
+                        <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-200/70">
+                          <div class="flex items-center gap-2.5">
+                            <span class="w-6 h-6 rounded-md bg-[#01214A] text-white font-bold text-[10px] flex items-center justify-center font-mono">#${sIdx + 1}</span>
+                            <span class="font-bold text-xs text-[#01214A]">${sub.fieldUserName || 'Saha Personeli'}</span>
+                            <span class="text-[11px] text-slate-400 font-normal">· ${new Date(sub.submittedAt || Date.now()).toLocaleDateString('tr-TR')} ${new Date(sub.submittedAt || Date.now()).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</span>
+                          </div>
+                          <div class="flex items-center gap-2">
+                            ${sub.latitude ? `
+                              <span class="inline-flex items-center gap-1 text-[11px] text-[#2A9D38] font-medium bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                                ${iconSvg('mapPin', 'w-3 h-3')} ${sub.latitude.toFixed(3)}, ${sub.longitude?.toFixed(3)}
+                              </span>
+                            ` : ''}
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${sub.isInvalid ? 'bg-red-100 text-red-800' : 'bg-emerald-100 text-emerald-800'}">
+                              ${sub.isInvalid ? 'Geçersiz' : 'Geçerli'}
+                            </span>
+                            <button data-sub-id="${sub.id}" class="btn-toggle-invalid-sub text-[11px] font-medium text-slate-600 hover:text-[#01214A] hover:underline cursor-pointer">
+                              ${sub.isInvalid ? 'Geçerli Yap' : 'Geçersiz Say'}
+                            </button>
+                          </div>
+                        </div>
+
+                        <!-- ANSWERS GRID -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                          ${questions.length > 0 ? questions.map(q => {
+                            const val = ans[q.id] || ans[q.key] || ans['q' + q.id] || 'Belirtilmedi';
+                            return `
+                              <div class="p-2.5 bg-white rounded-lg border border-slate-200/80 space-y-0.5">
+                                <span class="text-[10px] font-semibold text-slate-400 block">${q.title}</span>
+                                <span class="font-medium text-slate-800">${val}</span>
+                              </div>
+                            `;
+                          }).join('') : `
+                            <div class="p-2.5 bg-white rounded-lg border border-slate-200/80 sm:col-span-2">
+                              <span class="text-[10px] font-semibold text-slate-400 block">Form Yanıt Verileri</span>
+                              <div class="font-medium text-slate-800 mt-1 space-y-1">
+                                ${Object.entries(ans).map(([k, v]) => `<div><strong class="text-slate-600">${k}:</strong> ${v}</div>`).join('') || 'Cevap detayları kaydedildi.'}
+                              </div>
+                            </div>
+                          `}
+                        </div>
+
+                        ${photo ? `
+                          <div class="pt-1">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Saha Fotoğrafı</span>
+                            <img src="${photo}" alt="Saha Fotoğrafı" class="h-28 rounded-lg object-cover border border-slate-200 cursor-pointer hover:opacity-90"/>
+                          </div>
+                        ` : ''}
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              `}
+            </div>
+
+            <!-- SECTION: CANLI SORU BAZLI ANALİTİK & GRAFİK DAĞILIMLARI -->
+            <div class="space-y-3 pt-4 border-t border-[#E9EDF2]">
+              <div class="flex items-center justify-between">
+                <h3 class="text-sm font-bold text-[#01214A] flex items-center gap-2">
+                  ${iconSvg('assessment', 'w-4 h-4 text-[#2A9D38]')}
+                  <span>Soru Bazlı Canlı İstatistik ve Grafik Dağılımları</span>
+                </h3>
+              </div>
+
+              ${renderSurveyDetailedCharts(survey, state)}
+            </div>
+
+          </div>
+
+          <!-- FOOTER -->
+          <div class="p-4 bg-[#F8FAFC] border-t border-[#E9EDF2] flex items-center justify-between">
+            <button type="button" id="btn-close-custom-modal" class="h-9 px-4 border border-[#E9EDF2] bg-white text-slate-700 font-semibold text-xs rounded-[8px] hover:bg-slate-50 transition-colors cursor-pointer">
+              Kapat
+            </button>
+            <div class="flex items-center gap-2">
+              <button id="btn-reports-tab-excel" class="h-9 px-4 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[8px] transition-colors cursor-pointer flex items-center gap-1.5">
+                ${iconSvg('download', 'w-3.5 h-3.5 text-white')}
+                <span>Excel Olarak İndir</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    `;
+  }
+
   if (state.activeModal.type === 'view_report') {
     const report = state.activeModal.report || (state.reports || [])[0];
     const survey = state.activeModal.survey || (state.allSurveys || []).find(s => s.id === report?.surveyId) || (state.allSurveys || [])[0];
@@ -2634,14 +2829,17 @@ function render4StepSurveyBuilder(state) {
                   </div>
                 ` : ''}
 
-                <!-- FOOTER CONTROL BAR (REQUIRED TOGGLE SWITCH) -->
-                <div class="flex items-center justify-between pt-3 border-t border-slate-100">
-                  <div class="flex items-center gap-2">
-                    <span class="text-xs font-extrabold text-[#01214A]">Zorunlu Cevaplanması Gereksin Mi?</span>
-                    <span class="text-[11px] text-slate-400 font-medium">(Sahada boş bırakılamaz)</span>
-                  </div>
-                  <button type="button" data-q-id="${q.id}" class="btn-toggle-required relative w-12 h-6.5 rounded-full transition-colors ${q.isRequired ? 'bg-[#2A9D38]' : 'bg-slate-300'}">
-                    <span class="absolute top-1 left-1 w-4.5 h-4.5 rounded-full bg-white transition-transform shadow-xs ${q.isRequired ? 'translate-x-5.5' : ''}"></span>
+                <!-- FOOTER CONTROL BAR (REQUIRED CHECKBOX & TOGGLE) -->
+                <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-3 bg-slate-50/70 p-3 rounded-xl border border-slate-200/70">
+                  <label class="flex items-center gap-2.5 cursor-pointer select-none">
+                    <input type="checkbox" data-q-id="${q.id}" class="checkbox-toggle-required w-4.5 h-4.5 rounded text-[#2A9D38] border-slate-300 focus:ring-[#2A9D38] accent-[#2A9D38] cursor-pointer" ${q.isRequired ? 'checked' : ''}/>
+                    <div class="flex flex-col">
+                      <span class="text-xs font-bold text-[#01214A]">Zorunlu Soru (Cevaplama Zorunlu)</span>
+                      <span class="text-[10px] text-slate-500 font-normal">Bu soru sahada doldurulmadan form teslim edilemez.</span>
+                    </div>
+                  </label>
+                  <button type="button" data-q-id="${q.id}" class="btn-toggle-required relative w-11 h-6 rounded-full transition-colors shrink-0 ${q.isRequired ? 'bg-[#2A9D38]' : 'bg-slate-300'}" title="Zorunluluk Durumunu Değiştir">
+                    <span class="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform shadow-xs ${q.isRequired ? 'translate-x-5' : ''}"></span>
                   </button>
                 </div>
               </div>
@@ -2672,6 +2870,11 @@ function render4StepSurveyBuilder(state) {
                   <option value="photo">Fotoğraf Yükleme</option>
                   <option value="gps">GPS Konum Alımı</option>
                 </select>
+
+                <label class="flex items-center gap-1.5 px-2.5 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-[#01214A] cursor-pointer select-none shrink-0 shadow-2xs">
+                  <input type="checkbox" id="cb-bottom-new-q-required" checked class="w-4 h-4 rounded text-[#2A9D38] accent-[#2A9D38] cursor-pointer"/>
+                  <span class="text-[11px]">Zorunlu</span>
+                </label>
 
                 <button type="button" id="btn-bottom-add-question" class="h-10 px-4 bg-[#2A9D38] hover:bg-[#22822e] text-white font-extrabold text-xs rounded-xl transition-all shadow-sm hover:shadow flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer">
                   ${iconSvg('plus', 'w-4 h-4 text-white')}
@@ -3188,41 +3391,46 @@ function renderAdminTabContent(tab, state) {
                         ${!s.isArchived && s.status === 'DRAFT' ? `<span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">Taslak</span>` : ''}
                       </td>
                       <td class="py-4 px-5">
-                        <div class="space-y-1 max-w-[140px]">
-                          <div class="text-[11px] font-semibold text-[#01214A]">${completed} / ${target} · %${percent}</div>
-                          <div class="w-full bg-[#F1F5F9] h-1 rounded-full overflow-hidden">
+                        <div data-survey-id="${s.id}" class="btn-view-live-results space-y-1 max-w-[140px] cursor-pointer group" title="Canlı sonuçları ve gelen cevapları gör">
+                          <div class="text-[11px] font-semibold text-[#01214A] group-hover:text-[#2A9D38] transition-colors">${completed} / ${target} · %${percent}</div>
+                          <div class="w-full bg-[#F1F5F9] h-1.5 rounded-full overflow-hidden">
                             <div class="bg-[#2A9D38] h-full rounded-full transition-all duration-300" style="width: ${percent}%"></div>
                           </div>
                         </div>
                       </td>
                       <td class="py-4 px-5 text-right">
-                        <div class="flex items-center justify-end gap-2">
+                        <div class="flex items-center justify-end gap-1.5">
+                          <button type="button" data-survey-id="${s.id}" class="btn-view-live-results h-8 px-2.5 bg-emerald-50 hover:bg-[#2A9D38] text-[#2A9D38] hover:text-white border border-emerald-200 font-semibold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1 cursor-pointer" title="Anlık Gelen Cevapları ve Canlı Sonuçları Gör">
+                            ${iconSvg('poll', 'w-3.5 h-3.5')}
+                            <span>Cevapları Gör</span>
+                          </button>
+
                           ${s.status === 'COMPLETED' ? `
-                            <button data-survey-id="${s.id}" class="btn-view-survey-report h-8 px-3 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1 cursor-pointer">
+                            <button data-survey-id="${s.id}" class="btn-view-survey-report h-8 px-2.5 bg-[#01214A] hover:bg-[#082d5e] text-white font-semibold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1 cursor-pointer">
                               ${iconSvg('assessment', 'w-3.5 h-3.5 text-white')}
-                              <span>Raporu Gör</span>
+                              <span>Rapor</span>
                             </button>
                           ` : s.status === 'ACTIVE' ? `
-                            <button data-survey-id="${s.id}" class="btn-open-assign-survey-modal h-8 px-3 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1 cursor-pointer">
+                            <button data-survey-id="${s.id}" class="btn-open-assign-survey-modal h-8 px-2.5 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1 cursor-pointer">
                               ${iconSvg('send', 'w-3.5 h-3.5 text-white')}
                               <span>Atama Yap</span>
                             </button>
                           ` : `
-                            <button data-survey-id="${s.id}" class="btn-open-review-survey-modal h-8 px-3 bg-[#01214A] hover:bg-[#082d5e] text-white font-semibold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1 cursor-pointer">
+                            <button data-survey-id="${s.id}" class="btn-open-review-survey-modal h-8 px-2.5 bg-[#01214A] hover:bg-[#082d5e] text-white font-semibold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1 cursor-pointer">
                               <span>İncele</span>
                             </button>
                           `}
 
-                          <button data-survey-id="${s.id}" class="btn-admin-clone-survey h-8 px-2.5 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 text-xs font-normal rounded-[8px] transition-colors cursor-pointer">
+                          <button data-survey-id="${s.id}" class="btn-admin-clone-survey h-8 px-2 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 text-xs font-normal rounded-[8px] transition-colors cursor-pointer">
                             Kopyala
                           </button>
 
                           ${s.isArchived ? `
-                            <button data-survey-id="${s.id}" class="btn-unarchive-survey h-8 px-2.5 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 text-xs font-normal rounded-[8px] transition-colors cursor-pointer">
+                            <button data-survey-id="${s.id}" class="btn-unarchive-survey h-8 px-2 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 text-xs font-normal rounded-[8px] transition-colors cursor-pointer">
                               Yayına Al
                             </button>
                           ` : `
-                            <button data-survey-id="${s.id}" class="btn-archive-survey h-8 px-2.5 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-500 hover:text-slate-800 text-xs font-normal rounded-[8px] transition-colors cursor-pointer">
+                            <button data-survey-id="${s.id}" class="btn-archive-survey h-8 px-2 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-500 hover:text-slate-800 text-xs font-normal rounded-[8px] transition-colors cursor-pointer">
                               Arşivle
                             </button>
                           `}
@@ -3274,9 +3482,19 @@ function renderAdminTabContent(tab, state) {
                   </div>
                 </div>
 
-                <div class="flex items-center justify-between gap-2 pt-3 border-t border-[#F1F5F9]">
-                  <button data-survey-id="${s.id}" class="btn-view-survey-report h-9 px-3.5 bg-[#2A9D38] text-white font-semibold text-xs rounded-[10px]">Raporu Gör</button>
-                  <button data-survey-id="${s.id}" class="btn-admin-clone-survey h-9 px-3 bg-white border border-[#E9EDF2] text-slate-700 text-xs rounded-[10px]">Kopyala</button>
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-[#F1F5F9]">
+                  <button data-survey-id="${s.id}" class="btn-view-live-results h-9 px-3 bg-emerald-50 hover:bg-[#2A9D38] text-[#2A9D38] hover:text-white border border-emerald-200 font-semibold text-xs rounded-[10px] transition-colors flex items-center gap-1.5 cursor-pointer">
+                    ${iconSvg('poll', 'w-3.5 h-3.5')}
+                    <span>Cevapları Gör</span>
+                  </button>
+                  <div class="flex items-center gap-2">
+                    ${s.status === 'ACTIVE' ? `
+                      <button data-survey-id="${s.id}" class="btn-open-assign-survey-modal h-9 px-3 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[10px] flex items-center gap-1">Atama Yap</button>
+                    ` : `
+                      <button data-survey-id="${s.id}" class="btn-view-survey-report h-9 px-3.5 bg-[#2A9D38] text-white font-semibold text-xs rounded-[10px]">Raporu Gör</button>
+                    `}
+                    <button data-survey-id="${s.id}" class="btn-admin-clone-survey h-9 px-3 bg-white border border-[#E9EDF2] text-slate-700 text-xs rounded-[10px]">Kopyala</button>
+                  </div>
                 </div>
               </div>
             `;

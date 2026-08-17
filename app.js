@@ -328,8 +328,17 @@ if (typeof window !== 'undefined' && !window.__globalListenersAttached) {
     const bottomAddQBtn = e.target.closest('#btn-bottom-add-question');
     if (bottomAddQBtn) {
       const select = document.getElementById('select-bottom-q-type');
+      const reqCb = document.getElementById('cb-bottom-new-q-required');
       const type = select ? select.value : 'text';
-      store.addQuestionToBuilder(type);
+      const isRequired = reqCb ? reqCb.checked : true;
+      store.addQuestionToBuilder(type, isRequired);
+      return;
+    }
+
+    const reqCbToggle = e.target.closest('.checkbox-toggle-required');
+    if (reqCbToggle) {
+      const id = reqCbToggle.getAttribute('data-q-id');
+      if (id) store.updateQuestionRequired(id, reqCbToggle.checked);
       return;
     }
 
@@ -490,6 +499,22 @@ if (typeof window !== 'undefined' && !window.__globalListenersAttached) {
     const testNotifBtn = e.target.closest('#btn-send-test-notification, #btn-pwa-send-test-notification');
     if (testNotifBtn) {
       store.sendTestNotification();
+      return;
+    }
+
+    const viewLiveResultsBtn = e.target.closest('.btn-view-live-results');
+    if (viewLiveResultsBtn) {
+      const surveyId = viewLiveResultsBtn.getAttribute('data-survey-id');
+      if (surveyId) {
+        store.openLiveSurveyResults(surveyId);
+      }
+      return;
+    }
+
+    const navFilteredResponsesBtn = e.target.closest('.btn-navigate-to-filtered-responses');
+    if (navFilteredResponsesBtn) {
+      const surveyTitle = navFilteredResponsesBtn.getAttribute('data-survey-title');
+      store.filterResponsesBySurvey(surveyTitle);
       return;
     }
 
@@ -1065,7 +1090,14 @@ function validatePersonnelInput(email, phone, password, isPasswordOptional = fal
     });
   });
 
-  // Toggle Mandatory
+  // Toggle Mandatory (Checkbox & Switch)
+  document.querySelectorAll('.checkbox-toggle-required').forEach(cb => {
+    cb.addEventListener('change', (e) => {
+      const id = e.target.getAttribute('data-q-id');
+      if (id) store.updateQuestionRequired(id, e.target.checked);
+    });
+  });
+
   document.querySelectorAll('.btn-toggle-required').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const id = e.currentTarget.getAttribute('data-q-id');

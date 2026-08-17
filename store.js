@@ -809,7 +809,7 @@ class Store {
       sectionId: secId,
       title: typeLabels[type] || 'Yeni Soru',
       type: type,
-      isRequired: true,
+      isRequired: isRequired !== false,
       expanded: true,
       options: defaultOptions
     };
@@ -838,6 +838,27 @@ class Store {
   toggleQuestionRequired(questionId) {
     const q = this.state.builderSurvey.questions.find(x => x.id === questionId);
     if (q) q.isRequired = !q.isRequired;
+    this.saveState();
+  }
+
+  updateQuestionRequired(questionId, isRequired) {
+    const q = this.state.builderSurvey.questions.find(x => x.id === questionId);
+    if (q) {
+      q.isRequired = typeof isRequired === 'boolean' ? isRequired : !q.isRequired;
+    }
+    this.saveState();
+  }
+
+  openLiveSurveyResults(surveyId) {
+    const survey = (this.state.allSurveys || []).find(s => s.id === surveyId);
+    if (!survey) return;
+    this.openModal('view_live_survey_results', { survey });
+  }
+
+  filterResponsesBySurvey(surveyTitle) {
+    this.state.adminTab = 'responses';
+    this.state.searchSubmissionsQuery = surveyTitle || '';
+    this.state.activeModal = null;
     this.saveState();
   }
 

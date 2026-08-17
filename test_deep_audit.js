@@ -1,6 +1,17 @@
 // Comprehensive Deep Verification Script
 import { strict as assert } from 'assert';
 
+// Mock localStorage for Node.js environment
+if (typeof globalThis.localStorage === 'undefined') {
+  const storage = new Map();
+  globalThis.localStorage = {
+    getItem: (k) => storage.get(k) || null,
+    setItem: (k, v) => storage.set(k, String(v)),
+    removeItem: (k) => storage.delete(k),
+    clear: () => storage.clear()
+  };
+}
+
 console.log('======================================================================');
 console.log('🔬 SAHA ANKET - BİLDİRİMLER & İLERLEME DERİN DENETİM TESTİ');
 console.log('======================================================================\n');
@@ -111,8 +122,64 @@ assert(renderedNotifCenter.includes('btn-toggle-notifications-dropdown'), 'Bildi
 const renderedPwaBell = componentsModule.renderPwaNotificationBell(testState);
 assert(renderedPwaBell.includes('btn-toggle-pwa-notifications'), 'PWA bildirim butonu mevcut');
 
-console.log('✅ [5/5] Bildirim bileşenleri ve Sol Panel "Mesajlar" okunmamış rozeti arayüzde eksiksiz render ediliyor.');
+// 5. Question Builder Required Checkbox & Live Survey Results Verification
+console.log('🔬 [6/6] Soru Zorunluluk Kutucuğu ve Canlı Saha Sonuçları Test Ediliyor...');
+
+// Test 5.1: Question Builder Required Checkbox Toggle
+store.state.builderSurvey = {
+  id: 'bsrv-1',
+  questions: [
+    { id: 'q-test-1', title: 'Soru 1', type: 'text', isRequired: true },
+    { id: 'q-test-2', title: 'Soru 2', type: 'yesno', isRequired: false }
+  ],
+  sections: [{ id: 'sec-1', title: 'Genel' }]
+};
+
+assert(typeof store.updateQuestionRequired === 'function', 'updateQuestionRequired metodu store üzerinde mevcut');
+store.updateQuestionRequired('q-test-1', false);
+assert(store.state.builderSurvey.questions.find(q => q.id === 'q-test-1').isRequired === false, 'q-test-1 zorunluluk durumu false olarak güncellenmeli');
+
+store.updateQuestionRequired('q-test-1', true);
+assert(store.state.builderSurvey.questions.find(q => q.id === 'q-test-1').isRequired === true, 'q-test-1 zorunluluk durumu tekrar true olarak güncellenmeli');
+
+// Test 5.2: Live Survey Results Modal & Button
+assert(typeof store.openLiveSurveyResults === 'function', 'openLiveSurveyResults metodu store üzerinde mevcut');
+assert(typeof store.filterResponsesBySurvey === 'function', 'filterResponsesBySurvey metodu store üzerinde mevcut');
+
+store.state.allSurveys = [
+  { id: 'srv-live-100', title: 'Sinan Tarım Anketi', status: 'ACTIVE', targetCount: 100, completedCount: 3, category: 'Tarım', villageName: 'Sinan Köyü', questions: [{ id: 'q1', title: 'Arazi Büyüklüğü' }] }
+];
+store.state.submissions = [
+  { id: 'sub-live-1', surveyId: 'srv-live-100', fieldUserName: 'Ali Can', submittedAt: new Date().toISOString(), isInvalid: false, answers: { q1: '50 Dönüm' } },
+  { id: 'sub-live-2', surveyId: 'srv-live-100', fieldUserName: 'Veli Han', submittedAt: new Date().toISOString(), isInvalid: false, answers: { q1: '120 Dönüm' } },
+  { id: 'sub-live-3', surveyId: 'srv-live-100', fieldUserName: 'Ali Can', submittedAt: new Date().toISOString(), isInvalid: false, answers: { q1: '80 Dönüm' } }
+];
+
+store.openLiveSurveyResults('srv-live-100');
+assert(store.state.activeModal && store.state.activeModal.type === 'view_live_survey_results', 'Canlı anket sonuçları modalı açılmalı');
+
+const renderedLiveModal = componentsModule.renderCustomModals(store.state);
+assert(renderedLiveModal.includes('Sinan Tarım Anketi'), 'Modal içinde anket başlığı görünmeli');
+assert(renderedLiveModal.includes('CANLI SAHA TAKİBİ'), 'Modal içinde Canlı Saha Takibi başlığı görünmeli');
+assert(renderedLiveModal.includes('3 / 100'), 'Modal içinde anlık ilerleme 3 / 100 olarak görünmeli');
+assert(renderedLiveModal.includes('Ali Can'), 'Modal içinde sahadan cevap gönderen personelin adı görünmeli');
+assert(renderedLiveModal.includes('50 Dönüm'), 'Modal içinde sahadan gelen gerçek cevap metni görünmeli');
+
+// Test 5.3: Surveys Table "Cevapları Gör" button
+store.state.activeModal = null;
+store.state.adminTab = 'surveys';
+const renderedSurveysTable = componentsModule.renderAdminView();
+assert(renderedSurveysTable.includes('btn-view-live-results'), 'Anketler tablosunda "Cevapları Gör" butonu yer almalı');
+assert(renderedSurveysTable.includes('Cevapları Gör'), 'Anket satırında "Cevapları Gör" metni yer almalı');
+
+// Test 5.4: Navigate to filtered responses
+store.filterResponsesBySurvey('Sinan Tarım Anketi');
+assert(store.state.adminTab === 'responses', 'filterResponsesBySurvey çağrılınca admin responses tabına geçmeli');
+assert(store.state.searchSubmissionsQuery === 'Sinan Tarım Anketi', 'searchSubmissionsQuery anket başlığıyla filtrelenmeli');
+
+console.log('✅ [6/6] Soru Zorunluluk Kutucuğu ve Anket Devam Ederken Canlı Sonuçları & Cevapları İzleme özelliği eksiksiz çalışıyor.');
 
 console.log('\n======================================================================');
 console.log('🎉 TÜM DENETİMLER BAŞARIYLA GEÇTİ! HİÇBİR HATA VEYA KOPUKLUK YOKTUR.');
 console.log('======================================================================');
+
