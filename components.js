@@ -3398,37 +3398,37 @@ function renderAdminTabContent(tab, state) {
                       </td>
                       <td class="py-4 px-5 text-right">
                         <div class="flex items-center justify-end gap-1.5">
-                          <button type="button" data-survey-id="${s.id}" class="btn-view-live-results h-8 px-2.5 bg-emerald-50 hover:bg-[#2A9D38] text-[#2A9D38] hover:text-white border border-emerald-200 font-semibold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1 cursor-pointer" title="Anlık Gelen Cevapları ve Canlı Sonuçları Gör">
-                            ${iconSvg('poll', 'w-3.5 h-3.5')}
+                          <button type="button" data-survey-id="${s.id}" class="btn-view-live-results h-8 px-3 bg-[#2A9D38] hover:bg-[#22822e] text-white font-bold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Anlık Gelen Cevapları ve Canlı Sonuçları Gör">
+                            ${iconSvg('poll', 'w-3.5 h-3.5 text-white')}
                             <span>Cevapları Gör</span>
                           </button>
 
                           ${s.status === 'COMPLETED' ? `
-                            <button data-survey-id="${s.id}" class="btn-view-survey-report h-8 px-2.5 bg-[#01214A] hover:bg-[#082d5e] text-white font-semibold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1 cursor-pointer">
+                            <button type="button" data-survey-id="${s.id}" class="btn-view-survey-report h-8 px-2.5 bg-[#01214A] hover:bg-[#082d5e] text-white font-semibold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1 cursor-pointer">
                               ${iconSvg('assessment', 'w-3.5 h-3.5 text-white')}
                               <span>Rapor</span>
                             </button>
                           ` : s.status === 'ACTIVE' ? `
-                            <button data-survey-id="${s.id}" class="btn-open-assign-survey-modal h-8 px-2.5 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1 cursor-pointer">
-                              ${iconSvg('send', 'w-3.5 h-3.5 text-white')}
+                            <button type="button" data-survey-id="${s.id}" class="btn-open-assign-survey-modal h-8 px-2.5 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-[#01214A] font-semibold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1 cursor-pointer">
+                              ${iconSvg('send', 'w-3.5 h-3.5 text-slate-600')}
                               <span>Atama Yap</span>
                             </button>
                           ` : `
-                            <button data-survey-id="${s.id}" class="btn-open-review-survey-modal h-8 px-2.5 bg-[#01214A] hover:bg-[#082d5e] text-white font-semibold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1 cursor-pointer">
+                            <button type="button" data-survey-id="${s.id}" class="btn-open-review-survey-modal h-8 px-2.5 bg-[#01214A] hover:bg-[#082d5e] text-white font-semibold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1 cursor-pointer">
                               <span>İncele</span>
                             </button>
                           `}
 
-                          <button data-survey-id="${s.id}" class="btn-admin-clone-survey h-8 px-2 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 text-xs font-normal rounded-[8px] transition-colors cursor-pointer">
+                          <button type="button" data-survey-id="${s.id}" class="btn-admin-clone-survey h-8 px-2 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 text-xs font-normal rounded-[8px] transition-colors cursor-pointer">
                             Kopyala
                           </button>
 
                           ${s.isArchived ? `
-                            <button data-survey-id="${s.id}" class="btn-unarchive-survey h-8 px-2 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 text-xs font-normal rounded-[8px] transition-colors cursor-pointer">
+                            <button type="button" data-survey-id="${s.id}" class="btn-unarchive-survey h-8 px-2 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 text-xs font-normal rounded-[8px] transition-colors cursor-pointer">
                               Yayına Al
                             </button>
                           ` : `
-                            <button data-survey-id="${s.id}" class="btn-archive-survey h-8 px-2 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-500 hover:text-slate-800 text-xs font-normal rounded-[8px] transition-colors cursor-pointer">
+                            <button type="button" data-survey-id="${s.id}" class="btn-archive-survey h-8 px-2 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-500 hover:text-slate-800 text-xs font-normal rounded-[8px] transition-colors cursor-pointer">
                               Arşivle
                             </button>
                           `}
@@ -3481,8 +3481,8 @@ function renderAdminTabContent(tab, state) {
                 </div>
 
                 <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-[#F1F5F9]">
-                  <button type="button" data-survey-id="${s.id}" class="btn-view-live-results h-9 px-3 bg-emerald-50 hover:bg-[#2A9D38] text-[#2A9D38] hover:text-white border border-emerald-200 font-semibold text-xs rounded-[10px] transition-colors flex items-center gap-1.5 cursor-pointer" title="Soru bazlı canlı cevapları gör">
-                    ${iconSvg('poll', 'w-3.5 h-3.5')}
+                  <button type="button" data-survey-id="${s.id}" class="btn-view-live-results h-9 px-3.5 bg-[#2A9D38] hover:bg-[#22822e] text-white font-bold text-xs rounded-[10px] transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Soru bazlı canlı cevapları gör">
+                    ${iconSvg('poll', 'w-3.5 h-3.5 text-white')}
                     <span>Cevapları Gör</span>
                   </button>
                   <div class="flex items-center gap-1.5">
