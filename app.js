@@ -514,6 +514,15 @@ if (typeof window !== 'undefined' && !window.__globalListenersAttached) {
       return;
     }
 
+    const adminTabBtn = e.target.closest('.btn-admin-tab');
+    if (adminTabBtn) {
+      const tab = adminTabBtn.getAttribute('data-admin-tab');
+      if (tab) {
+        store.setAdminTab(tab);
+        return;
+      }
+    }
+
     const testNotifBtn = e.target.closest('#btn-send-test-notification, #btn-pwa-send-test-notification');
     if (testNotifBtn) {
       store.sendTestNotification();

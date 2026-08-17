@@ -492,7 +492,9 @@ class Store {
   }
 
   setAdminTab(tab) {
+    this.state.currentRole = 'admin';
     this.state.adminTab = tab;
+    this.state.activeModal = null;
     if (tab === 'messages') {
       (this.state.messages || []).forEach(m => {
         if (m.senderRole === 'FIELD_USER' || m.direction === 'TO_ADMIN') {

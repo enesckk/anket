@@ -2410,7 +2410,7 @@ export function renderAdminView() {
             const showSurveyBadge = isSurvey && pendingSurveysCount > 0;
 
             return `
-              <button data-admin-tab="${item.id}" class="btn-admin-tab w-full flex items-center justify-between px-3.5 py-2.5 rounded-[10px] text-left text-xs transition-all duration-150 relative cursor-pointer ${isActive ? 'text-[#01214A] bg-[#2A9D38]/10 font-semibold border-l-3 border-[#2A9D38]' : 'text-slate-500 hover:text-[#01214A] hover:bg-slate-50 font-normal'}">
+              <button type="button" data-admin-tab="${item.id}" class="btn-admin-tab w-full flex items-center justify-between px-3.5 py-2.5 rounded-[10px] text-left text-xs transition-all duration-150 relative cursor-pointer ${isActive ? 'text-[#01214A] bg-[#2A9D38]/10 font-semibold border-l-3 border-[#2A9D38]' : 'text-slate-500 hover:text-[#01214A] hover:bg-slate-50 font-normal'}">
                 <div class="flex items-center gap-3 min-w-0">
                   <div class="relative flex items-center justify-center shrink-0">
                     ${iconSvg(item.icon, `w-4 h-4 ${isActive ? 'text-[#2A9D38]' : 'text-slate-400'}`)}
