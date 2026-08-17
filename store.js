@@ -648,6 +648,15 @@ class Store {
     // 1. Instant 0ms local state update & modal close
     this.state.allPersonnel.push(newUser);
     this.closeModal();
+    this.setToast(`'${fullName}' personeli başarıyla sisteme eklendi ve aktif edildi.`, 'success');
+    this.addNotification(
+      'SYSTEM',
+      '👤 Yeni Personel Kaydı',
+      `"${fullName}" (${role === 'ADMIN' ? 'Yönetici' : 'Saha Personeli'}) hesabı sisteme başarıyla kaydedildi.`,
+      'ADMIN',
+      'person',
+      'emerald'
+    );
     this.saveState();
 
     // 2. Non-blocking background API sync
@@ -1800,6 +1809,34 @@ class Store {
     } catch (e) {
       console.warn('Create assignment error:', e);
     }
+  }
+
+  resendAssignmentNotification(assignmentId) {
+    const asg = (this.state.allAssignments || []).find(a => a.id === assignmentId);
+    if (!asg) return;
+
+    this.addNotification(
+      'NEW_ASSIGNMENT',
+      `📢 Saha Görevi Hatırlatması: ${asg.surveyTitle}`,
+      `"${asg.villageName}" bölgesi saha görevi için hedef: ${asg.targetCount} anket. Lütfen verileri tamamlayınız.`,
+      'ALL',
+      'assignment',
+      'emerald'
+    );
+    this.setToast(`'${asg.surveyTitle}' görevi için tüm personele bildirim tekrar gönderildi!`, 'success');
+  }
+
+  sendTestNotification() {
+    this.requestNotificationPermission();
+    this.addNotification(
+      'SYSTEM',
+      '🔔 Test Bildirimi Başarılı',
+      'Sistem anlık bildirimleri (Windows, Apple, Android) kusursuz şekilde aktif ve çalışıyor.',
+      'ALL',
+      'bell',
+      'emerald'
+    );
+    this.setToast('Test bildirimi başarıyla gönderildi ve ekrana iletildi.', 'success');
   }
 
   async cloneAdminSurvey(surveyId) {

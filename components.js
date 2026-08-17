@@ -1249,6 +1249,15 @@ export function renderPwaNotificationsPanel(state) {
           </div>
         `).join('')}
       </div>
+
+      <!-- Panel Footer Action -->
+      <div class="p-2.5 bg-slate-50 border-t border-[#E9EDF2] flex items-center justify-between">
+        <button type="button" id="btn-pwa-send-test-notification" class="text-xs font-semibold text-[#2A9D38] hover:text-[#22822e] flex items-center gap-1.5 cursor-pointer py-1 px-2 rounded-lg hover:bg-emerald-50 transition-colors">
+          ${iconSvg('bell', 'w-3.5 h-3.5 text-[#2A9D38]')}
+          <span>Test Bildirimi Gönder</span>
+        </button>
+        <span class="text-[10px] text-slate-400">Anlık Push / Ekran</span>
+      </div>
     </div>
   `;
 }
@@ -1317,6 +1326,15 @@ export function renderNotificationCenter(state) {
                 ${!notif.isRead ? '<span class="w-2 h-2 rounded-full bg-[#2A9D38] shrink-0 mt-1.5"></span>' : ''}
               </div>
             `).join('')}
+          </div>
+
+          <!-- Panel Footer Action: Test Bildirimi -->
+          <div class="p-2.5 bg-slate-50 border-t border-[#E9EDF2] flex items-center justify-between">
+            <button type="button" id="btn-send-test-notification" class="text-xs font-semibold text-[#2A9D38] hover:text-[#22822e] flex items-center gap-1.5 cursor-pointer py-1 px-2 rounded-lg hover:bg-emerald-50 transition-colors">
+              ${iconSvg('bell', 'w-3.5 h-3.5 text-[#2A9D38]')}
+              <span>Test Bildirimi Gönder</span>
+            </button>
+            <span class="text-[10px] text-slate-400">Windows · Apple · Android</span>
           </div>
         </div>
       ` : ''}
@@ -3365,7 +3383,8 @@ function renderAdminTabContent(tab, state) {
                   <th class="py-3 px-5">Hedef Köy / Bölge</th>
                   <th class="py-3 px-5">Yönetici Notu</th>
                   <th class="py-3 px-5">Hedef / Tamamlanan</th>
-                  <th class="py-3 px-5 text-right">Saha Görüldü</th>
+                  <th class="py-3 px-5 text-center">Saha Görüldü</th>
+                  <th class="py-3 px-5 text-right">İşlem</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-[#F1F5F9]">
@@ -3375,10 +3394,16 @@ function renderAdminTabContent(tab, state) {
                     <td class="py-4 px-5 text-slate-500 font-normal">${a.villageName}</td>
                     <td class="py-4 px-5 text-slate-600 font-normal max-w-xs truncate">${a.note || 'Özel not eklenmedi.'}</td>
                     <td class="py-4 px-5 font-semibold text-[#2A9D38]">${a.completedCount} / ${a.targetCount}</td>
-                    <td class="py-4 px-5 text-right">
+                    <td class="py-4 px-5 text-center">
                       <span class="px-2.5 py-1 rounded-[6px] text-[11px] font-semibold ${a.viewedAt ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-amber-50 text-amber-900 border border-amber-200'}">
                         ${a.viewedAt ? 'Görüldü' : 'Bekliyor'}
                       </span>
+                    </td>
+                    <td class="py-4 px-5 text-right">
+                      <button type="button" data-assignment-id="${a.id}" class="btn-resend-assignment-notif h-8 px-2.5 bg-emerald-50 hover:bg-[#2A9D38] text-[#2A9D38] hover:text-white border border-emerald-200 font-semibold text-xs rounded-[8px] transition-colors inline-flex items-center gap-1.5 cursor-pointer ml-auto" title="Personele Tekrar Bildirim Gönder">
+                        ${iconSvg('bell', 'w-3.5 h-3.5')}
+                        <span>Tekrar Bildir</span>
+                      </button>
                     </td>
                   </tr>
                 `).join('')}

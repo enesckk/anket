@@ -48,7 +48,22 @@ store.state.notifications = [{ id: 'test-notif-assign', type: 'NEW_ASSIGNMENT', 
 store.handleNotificationClick('test-notif-assign');
 assert(store.state.pwaScreen === 'home', 'PWA görev bildirimine basınca ana sayfaya yönlenmeli');
 
-console.log('✅ [3/5] Bildirim yönlendirme rotaları (Mesaj, Onay, Görev) hatasız çalışıyor.');
+// Test: Personel Kayıt Edilince Bildirim Tetiklenmesi
+store.state.allPersonnel = [];
+store.createAdminPersonnel('Deneme Personel', 'deneme@sahaanket.gov.tr', '05551112233', 'Demo123!', 'FIELD_USER');
+assert(store.state.allPersonnel.length === 1, 'Personel başarıyla kaydedilmeli');
+assert(store.state.notifications[0].type === 'SYSTEM' && store.state.notifications[0].title.includes('Yeni Personel Kaydı'), 'Personel kaydedilince anında bildirim üretilmeli');
+
+// Test: Görev Kaydedilince / Tekrar Bildirim Gönderilince Bildirim Tetiklenmesi
+store.state.allAssignments = [{ id: 'asg-test-99', surveyTitle: 'Mahalle Anketi', villageName: 'Köy A', targetCount: 100 }];
+store.resendAssignmentNotification('asg-test-99');
+assert(store.state.notifications[0].type === 'NEW_ASSIGNMENT' && store.state.notifications[0].title.includes('Saha Görevi Hatırlatması'), 'Tekrar bildirim gönderilince personele anında push bildirimi iletilmeli');
+
+// Test: Test Bildirimi Gönder Butonu
+store.sendTestNotification();
+assert(store.state.notifications[0].type === 'SYSTEM' && store.state.notifications[0].title.includes('Test Bildirimi'), 'Test bildirimi butonu başarıyla bildirim üretmeli');
+
+console.log('✅ [3/5] Bildirim yönlendirme rotaları, kayıt bildirimleri, tekrar bildirme ve test butonu hatasız çalışıyor.');
 
 // 3. Progress Calculation Integrity Test in components.js
 const testState = {

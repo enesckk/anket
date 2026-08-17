@@ -485,6 +485,19 @@ if (typeof window !== 'undefined' && !window.__globalListenersAttached) {
       return;
     }
 
+    const testNotifBtn = e.target.closest('#btn-send-test-notification, #btn-pwa-send-test-notification');
+    if (testNotifBtn) {
+      store.sendTestNotification();
+      return;
+    }
+
+    const resendAsgBtn = e.target.closest('.btn-resend-assignment-notif');
+    if (resendAsgBtn) {
+      const asgId = resendAsgBtn.getAttribute('data-assignment-id');
+      if (asgId) store.resendAssignmentNotification(asgId);
+      return;
+    }
+
     const notifItem = e.target.closest('.notif-item, .pwa-notif-item');
     if (notifItem) {
       const notifId = notifItem.getAttribute('data-notif-id');
