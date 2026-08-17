@@ -1086,7 +1086,7 @@ export function renderCustomModals(state) {
   }
 
   if (state.activeModal.type === 'assign_survey') {
-    const survey = state.activeModal.survey;
+    const survey = state.activeModal.survey || (state.allSurveys || [])[0] || { id: 'srv-1', title: 'Saha Anketi' };
     return `
       <div class="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white border-none rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-5 animate-in zoom-in-95 duration-150">

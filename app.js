@@ -158,20 +158,11 @@ function renderApp() {
   } catch (err) {
     console.error('App Render Error:', err);
     try {
-      localStorage.clear();
-    } catch(e) {}
-    root.innerHTML = `
-      <div class="min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-6 text-center space-y-4">
-        <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-          <svg class="w-8 h-8 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-        </div>
-        <h1 class="text-xl font-bold">Şehitkamil Strateji Geliştirme Portalı</h1>
-        <p class="text-xs text-slate-300 max-w-md">Sistem önbelleği temizlendi. Lütfen aşağıdaki butona basarak paneli başlatınız.</p>
-        <button onclick="window.location.reload()" class="px-6 py-3 bg-[#2A9D38] hover:bg-[#22822e] text-white font-extrabold text-xs rounded-xl shadow-lg transition-all">
-          Sistemi Başlat
-        </button>
-      </div>
-    `;
+      root.innerHTML = renderLoginScreen();
+      attachLoginListeners();
+    } catch (e) {
+      console.error('Fallback Login Render Error:', e);
+    }
   }
 }
 
