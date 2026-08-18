@@ -207,8 +207,11 @@ class Store {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        const parsed = JSON.parse(saved);
         const merged = { ...defaultState, ...parsed };
+        merged.showAdminNotifications = false;
+        merged.showPwaNotifications = false;
+        merged.mobileSidebarOpen = false;
+        merged.activeModal = null;
 
         if (parsed.auth && parsed.auth.isLoggedIn && parsed.auth.token) {
           merged.auth = parsed.auth;
@@ -497,6 +500,8 @@ class Store {
     this.state.adminTab = tab;
     this.state.activeModal = null;
     this.state.mobileSidebarOpen = false;
+    this.state.showAdminNotifications = false;
+    this.state.showPwaNotifications = false;
     if (tab === 'messages') {
       (this.state.messages || []).forEach(m => {
         if (m.senderRole === 'FIELD_USER' || m.direction === 'TO_ADMIN') {

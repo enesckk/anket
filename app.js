@@ -1,6 +1,6 @@
 // SurveyAdmin Intelligence - Main PWA & Admin Application Controller
 
-import { store, compressImageFile } from './store.js?v=16';
+import { store, compressImageFile } from './store.js?v=18';
 import {
   iconSvg,
   renderSystemBar,
@@ -18,7 +18,7 @@ import {
   renderAdminView,
   renderToastNotification,
   renderCustomModals
-} from './components.js?v=16';
+} from './components.js?v=18';
 
 function generateRandomStrongPassword() {
   const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
@@ -207,6 +207,15 @@ if (typeof document !== 'undefined') {
   }
 
   document.addEventListener('click', async (e) => {
+    const adminTabBtn = e.target.closest('.btn-admin-tab');
+    if (adminTabBtn) {
+      const tab = adminTabBtn.getAttribute('data-admin-tab');
+      if (tab) {
+        store.setAdminTab(tab);
+        return;
+      }
+    }
+
     const logoutBtn = e.target.closest('#btn-global-logout, #btn-logout');
     if (logoutBtn) {
       store.logout();
@@ -575,15 +584,6 @@ if (typeof document !== 'undefined') {
       return;
     }
 
-    const adminTabBtn = e.target.closest('.btn-admin-tab');
-    if (adminTabBtn) {
-      const tab = adminTabBtn.getAttribute('data-admin-tab');
-      if (tab) {
-        store.setAdminTab(tab);
-        return;
-      }
-    }
-
     const testNotifBtn = e.target.closest('#btn-send-test-notification, #btn-pwa-send-test-notification');
     if (testNotifBtn) {
       store.sendTestNotification();
@@ -930,6 +930,15 @@ function attachLoginListeners() {
 
 function attachAdminListeners() {
   attachGlobalSystemListeners();
+
+  // Direct Sidebar Tab Switches (double guarantee)
+  document.querySelectorAll('.btn-admin-tab').forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const tab = e.currentTarget.getAttribute('data-admin-tab');
+      if (tab) store.setAdminTab(tab);
+    };
+  });
 
   // Excel & PDF Report Download Actions
   document.getElementById('btn-admin-download-excel')?.addEventListener('click', () => {
