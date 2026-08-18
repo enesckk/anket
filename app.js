@@ -1,6 +1,6 @@
 // SurveyAdmin Intelligence - Main PWA & Admin Application Controller
 
-import { store, compressImageFile } from './store.js?v=14';
+import { store, compressImageFile } from './store.js?v=15';
 import {
   renderSystemBar,
   renderLoginScreen,
@@ -17,7 +17,7 @@ import {
   renderAdminView,
   renderToastNotification,
   renderCustomModals
-} from './components.js?v=14';
+} from './components.js?v=15';
 
 function generateRandomStrongPassword() {
   const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
