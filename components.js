@@ -17,6 +17,7 @@ export function iconSvg(name, extraClass = 'w-5 h-5') {
     clipboard: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>`,
     message: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
     user: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+    menu: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>`,
     arrowLeft: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>`,
     arrowRight: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>`,
     checkCircle: `<svg class="${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
@@ -2389,6 +2390,57 @@ export function renderAdminView() {
     <div class="flex min-h-screen bg-[#F8FAFC] relative font-sans">
       ${renderCustomModals(state)}
 
+      <!-- MOBILE RESPONSIVE SIDEBAR DRAWER OVERLAY -->
+      ${state.mobileSidebarOpen ? `
+        <div class="fixed inset-0 z-50 md:hidden flex">
+          <div id="btn-close-mobile-sidebar-backdrop" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity cursor-pointer"></div>
+          
+          <aside class="relative flex flex-col w-72 max-w-[85vw] bg-white h-full shadow-2xl z-10 animate-in slide-in-from-left duration-200">
+            <div class="h-[72px] px-4 border-b border-[#E9EDF2] flex items-center justify-between shrink-0">
+              <div class="flex items-center gap-3">
+                <img src="./logo_sehitkamil.png" alt="Şehitkamil Logo" class="h-9 w-auto object-contain shrink-0">
+                <div class="flex flex-col min-w-0">
+                  <span class="text-[13px] font-semibold text-[#01214A] leading-snug tracking-tight truncate">Şehitkamil Strateji</span>
+                  <span class="text-[10px] font-normal text-slate-400">Yönetim Paneli</span>
+                </div>
+              </div>
+              <button id="btn-close-mobile-sidebar" type="button" class="p-2 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 cursor-pointer">
+                ${iconSvg('close', 'w-5 h-5')}
+              </button>
+            </div>
+
+            <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
+              ${navItems.map(item => {
+                const isActive = activeTab === item.id || (activeTab === 'builder' && item.id === 'surveys');
+                const isMsg = item.id === 'messages';
+                const isSurvey = item.id === 'surveys';
+                const showMsgBadge = isMsg && unreadAdminMsgCount > 0;
+                const showSurveyBadge = isSurvey && pendingSurveysCount > 0;
+
+                return `
+                  <button type="button" data-admin-tab="${item.id}" class="btn-admin-tab w-full flex items-center justify-between px-3.5 py-3 rounded-[10px] text-left text-xs transition-all duration-150 relative cursor-pointer ${isActive ? 'text-[#01214A] bg-[#2A9D38]/10 font-semibold border-l-3 border-[#2A9D38]' : 'text-slate-500 hover:text-[#01214A] hover:bg-slate-50 font-normal'}">
+                    <div class="flex items-center gap-3 min-w-0">
+                      ${iconSvg(item.icon, `w-5 h-5 ${isActive ? 'text-[#2A9D38]' : 'text-slate-400'}`)}
+                      <span class="truncate font-medium text-sm">${item.label}</span>
+                    </div>
+                    ${showMsgBadge ? `
+                      <span class="ml-2 px-2 py-0.5 bg-red-500 text-white text-[10px] font-extrabold rounded-full animate-bounce shadow-xs shrink-0 flex items-center gap-1">
+                        <span>${unreadAdminMsgCount} Yeni</span>
+                      </span>
+                    ` : ''}
+                    ${showSurveyBadge ? `
+                      <span class="ml-2 px-2 py-0.5 bg-amber-500 text-white text-[10px] font-extrabold rounded-full shadow-xs shrink-0">
+                        ${pendingSurveysCount} Onay
+                      </span>
+                    ` : ''}
+                  </button>
+                `;
+              }).join('')}
+            </nav>
+          </aside>
+        </div>
+      ` : ''}
+
       <!-- LEFT SIDEBAR WITH TOP BRANDING (72px BRANDING HEIGHT, 32-36px LOGO, 10-12px GAP) -->
       <aside class="hidden md:flex flex-col w-64 border-r border-[#E9EDF2] bg-white z-30 shrink-0 sticky top-0 h-screen">
         
@@ -2444,16 +2496,21 @@ export function renderAdminView() {
       <div class="flex-1 flex flex-col min-w-0 min-h-screen">
         
         <!-- SINGLE UNIFIED TOP HEADER BAR (72px HEIGHT MATCHING BRANDING BLOCK) -->
-        <header class="h-[72px] border-b border-[#E9EDF2] bg-white px-6 sm:px-8 flex items-center justify-between sticky top-0 z-30 shrink-0">
+        <header class="h-[72px] border-b border-[#E9EDF2] bg-white px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30 shrink-0">
           
-          <!-- LEFT: PAGE TITLE & SUBTITLE / DATE -->
-          <div class="space-y-0.5 min-w-0">
-            <h1 class="text-[24px] sm:text-[26px] font-bold text-[#01214A] tracking-tight leading-tight truncate">
-              ${activeTab === 'builder' ? 'Anket Oluştur' : currentNavItem.label}
-            </h1>
-            <p class="text-[13px] text-slate-400 font-normal truncate">
-              ${currentDateStr} · ${activeTab === 'builder' ? 'Yeni saha araştırması hazırlama sihirbazı' : currentNavItem.subtitle}
-            </p>
+          <!-- LEFT: MOBILE HAMBURGER BUTTON & PAGE TITLE -->
+          <div class="flex items-center gap-3 min-w-0">
+            <button id="btn-open-mobile-sidebar" type="button" class="md:hidden p-2 text-slate-600 hover:text-[#01214A] hover:bg-slate-100 rounded-lg cursor-pointer shrink-0 -ml-1" title="Menüyü Aç">
+              ${iconSvg('menu', 'w-6 h-6')}
+            </button>
+            <div class="space-y-0.5 min-w-0">
+              <h1 class="text-[20px] sm:text-[26px] font-bold text-[#01214A] tracking-tight leading-tight truncate">
+                ${activeTab === 'builder' ? 'Anket Oluştur' : currentNavItem.label}
+              </h1>
+              <p class="hidden sm:block text-[13px] text-slate-400 font-normal truncate">
+                ${currentDateStr} · ${activeTab === 'builder' ? 'Yeni saha araştırması hazırlama sihirbazı' : currentNavItem.subtitle}
+              </p>
+            </div>
           </div>
 
           <!-- RIGHT: CONTEXTUAL CTA, NOTIFICATIONS & PROFILE DROPDOWN (NO SISTEM ÇEVRİMİÇİ, NO STANDALONE LOGOUT) -->

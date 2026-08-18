@@ -1,6 +1,6 @@
 // SurveyAdmin Intelligence - Main PWA & Admin Application Controller
 
-import { store, compressImageFile } from './store.js?v=12';
+import { store, compressImageFile } from './store.js?v=13';
 import {
   renderSystemBar,
   renderLoginScreen,
@@ -17,7 +17,7 @@ import {
   renderAdminView,
   renderToastNotification,
   renderCustomModals
-} from './components.js?v=12';
+} from './components.js?v=13';
 
 function generateRandomStrongPassword() {
   const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
@@ -514,6 +514,67 @@ if (typeof window !== 'undefined' && !window.__globalListenersAttached) {
       return;
     }
 
+    const openMobileSidebarBtn = e.target.closest('#btn-open-mobile-sidebar');
+    if (openMobileSidebarBtn) {
+      store.toggleMobileSidebar();
+      return;
+    }
+
+    const closeMobileSidebarBtn = e.target.closest('#btn-close-mobile-sidebar, #btn-close-mobile-sidebar-backdrop');
+    if (closeMobileSidebarBtn) {
+      store.closeMobileSidebar();
+      return;
+    }
+
+    const profileToggleBtn = e.target.closest('#btn-toggle-profile-dropdown');
+    if (profileToggleBtn) {
+      const menu = document.getElementById('dropdown-user-profile-menu');
+      if (menu) menu.classList.toggle('hidden');
+      return;
+    }
+
+    const dropdownProfileBtn = e.target.closest('#btn-dropdown-profile');
+    if (dropdownProfileBtn) {
+      store.setPwaScreen('profile');
+      return;
+    }
+
+    const navHomeBtn = e.target.closest('#nav-home');
+    if (navHomeBtn) {
+      store.setPwaScreen('home');
+      return;
+    }
+
+    const navSurveysBtn = e.target.closest('#nav-surveys');
+    if (navSurveysBtn) {
+      store.setPwaScreen('my_surveys');
+      return;
+    }
+
+    const navMessagesBtn = e.target.closest('#nav-messages');
+    if (navMessagesBtn) {
+      store.setPwaScreen('messages');
+      return;
+    }
+
+    const navProfileBtn = e.target.closest('#nav-profile');
+    if (navProfileBtn) {
+      store.setPwaScreen('profile');
+      return;
+    }
+
+    const pwaNotifToggleBtn = e.target.closest('#btn-toggle-pwa-notifications');
+    if (pwaNotifToggleBtn) {
+      store.togglePwaNotifications();
+      return;
+    }
+
+    const pwaNotifCloseBtn = e.target.closest('#btn-close-pwa-notifications');
+    if (pwaNotifCloseBtn) {
+      if (store.state.showPwaNotifications) store.togglePwaNotifications();
+      return;
+    }
+
     const adminTabBtn = e.target.closest('.btn-admin-tab');
     if (adminTabBtn) {
       const tab = adminTabBtn.getAttribute('data-admin-tab');
@@ -573,6 +634,10 @@ if (typeof window !== 'undefined' && !window.__globalListenersAttached) {
       store.toggleAdminNotifications();
     }
 
+    const profileDropdown = document.getElementById('dropdown-user-profile-menu');
+    if (profileDropdown && !profileDropdown.classList.contains('hidden') && !profileDropdown.contains(e.target) && !e.target.closest('#btn-toggle-profile-dropdown')) {
+      profileDropdown.classList.add('hidden');
+    }
 
     const assignMenu = document.getElementById('dropdown-assign-personnel-menu');
     const assignBtn = document.getElementById('btn-toggle-assign-personnel-dropdown');
@@ -865,35 +930,6 @@ function attachLoginListeners() {
 
 function attachAdminListeners() {
   attachGlobalSystemListeners();
-
-  // USER PROFILE DROPDOWN TOGGLE & OUTSIDE CLICK DISMISS
-  document.getElementById('btn-toggle-profile-dropdown')?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const menu = document.getElementById('dropdown-user-profile-menu');
-    if (menu) {
-      menu.classList.toggle('hidden');
-    }
-  });
-
-  document.addEventListener('click', (e) => {
-    const dropdown = document.getElementById('dropdown-user-profile-menu');
-    const button = document.getElementById('btn-toggle-profile-dropdown');
-    if (dropdown && !dropdown.contains(e.target) && button && !button.contains(e.target)) {
-      dropdown.classList.add('hidden');
-    }
-  });
-
-  document.getElementById('btn-dropdown-profile')?.addEventListener('click', () => {
-    store.setPwaScreen('profile');
-  });
-
-  // Sidebar 7 Tab Switches
-  document.querySelectorAll('.btn-admin-tab').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const tab = e.currentTarget.getAttribute('data-admin-tab');
-      store.setAdminTab(tab);
-    });
-  });
 
   // Excel & PDF Report Download Actions
   document.getElementById('btn-admin-download-excel')?.addEventListener('click', () => {

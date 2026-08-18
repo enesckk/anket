@@ -491,10 +491,21 @@ class Store {
     this.fetchInitialData();
   }
 
+  toggleMobileSidebar() {
+    this.state.mobileSidebarOpen = !this.state.mobileSidebarOpen;
+    this.saveState();
+  }
+
+  closeMobileSidebar() {
+    this.state.mobileSidebarOpen = false;
+    this.saveState();
+  }
+
   setAdminTab(tab) {
     this.state.currentRole = 'admin';
     this.state.adminTab = tab;
     this.state.activeModal = null;
+    this.state.mobileSidebarOpen = false;
     if (tab === 'messages') {
       (this.state.messages || []).forEach(m => {
         if (m.senderRole === 'FIELD_USER' || m.direction === 'TO_ADMIN') {
