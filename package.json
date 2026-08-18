@@ -4,6 +4,7 @@
   "type": "module",
   "description": "SurveyAdmin Intelligence - Saha Anket & Executive Admin Platformu",
   "scripts": {
+    "build": "echo Static site ready",
     "start": "node server.js"
   },
   "keywords": ["pwa", "survey", "dashboard", "field-survey", "data-intelligence"],
