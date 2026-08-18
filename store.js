@@ -158,8 +158,8 @@ const defaultState = {
   ],
   allAssignments: [],
   allPersonnel: [
-    { id: 'usr-admin', fullName: 'Sistem Yöneticisi', email: 'admin@sahaanket.gov.tr', phone: '0500 000 00 00', role: 'ADMIN', isActive: true, password: 'Admin123!' },
-    { id: 'usr-saha', fullName: 'Saha Yöneticisi', email: 'saha@sahaanket.gov.tr', phone: '0555 100 20 30', role: 'FIELD_USER', isActive: true, password: 'Saha123!' }
+    { id: 'usr-admin', fullName: 'Sistem Yöneticisi', email: 'admin@sahaanket.com', phone: '0500 000 00 00', role: 'ADMIN', isActive: true, password: 'Admin123!' },
+    { id: 'usr-saha', fullName: 'Saha Yöneticisi', email: 'saha@sahaanket.com', phone: '0555 100 20 30', role: 'FIELD_USER', isActive: true, password: 'Saha123!' }
   ],
 
   // Active Form Runner State
@@ -207,41 +207,44 @@ class Store {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        const merged = { ...defaultState, ...parsed };
-        merged.showAdminNotifications = false;
-        merged.showPwaNotifications = false;
-        merged.mobileSidebarOpen = false;
-        merged.activeModal = null;
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') {
+          const merged = { ...defaultState, ...parsed };
+          merged.showAdminNotifications = false;
+          merged.showPwaNotifications = false;
+          merged.mobileSidebarOpen = false;
+          merged.activeModal = null;
 
-        if (parsed.auth && parsed.auth.isLoggedIn && parsed.auth.token) {
-          merged.auth = parsed.auth;
-        } else {
-          merged.auth = { ...defaultState.auth };
+          if (parsed.auth && parsed.auth.isLoggedIn && parsed.auth.token) {
+            merged.auth = parsed.auth;
+          } else {
+            merged.auth = { ...defaultState.auth };
+          }
+
+          merged.adminKpis = { ...defaultState.adminKpis, ...(parsed.adminKpis || {}) };
+
+          if (Array.isArray(parsed.allSurveys) && parsed.allSurveys.length > 0) {
+            merged.allSurveys = parsed.allSurveys.filter(Boolean);
+          } else {
+            merged.allSurveys = [...defaultState.allSurveys];
+          }
+
+          if (Array.isArray(parsed.allPersonnel) && parsed.allPersonnel.length > 0) {
+            merged.allPersonnel = parsed.allPersonnel.filter(Boolean);
+          } else {
+            merged.allPersonnel = [...defaultState.allPersonnel];
+          }
+
+          if (Array.isArray(parsed.allAssignments)) merged.allAssignments = parsed.allAssignments.filter(Boolean);
+          if (Array.isArray(parsed.assignedSurveys)) merged.assignedSurveys = parsed.assignedSurveys.filter(Boolean);
+          if (Array.isArray(parsed.myQuickSurveys)) merged.myQuickSurveys = parsed.myQuickSurveys.filter(Boolean);
+          if (Array.isArray(parsed.messages)) merged.messages = parsed.messages.filter(Boolean);
+          if (Array.isArray(parsed.submissions)) merged.submissions = parsed.submissions.filter(Boolean);
+          if (Array.isArray(parsed.reports)) merged.reports = parsed.reports.filter(Boolean);
+          if (Array.isArray(parsed.notifications)) merged.notifications = parsed.notifications.filter(Boolean);
+
+          return merged;
         }
-
-        merged.adminKpis = { ...defaultState.adminKpis, ...(parsed.adminKpis || {}) };
-
-        if (Array.isArray(parsed.allSurveys) && parsed.allSurveys.length > 0) {
-          merged.allSurveys = parsed.allSurveys.filter(Boolean);
-        } else {
-          merged.allSurveys = [...defaultState.allSurveys];
-        }
-
-        if (Array.isArray(parsed.allPersonnel) && parsed.allPersonnel.length > 0) {
-          merged.allPersonnel = parsed.allPersonnel.filter(Boolean);
-        } else {
-          merged.allPersonnel = [...defaultState.allPersonnel];
-        }
-
-        if (Array.isArray(parsed.allAssignments)) merged.allAssignments = parsed.allAssignments.filter(Boolean);
-        if (Array.isArray(parsed.assignedSurveys)) merged.assignedSurveys = parsed.assignedSurveys.filter(Boolean);
-        if (Array.isArray(parsed.myQuickSurveys)) merged.myQuickSurveys = parsed.myQuickSurveys.filter(Boolean);
-        if (Array.isArray(parsed.messages)) merged.messages = parsed.messages.filter(Boolean);
-        if (Array.isArray(parsed.submissions)) merged.submissions = parsed.submissions.filter(Boolean);
-        if (Array.isArray(parsed.reports)) merged.reports = parsed.reports.filter(Boolean);
-        if (Array.isArray(parsed.notifications)) merged.notifications = parsed.notifications.filter(Boolean);
-
-        return merged;
       }
     } catch (e) {
       console.warn('LocalStorage load error:', e);
@@ -327,17 +330,22 @@ class Store {
   // AUTH ACTIONS
   async login(usernameOrPhone, password) {
     const inputStr = (usernameOrPhone || '').trim().toLowerCase();
+    const cleanPwd = (password || '').trim();
 
     // ── Girdi validasyonu ──
     if (!inputStr) {
-      this.setToast('Lütfen e-posta adresinizi giriniz.', 'error');
+      this.setToast('Lütfen e-posta veya kullanıcı adınızı giriniz.', 'error');
+      return;
+    }
+    if (!cleanPwd) {
+      this.setToast('Lütfen şifrenizi giriniz.', 'error');
       return;
     }
 
     try {
       const res = await this.apiFetch('/auth/login', {
         method: 'POST',
-        body: JSON.stringify({ usernameOrPhone, password: password || '123456' })
+        body: JSON.stringify({ usernameOrPhone: inputStr, password: cleanPwd })
       });
 
       this.state.auth = {
@@ -347,46 +355,65 @@ class Store {
         user: res.user
       };
       this.state.currentRole = res.user.role === 'ADMIN' ? 'admin' : 'pwa';
-      this.state.pwaScreen = 'home';
+      if (this.state.currentRole === 'admin') {
+        this.state.adminTab = 'dashboard';
+      } else {
+        this.state.pwaScreen = 'home';
+      }
+      this.setToast(`Giriş Başarılı! Hoş geldiniz, ${res.user.fullName}`, 'success');
       this.saveState();
       await this.fetchInitialData();
     } catch (e) {
       // ── Offline / Demo Mod Yetkilendirme ──
       const allPersonnel = this.state.allPersonnel || [];
 
-      // E-posta, telefon veya isim eşleştirme
+      // 1. E-posta, telefon veya isim tam eşleştirme
       let matched = allPersonnel.find(p =>
         (p.email && p.email.trim().toLowerCase() === inputStr) ||
         (p.phone && p.phone.replace(/\D/g, '') === inputStr.replace(/\D/g, '')) ||
         (p.fullName && p.fullName.trim().toLowerCase() === inputStr)
       );
 
-      // Eğer 'admin' veya 'koordinat' yazıldıysa admin kullanıcısını seç
-      if (!matched && (inputStr === 'admin' || inputStr.includes('admin') || inputStr.includes('koordinat'))) {
-        matched = allPersonnel.find(p => p.role === 'ADMIN') || {
-          id: 'usr-admin',
-          fullName: 'Saha Koordinatörü',
-          email: 'admin@sahaanket.gov.tr',
-          phone: '0500 000 00 00',
-          role: 'ADMIN',
-          isActive: true
+      // 2. saha@ veya 'saha' içeren e-posta/kullanıcı adı -> Saha Personeli
+      if (!matched && (inputStr.includes('saha') || inputStr.includes('field'))) {
+        matched = allPersonnel.find(p => p.role === 'FIELD_USER') || {
+          id: 'usr-saha',
+          fullName: 'Saha Yöneticisi',
+          email: 'saha@sahaanket.com',
+          phone: '0555 100 20 30',
+          role: 'FIELD_USER',
+          isActive: true,
+          password: 'Saha123!'
         };
       }
 
-      // Eğer eşleşme bulunamadıysa varsayılan saha kullanıcısı
-      if (!matched) {
-        matched = allPersonnel[0] || {
-          id: 'usr-1',
-          fullName: 'Ahmet Yılmaz',
-          email: inputStr,
-          phone: '0532 100 20 30',
-          role: 'FIELD_USER',
-          isActive: true
+      // 3. admin@ veya 'admin' / 'koordinat' / 'yonetici' -> Admin
+      if (!matched && (inputStr.includes('admin') || inputStr.includes('koordinat') || inputStr.includes('yonetici'))) {
+        matched = allPersonnel.find(p => p.role === 'ADMIN') || {
+          id: 'usr-admin',
+          fullName: 'Sistem Yöneticisi',
+          email: 'admin@sahaanket.com',
+          phone: '0500 000 00 00',
+          role: 'ADMIN',
+          isActive: true,
+          password: 'Admin123!'
         };
+      }
+
+      // 4. Varsayılan eşleşme
+      if (!matched) {
+        matched = allPersonnel.find(p => p.role === 'FIELD_USER') || allPersonnel[0];
       }
 
       if (matched.isActive === false) {
         this.setToast(`'${matched.fullName}' hesabı pasif durumdadır!`, 'error');
+        return;
+      }
+
+      // Şifre kontrolü
+      const expectedPwd = matched.password || (matched.role === 'ADMIN' ? 'Admin123!' : 'Saha123!');
+      if (cleanPwd !== expectedPwd && cleanPwd !== '123456' && cleanPwd !== 'Saha123!' && cleanPwd !== 'Admin123!') {
+        this.setToast('Geçersiz kullanıcı adı/e-posta veya şifre.', 'error');
         return;
       }
 
@@ -397,7 +424,7 @@ class Store {
         refreshToken: null,
         user: {
           id: matched.id,
-          username: matched.email,
+          username: matched.email || inputStr,
           phone: matched.phone,
           fullName: matched.fullName,
           role: matched.role,
@@ -405,7 +432,11 @@ class Store {
         }
       };
       this.state.currentRole = isUserAdmin ? 'admin' : 'pwa';
-      this.state.pwaScreen = 'home';
+      if (isUserAdmin) {
+        this.state.adminTab = 'dashboard';
+      } else {
+        this.state.pwaScreen = 'home';
+      }
       this.setToast(`Giriş Başarılı! Hoş geldiniz, ${matched.fullName} (${isUserAdmin ? 'Yönetici Paneli' : 'Saha Personeli PWA'})`, 'success');
       this.saveState();
       this.requestNotificationPermission();
@@ -1254,7 +1285,17 @@ class Store {
   }
 
   setToast(message, type = 'success') {
-    this.state.toast = { message, type, id: Date.now() };
+    const toastId = Date.now();
+    this.state.toast = { message, type, id: toastId };
+
+    // Auto-clear from state after 3.5s so re-renders don't keep resurrecting old toasts
+    setTimeout(() => {
+      if (this.state.toast && this.state.toast.id === toastId) {
+        this.state.toast = null;
+        this.saveState(true);
+      }
+    }, 3500);
+
     if (typeof document !== 'undefined') {
       let toastContainer = document.getElementById('global-toast-container');
       if (!toastContainer) {
@@ -1278,13 +1319,21 @@ class Store {
             : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>');
 
       const toastItem = document.createElement('div');
-      toastItem.className = `px-4 py-3 rounded-xl flex items-center gap-3 border text-xs font-semibold ${bgClass} transition-all duration-200 transform translate-y-0 opacity-100`;
+      toastItem.className = `pointer-events-auto cursor-pointer px-4 py-3 rounded-xl flex items-center gap-3 border text-xs font-semibold ${bgClass} transition-all duration-200 transform translate-y-0 opacity-100`;
       toastItem.innerHTML = `
         <svg class="w-4 h-4 ${iconColor} shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           ${iconPath}
         </svg>
-        <span class="leading-snug">${message}</span>
+        <span class="leading-snug flex-1">${message}</span>
+        <svg class="w-3.5 h-3.5 text-slate-400 hover:text-white shrink-0 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       `;
+      toastItem.onclick = () => {
+        toastItem.style.opacity = '0';
+        toastItem.style.transform = 'translateY(-10px)';
+        setTimeout(() => {
+          if (toastItem.parentNode) toastItem.parentNode.removeChild(toastItem);
+        }, 200);
+      };
       toastContainer.appendChild(toastItem);
 
       setTimeout(() => {

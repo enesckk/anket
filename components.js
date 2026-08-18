@@ -1243,16 +1243,8 @@ export function renderCustomModals(state) {
 
 
 export function renderToastNotification(state) {
-  if (!state.toast) return '';
-  const isSuccess = state.toast.type === 'success';
-  return `
-    <div class="fixed top-5 right-5 z-50 animate-in slide-in-from-top-5 duration-200">
-      <div class="px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border text-xs font-bold ${isSuccess ? 'bg-emerald-900 text-white border-emerald-700' : 'bg-red-900 text-white border-red-700'}">
-        ${iconSvg(isSuccess ? 'checkCircle' : 'block', 'w-5 h-5 text-white shrink-0')}
-        <span>${state.toast.message}</span>
-      </div>
-    </div>
-  `;
+  // Toasts are dynamically and cleanly managed by #global-toast-container with auto-dismiss
+  return '';
 }
 
 // System Top Bar (Disabled because Admin and PWA views manage their own dedicated headers)
@@ -1280,23 +1272,24 @@ export function renderLoginScreen() {
         </div>
 
         <!-- EXECUTIVE LOGIN CARD -->
-        <div class="bg-white rounded-[24px] shadow-[0_20px_60px_rgba(0,0,0,0.25)] border border-slate-100 p-8 sm:p-9 space-y-6">
+        <div class="bg-white rounded-[24px] shadow-[0_20px_60px_rgba(0,0,0,0.25)] border border-slate-100 p-8 sm:p-9 space-y-5">
           
           <!-- TITLE -->
           <div class="text-center pb-1">
             <h1 class="text-lg sm:text-xl font-bold text-[#0B315D] tracking-tight leading-snug">Saha Anket</h1>
+            <p class="text-xs text-slate-500 font-normal mt-1">Saha Yönetim & Veri Toplama Platformu</p>
           </div>
 
           <!-- FORM -->
-          <form id="form-login" autocomplete="off" class="space-y-5">
+          <form id="form-login" autocomplete="off" class="space-y-4">
             
-            <!-- EMAIL FIELD -->
+            <!-- USERNAME / EMAIL / PHONE FIELD -->
             <div class="space-y-1.5">
-              <label for="login-email" class="block text-xs font-semibold text-[#1F2937]">E-posta adresi</label>
+              <label for="login-email" class="block text-xs font-semibold text-[#1F2937]">Kullanıcı Adı / E-posta / Telefon</label>
               <div class="relative">
-                <input type="email" id="login-email" required autocomplete="off" placeholder="E-posta adresinizi girin" class="w-full h-[50px] pl-11 pr-4 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-xs sm:text-sm font-medium text-slate-900 focus:outline-none focus:bg-white focus:border-[#0B315D] focus:ring-4 focus:ring-[#0B315D]/10 transition-all placeholder:text-slate-400"/>
+                <input type="text" id="login-email" required autocomplete="username" placeholder="admin veya admin@sahaanket.gov.tr" class="w-full h-[50px] pl-11 pr-4 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-xs sm:text-sm font-medium text-slate-900 focus:outline-none focus:bg-white focus:border-[#0B315D] focus:ring-4 focus:ring-[#0B315D]/10 transition-all placeholder:text-slate-400"/>
                 <span class="absolute left-3.5 top-3.5 text-slate-400 pointer-events-none">
-                  ${iconSvg('mail', 'w-5 h-5 text-slate-400')}
+                  ${iconSvg('user', 'w-5 h-5 text-slate-400')}
                 </span>
               </div>
             </div>
@@ -1307,7 +1300,7 @@ export function renderLoginScreen() {
                 <label for="login-password" class="block text-xs font-semibold text-[#1F2937]">Şifre</label>
               </div>
               <div class="relative">
-                <input type="password" id="login-password" required autocomplete="new-password" placeholder="Şifrenizi girin" class="w-full h-[50px] pl-4 pr-11 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-xs sm:text-sm font-medium text-slate-900 focus:outline-none focus:bg-white focus:border-[#0B315D] focus:ring-4 focus:ring-[#0B315D]/10 transition-all placeholder:text-slate-400"/>
+                <input type="password" id="login-password" required autocomplete="current-password" placeholder="Şifrenizi girin" class="w-full h-[50px] pl-4 pr-11 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-xs sm:text-sm font-medium text-slate-900 focus:outline-none focus:bg-white focus:border-[#0B315D] focus:ring-4 focus:ring-[#0B315D]/10 transition-all placeholder:text-slate-400"/>
                 <button type="button" id="btn-toggle-password" title="Şifreyi Göster / Gizle" class="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer focus:outline-none">
                   <span id="pwd-eye-icon">${iconSvg('eye', 'w-5 h-5 text-slate-400')}</span>
                 </button>
@@ -1315,10 +1308,25 @@ export function renderLoginScreen() {
             </div>
 
             <!-- SUBMIT BUTTON -->
-            <button type="submit" class="w-full h-[52px] bg-[#0B315D] hover:bg-[#072446] text-white font-semibold text-sm rounded-[14px] shadow-md hover:shadow-lg transition-all active:scale-[0.99] flex items-center justify-center cursor-pointer mt-3">
+            <button type="submit" class="w-full h-[52px] bg-[#0B315D] hover:bg-[#072446] text-white font-semibold text-sm rounded-[14px] shadow-md hover:shadow-lg transition-all active:scale-[0.99] flex items-center justify-center cursor-pointer mt-2">
               Giriş Yap
             </button>
           </form>
+
+          <!-- QUICK DEMO PRESETS -->
+          <div class="pt-3 border-t border-slate-100 space-y-2">
+            <span class="text-[11px] font-semibold text-slate-400 text-center block">Hızlı Tek Tıkla Giriş:</span>
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" id="btn-quick-login-admin" class="py-2.5 px-3 bg-slate-50 hover:bg-slate-100 text-[#01214A] border border-slate-200 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all hover:scale-[1.02] cursor-pointer">
+                ${iconSvg('shield', 'w-4 h-4 text-[#2A9D38]')}
+                <span>Yönetici Girişi</span>
+              </button>
+              <button type="button" id="btn-quick-login-field" class="py-2.5 px-3 bg-slate-50 hover:bg-slate-100 text-[#01214A] border border-slate-200 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all hover:scale-[1.02] cursor-pointer">
+                ${iconSvg('users', 'w-4 h-4 text-[#00A0DF]')}
+                <span>Saha Ekibi Girişi</span>
+              </button>
+            </div>
+          </div>
 
         </div>
 
@@ -2335,8 +2343,12 @@ export function renderProfile() {
 
         </div>
 
-        <!-- SMALL DESTRUCTIVE OUTLINE LOGOUT BUTTON AT BOTTOM (SECTION 37) -->
-        <div class="pt-2">
+        <!-- ACTION BUTTONS -->
+        <div class="pt-2 space-y-2">
+          <button id="btn-switch-to-admin" type="button" class="w-full h-10 bg-[#01214A] hover:bg-[#072446] text-white font-semibold text-xs rounded-[10px] transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs">
+            ${iconSvg('dashboard', 'w-4 h-4 text-white')}
+            <span>Yönetici Paneline Geç</span>
+          </button>
           <button id="btn-open-logout-modal" type="button" class="w-full h-10 border border-red-200 hover:bg-red-50 text-red-600 font-semibold text-xs rounded-[10px] transition-colors flex items-center justify-center gap-2 cursor-pointer">
             ${iconSvg('logOut', 'w-4 h-4 text-red-600')}
             <span>Çıkış Yap</span>
@@ -2561,9 +2573,9 @@ export function renderAdminView() {
                   <span>Profil</span>
                 </button>
 
-                <button type="button" id="btn-dropdown-account" class="w-full px-3.5 py-2 text-left text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 transition-colors cursor-pointer font-medium">
-                  ${iconSvg('dashboard', 'w-4 h-4 text-slate-400')}
-                  <span>Hesap Ayarları</span>
+                <button type="button" id="btn-switch-to-pwa" class="w-full px-3.5 py-2 text-left text-xs text-[#01214A] hover:bg-slate-50 flex items-center gap-2.5 transition-colors cursor-pointer font-medium">
+                  ${iconSvg('phone', 'w-4 h-4 text-[#00A0DF]')}
+                  <span>Saha Görünümüne Geç (PWA)</span>
                 </button>
 
                 <div class="border-t border-[#F1F5F9] my-1"></div>

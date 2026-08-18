@@ -46,6 +46,7 @@ public class SurveyDbContext : DbContext
         {
             Id = adminId,
             Username = "admin",
+            Email = "admin@sahaanket.gov.tr",
             Phone = "05000000000",
             FullName = "Sistem Yöneticisi",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!"),
@@ -58,6 +59,7 @@ public class SurveyDbContext : DbContext
         {
             Id = fieldUserId,
             Username = "saha",
+            Email = "saha@sahaanket.gov.tr",
             Phone = "05551002030",
             FullName = "Saha Yöneticisi",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword("Saha123!"),

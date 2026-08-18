@@ -1,6 +1,6 @@
 // SurveyAdmin Intelligence - Main PWA & Admin Application Controller
 
-import { store, compressImageFile } from './store.js?v=18';
+import { store, compressImageFile } from './store.js?v=19';
 import {
   iconSvg,
   renderSystemBar,
@@ -18,7 +18,7 @@ import {
   renderAdminView,
   renderToastNotification,
   renderCustomModals
-} from './components.js?v=18';
+} from './components.js?v=19';
 
 function generateRandomStrongPassword() {
   const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
@@ -548,6 +548,30 @@ if (typeof document !== 'undefined') {
       return;
     }
 
+    const switchToPwaBtn = e.target.closest('#btn-switch-to-pwa');
+    if (switchToPwaBtn) {
+      store.setRole('pwa');
+      return;
+    }
+
+    const switchToAdminBtn = e.target.closest('#btn-switch-to-admin');
+    if (switchToAdminBtn) {
+      store.setRole('admin');
+      return;
+    }
+
+    const quickAdminBtn = e.target.closest('#btn-quick-login-admin');
+    if (quickAdminBtn) {
+      await store.login('admin@sahaanket.gov.tr', 'Admin123!');
+      return;
+    }
+
+    const quickFieldBtn = e.target.closest('#btn-quick-login-field');
+    if (quickFieldBtn) {
+      await store.login('saha@sahaanket.gov.tr', 'Saha123!');
+      return;
+    }
+
     const navHomeBtn = e.target.closest('#nav-home');
     if (navHomeBtn) {
       store.setPwaScreen('home');
@@ -926,6 +950,22 @@ function attachLoginListeners() {
       await store.login(email, pwd);
     });
   }
+
+  document.getElementById('btn-quick-login-admin')?.addEventListener('click', async () => {
+    const emailEl = document.getElementById('login-email');
+    const pwdEl = document.getElementById('login-password');
+    if (emailEl) emailEl.value = 'admin@sahaanket.gov.tr';
+    if (pwdEl) pwdEl.value = 'Admin123!';
+    await store.login('admin@sahaanket.gov.tr', 'Admin123!');
+  });
+
+  document.getElementById('btn-quick-login-field')?.addEventListener('click', async () => {
+    const emailEl = document.getElementById('login-email');
+    const pwdEl = document.getElementById('login-password');
+    if (emailEl) emailEl.value = 'saha@sahaanket.gov.tr';
+    if (pwdEl) pwdEl.value = 'Saha123!';
+    await store.login('saha@sahaanket.gov.tr', 'Saha123!');
+  });
 }
 
 function attachAdminListeners() {
