@@ -1,6 +1,6 @@
 // SurveyAdmin Intelligence - Main PWA & Admin Application Controller
 
-import { store, compressImageFile } from './store.js?v=13';
+import { store, compressImageFile } from './store.js?v=14';
 import {
   renderSystemBar,
   renderLoginScreen,
@@ -17,7 +17,7 @@ import {
   renderAdminView,
   renderToastNotification,
   renderCustomModals
-} from './components.js?v=13';
+} from './components.js?v=14';
 
 function generateRandomStrongPassword() {
   const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
@@ -193,12 +193,11 @@ function attachGlobalSystemListeners() {
   }
 }
 
-// GLOBAL DELEGATED DOCUMENT LISTENERS (GUARANTEES DYNAMIC MODALS WORK 100%)
-if (typeof window !== 'undefined' && !window.__globalListenersAttached) {
-  window.__globalListenersAttached = true;
-
+// GLOBAL DELEGATED DOCUMENT LISTENERS (GUARANTEES DYNAMIC TABS, MENUS & MODALS WORK 100%)
+if (typeof document !== 'undefined') {
   // Handle background/OS notification clicks relayed by Service Worker
-  if ('serviceWorker' in navigator) {
+  if ('serviceWorker' in navigator && !window.__swMessageAttached) {
+    window.__swMessageAttached = true;
     navigator.serviceWorker.addEventListener('message', (event) => {
       if (event.data && event.data.type === 'NOTIFICATION_CLICKED' && event.data.notifId) {
         store.handleNotificationClick(event.data.notifId);

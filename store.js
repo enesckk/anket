@@ -304,7 +304,7 @@ class Store {
       ...options.headers
     };
 
-    if (this.state.auth && this.state.auth.token) {
+    if (this.state.auth && this.state.auth.token && !this.state.auth.token.startsWith('auth-token-')) {
       headers['Authorization'] = `Bearer ${this.state.auth.token}`;
     }
 
@@ -432,6 +432,9 @@ class Store {
     try {
       if (!this.state.auth || !this.state.auth.token || !this.state.auth.isLoggedIn) {
         return;
+      }
+      if (this.state.auth.token.startsWith('auth-token-')) {
+        return; // In offline/demo mode, preserve local state cleanly
       }
 
       // Fetch All Surveys from Backend DB
