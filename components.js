@@ -1313,21 +1313,6 @@ export function renderLoginScreen() {
             </button>
           </form>
 
-          <!-- QUICK DEMO PRESETS -->
-          <div class="pt-3 border-t border-slate-100 space-y-2">
-            <span class="text-[11px] font-semibold text-slate-400 text-center block">Hızlı Tek Tıkla Giriş:</span>
-            <div class="grid grid-cols-2 gap-2">
-              <button type="button" id="btn-quick-login-admin" class="py-2.5 px-3 bg-slate-50 hover:bg-slate-100 text-[#01214A] border border-slate-200 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all hover:scale-[1.02] cursor-pointer">
-                ${iconSvg('shield', 'w-4 h-4 text-[#2A9D38]')}
-                <span>Yönetici Girişi</span>
-              </button>
-              <button type="button" id="btn-quick-login-field" class="py-2.5 px-3 bg-slate-50 hover:bg-slate-100 text-[#01214A] border border-slate-200 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all hover:scale-[1.02] cursor-pointer">
-                ${iconSvg('users', 'w-4 h-4 text-[#00A0DF]')}
-                <span>Saha Ekibi Girişi</span>
-              </button>
-            </div>
-          </div>
-
         </div>
 
       </div>
@@ -3252,8 +3237,8 @@ function renderAdminTabContent(tab, state) {
             <span class="font-semibold text-[#01214A]">${(state.submissions || []).length} yanıt</span>
           </div>
           <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full ${state.isOnline ? 'bg-[#2A9D38]' : 'bg-amber-500'}"></span>
-            <span class="text-slate-600 font-normal">${state.isOnline ? 'Sistem Çevrimiçi · Merkezi Veritabanı Aktif' : 'Çevrimdışı Mod'}</span>
+            <span class="text-[#667085]">Aktif Saha Görevleri:</span>
+            <span class="font-semibold text-[#01214A]">${(state.assignments || []).filter(a => a.status === 'IN_PROGRESS').length} devam eden</span>
           </div>
         </div>
 
@@ -3816,148 +3801,255 @@ function renderAdminTabContent(tab, state) {
       const allReports = Array.isArray(state.reports) ? state.reports : [];
       const savedReports = store.getFilteredReports();
       const currentReportView = state.reportActiveView || 'questions';
-      
-      // Selected Survey (defaults to first active survey, or explicitly chosen survey)
-      const selectedSurveyId = state.selectedReportSurveyId || (allSurveys.find(s => s.status === 'ACTIVE') || allSurveys[0])?.id;
-      const currentSurvey = allSurveys.find(s => s.id === selectedSurveyId) || allSurveys[0] || {
-        id: 'srv-default',
-        title: 'Şehitkamil Tarımsal İhtiyaç ve Arazi Değerlendirme Anketi',
-        category: 'Tarım',
-        villageName: 'Sinan Köyü',
-        targetCount: 100,
-        completedCount: 100,
-        status: 'ACTIVE'
-      };
-
-      const surveySubmissions = (state.submissions || []).filter(sub => (sub.surveyId === currentSurvey.id || sub.surveyTitle === currentSurvey.title) && !sub.isInvalid);
-      const totalCitizenCount = allReports.reduce((acc, r) => acc + (r.completedCount || 100), 0);
       const currentReportCategory = state.reportCategoryFilter || 'ALL';
       const reportCategories = ['Tümü', 'Tarım', 'Hayvancılık', 'Altyapı', 'Eğitim', 'Sosyal Destek', 'Vatandaş Memnuniyeti'];
 
-      return `
-        <!-- TOP CONTROLS: SURVEY SELECTOR, EXPORTS & VIEW SWITCHER -->
-        <div class="bg-white p-5 rounded-[16px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-4">
-          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div class="space-y-1">
-              <div class="flex items-center gap-2">
-                <span class="px-2.5 py-0.5 rounded-[6px] text-[10px] font-bold bg-[#01214A] text-white">ANALİTİK & HAM SONUÇLAR</span>
-                <span class="px-2.5 py-0.5 rounded-[6px] text-[10px] font-semibold ${currentSurvey.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-blue-50 text-blue-800 border border-blue-200'}">
-                  ${currentSurvey.status === 'COMPLETED' ? 'Tamamlanmış Anket' : 'Aktif Saha Çalışması'}
-                </span>
-              </div>
-              <h2 class="text-lg font-bold text-[#01214A]">${currentSurvey.title}</h2>
-              <p class="text-xs text-slate-500 font-normal">Rapor oluşturmaya gerek kalmadan tüm anket sorularına verilen cevapları, oranları ve ham kayıtları anında inceleyin.</p>
+      // If a specific survey is selected, show its full detailed analytics & question breakdowns
+      if (state.selectedReportSurveyId) {
+        const currentSurvey = allSurveys.find(s => s.id === state.selectedReportSurveyId) || allSurveys[0] || {
+          id: 'srv-default',
+          title: 'Şehitkamil Tarımsal İhtiyaç ve Arazi Değerlendirme Anketi',
+          category: 'Tarım',
+          villageName: 'Sinan Köyü',
+          targetCount: 100,
+          completedCount: 100,
+          status: 'ACTIVE'
+        };
+
+        const surveySubmissions = (state.submissions || []).filter(sub => (sub.surveyId === currentSurvey.id || sub.surveyTitle === currentSurvey.title) && !sub.isInvalid);
+
+        return `
+          <!-- TOP CONTROLS: SURVEY SELECTOR, EXPORTS & VIEW SWITCHER -->
+          <div class="bg-white p-5 rounded-[16px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-4">
+            
+            <!-- BACK BUTTON ROW -->
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+              <button type="button" id="btn-back-to-reports-hub" class="inline-flex items-center gap-1.5 text-xs font-semibold text-[#01214A] hover:text-[#2A9D38] bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-[8px] transition-colors cursor-pointer">
+                ${iconSvg('chevronLeft', 'w-4 h-4')}
+                <span>← Tüm Anket Raporlarına Dön</span>
+              </button>
+              <span class="text-xs text-slate-500 font-medium">Seçili Anket: <strong class="text-[#01214A]">${currentSurvey.title}</strong></span>
             </div>
 
-            <!-- SURVEY SELECTOR & ACTIONS -->
-            <div class="flex flex-wrap items-center gap-2.5">
-              <div class="relative min-w-[240px]">
-                <select id="select-report-survey-filter" class="w-full h-10 pl-3 pr-8 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs font-semibold text-[#01214A] focus:outline-none focus:bg-white focus:border-[#2A9D38] cursor-pointer">
-                  ${allSurveys.map(s => `
-                    <option value="${s.id}" ${s.id === currentSurvey.id ? 'selected' : ''}>
-                      ${s.title} (${s.status === 'COMPLETED' ? 'Tamamlandı' : 'Aktif'})
-                    </option>
-                  `).join('')}
-                </select>
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="px-2.5 py-0.5 rounded-[6px] text-[10px] font-bold bg-[#01214A] text-white">ANALİTİK & HAM SONUÇLAR</span>
+                  <span class="px-2.5 py-0.5 rounded-[6px] text-[10px] font-semibold ${currentSurvey.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-blue-50 text-blue-800 border border-blue-200'}">
+                    ${currentSurvey.status === 'COMPLETED' ? 'Tamamlanmış Anket' : 'Aktif Saha Çalışması'}
+                  </span>
+                </div>
+                <h2 class="text-lg font-bold text-[#01214A]">${currentSurvey.title}</h2>
+                <p class="text-xs text-slate-500 font-normal">Rapor oluşturmaya gerek kalmadan tüm anket sorularına verilen cevapları, oranları ve ham kayıtları anında inceleyin.</p>
               </div>
 
-              <button id="btn-reports-tab-excel" class="h-10 px-3.5 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs rounded-[10px] transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Ham verileri Excel olarak indir">
-                ${iconSvg('download', 'w-3.5 h-3.5 text-white')}
-                <span>Excel İndir</span>
+              <!-- SURVEY SELECTOR & ACTIONS -->
+              <div class="flex flex-wrap items-center gap-2.5">
+                <div class="relative min-w-[240px]">
+                  <select id="select-report-survey-filter" class="w-full h-10 pl-3 pr-8 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs font-semibold text-[#01214A] focus:outline-none focus:bg-white focus:border-[#2A9D38] cursor-pointer">
+                    <option value="">— Başka Anket Seç —</option>
+                    ${allSurveys.map(s => `
+                      <option value="${s.id}" ${s.id === currentSurvey.id ? 'selected' : ''}>
+                        ${s.title} (${s.status === 'COMPLETED' ? 'Tamamlandı' : 'Aktif'})
+                      </option>
+                    `).join('')}
+                  </select>
+                </div>
+
+                <button id="btn-reports-tab-excel" class="h-10 px-3.5 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs rounded-[10px] transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Ham verileri Excel olarak indir">
+                  ${iconSvg('download', 'w-3.5 h-3.5 text-white')}
+                  <span>Excel İndir</span>
+                </button>
+
+                <button id="btn-reports-tab-pdf" class="h-10 px-3.5 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs rounded-[10px] transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs" title="PDF Analitik Rapor oluştur">
+                  ${iconSvg('fileText', 'w-3.5 h-3.5 text-slate-300')}
+                  <span>PDF Rapor</span>
+                </button>
+
+                <button onclick="window.print()" class="h-10 px-3 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 text-xs font-medium rounded-[10px] transition-colors flex items-center gap-1 cursor-pointer">
+                  <span>Yazdır</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 3 CLEAN TAB CONTROLS -->
+            <div class="flex items-center gap-1.5 bg-[#F8FAFC] p-1.5 rounded-[12px] border border-[#E9EDF2] text-xs overflow-x-auto">
+              <button type="button" data-view="questions" class="btn-switch-report-view flex-1 min-w-[200px] py-2 px-3 rounded-[9px] font-semibold transition-all cursor-pointer flex items-center justify-center gap-2 ${currentReportView === 'questions' ? 'bg-white text-[#01214A] shadow-xs border border-[#E9EDF2]' : 'text-slate-500 hover:text-slate-800'}">
+                ${iconSvg('poll', 'w-4 h-4 text-[#2A9D38]')}
+                <span>Soru Bazlı Ham & Canlı Analiz</span>
               </button>
 
-              <button id="btn-reports-tab-pdf" class="h-10 px-3.5 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs rounded-[10px] transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs" title="PDF Analitik Rapor oluştur">
-                ${iconSvg('fileText', 'w-3.5 h-3.5 text-slate-300')}
-                <span>PDF Rapor</span>
+              <button type="button" data-view="submissions" class="btn-switch-report-view flex-1 min-w-[200px] py-2 px-3 rounded-[9px] font-semibold transition-all cursor-pointer flex items-center justify-center gap-2 ${currentReportView === 'submissions' ? 'bg-white text-[#01214A] shadow-xs border border-[#E9EDF2]' : 'text-slate-500 hover:text-slate-800'}">
+                ${iconSvg('chatBubble', 'w-4 h-4 text-[#00A0DF]')}
+                <span>Sahadan Gelen Ham Formlar (${surveySubmissions.length})</span>
               </button>
 
-              <button onclick="window.print()" class="h-10 px-3 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 text-xs font-medium rounded-[10px] transition-colors flex items-center gap-1 cursor-pointer">
-                <span>Yazdır</span>
+              <button type="button" data-view="saved_reports" class="btn-switch-report-view flex-1 min-w-[200px] py-2 px-3 rounded-[9px] font-semibold transition-all cursor-pointer flex items-center justify-center gap-2 ${currentReportView === 'saved_reports' ? 'bg-white text-[#01214A] shadow-xs border border-[#E9EDF2]' : 'text-slate-500 hover:text-slate-800'}">
+                ${iconSvg('assessment', 'w-4 h-4 text-emerald-700')}
+                <span>Kayıtlı Kurumsal Raporlar (${savedReports.length})</span>
               </button>
             </div>
           </div>
 
-          <!-- 3 CLEAN TAB CONTROLS -->
-          <div class="flex items-center gap-1.5 bg-[#F8FAFC] p-1.5 rounded-[12px] border border-[#E9EDF2] text-xs overflow-x-auto">
-            <button type="button" data-view="questions" class="btn-switch-report-view flex-1 min-w-[200px] py-2 px-3 rounded-[9px] font-semibold transition-all cursor-pointer flex items-center justify-center gap-2 ${currentReportView === 'questions' ? 'bg-white text-[#01214A] shadow-xs border border-[#E9EDF2]' : 'text-slate-500 hover:text-slate-800'}">
-              ${iconSvg('poll', 'w-4 h-4 text-[#2A9D38]')}
-              <span>Soru Bazlı Ham & Canlı Analiz</span>
-            </button>
-
-            <button type="button" data-view="submissions" class="btn-switch-report-view flex-1 min-w-[200px] py-2 px-3 rounded-[9px] font-semibold transition-all cursor-pointer flex items-center justify-center gap-2 ${currentReportView === 'submissions' ? 'bg-white text-[#01214A] shadow-xs border border-[#E9EDF2]' : 'text-slate-500 hover:text-slate-800'}">
-              ${iconSvg('chatBubble', 'w-4 h-4 text-[#00A0DF]')}
-              <span>Sahadan Gelen Ham Formlar (${surveySubmissions.length})</span>
-            </button>
-
-            <button type="button" data-view="saved_reports" class="btn-switch-report-view flex-1 min-w-[200px] py-2 px-3 rounded-[9px] font-semibold transition-all cursor-pointer flex items-center justify-center gap-2 ${currentReportView === 'saved_reports' ? 'bg-white text-[#01214A] shadow-xs border border-[#E9EDF2]' : 'text-slate-500 hover:text-slate-800'}">
-              ${iconSvg('assessment', 'w-4 h-4 text-emerald-700')}
-              <span>Kayıtlı Kurumsal Raporlar (${savedReports.length})</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- CONDITIONAL CONTENT BASED ON SELECTED TAB -->
-        ${currentReportView === 'questions' ? `
-          <!-- TAB 1: REAL-TIME QUESTION-BY-QUESTION ANALYTICS -->
-          <div class="space-y-6">
-            ${renderSurveyDetailedCharts(currentSurvey, state)}
-          </div>
-        ` : currentReportView === 'submissions' ? `
-          <!-- TAB 2: RAW SUBMISSIONS TABLE FOR SELECTED SURVEY -->
-          <div class="bg-white rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden space-y-3 p-6">
-            <div class="flex items-center justify-between">
-              <div>
-                <h3 class="text-base font-bold text-[#01214A]">Sahadan Gelen Ham Yanıt Formları (${surveySubmissions.length})</h3>
-                <p class="text-xs text-slate-400 font-normal">Bu anket için sahadan doldurulan formların ham dökümü.</p>
-              </div>
+          <!-- CONDITIONAL CONTENT BASED ON SELECTED TAB -->
+          ${currentReportView === 'questions' ? `
+            <!-- TAB 1: REAL-TIME QUESTION-BY-QUESTION ANALYTICS -->
+            <div class="space-y-6">
+              ${renderSurveyDetailedCharts(currentSurvey, state)}
             </div>
+          ` : currentReportView === 'submissions' ? `
+            <!-- TAB 2: RAW SUBMISSIONS TABLE FOR SELECTED SURVEY -->
+            <div class="bg-white rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden space-y-3 p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="text-base font-bold text-[#01214A]">Sahadan Gelen Ham Yanıt Formları (${surveySubmissions.length})</h3>
+                  <p class="text-xs text-slate-400 font-normal">Bu anket için sahadan doldurulan formların ham dökümü.</p>
+                </div>
+              </div>
 
-            <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr class="bg-[#F8FAFC] border-b border-[#E9EDF2] text-slate-500 font-semibold text-[11px]">
-                    <th class="py-3 px-4">Form ID</th>
-                    <th class="py-3 px-4">Saha Personeli</th>
-                    <th class="py-3 px-4">Tarih & Saat</th>
-                    <th class="py-3 px-4">GPS Konum</th>
-                    <th class="py-3 px-4">Yanıt Özeti</th>
-                    <th class="py-3 px-4 text-right">Durum</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-[#F1F5F9]">
-                  ${surveySubmissions.length === 0 ? `
-                    <tr>
-                      <td colspan="6" class="p-8 text-center text-slate-400 text-xs">Bu anket için henüz form yanıtı gönderilmedi.</td>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr class="bg-[#F8FAFC] border-b border-[#E9EDF2] text-slate-500 font-semibold text-[11px]">
+                      <th class="py-3 px-4">Form ID</th>
+                      <th class="py-3 px-4">Saha Personeli</th>
+                      <th class="py-3 px-4">Tarih & Saat</th>
+                      <th class="py-3 px-4">GPS Konum</th>
+                      <th class="py-3 px-4">Yanıt Özeti</th>
+                      <th class="py-3 px-4 text-right">Durum</th>
                     </tr>
-                  ` : surveySubmissions.map(sub => {
-                    const ansList = Object.entries(sub.answers || {}).slice(0, 2).map(([k, v]) => `${v}`).join(', ');
-                    return `
-                      <tr class="hover:bg-slate-50/60 transition-colors">
-                        <td class="py-3.5 px-4 font-mono text-[11px] text-slate-400">${sub.clientSubmissionId || sub.id}</td>
-                        <td class="py-3.5 px-4 font-semibold text-[#01214A]">${sub.fieldUserName || 'Saha Personeli'}</td>
-                        <td class="py-3.5 px-4 text-slate-500">${new Date(sub.submittedAt || Date.now()).toLocaleTimeString('tr-TR')}</td>
-                        <td class="py-3.5 px-4 text-slate-500">
-                          ${sub.latitude ? `${sub.latitude.toFixed(3)}, ${sub.longitude?.toFixed(3)}` : 'Çevrimdışı'}
-                        </td>
-                        <td class="py-3.5 px-4 text-slate-700 max-w-xs truncate">${ansList || 'Cevaplar kaydedildi'}</td>
-                        <td class="py-3.5 px-4 text-right">
-                          <span class="px-2 py-0.5 rounded text-[10px] font-bold ${sub.isInvalid ? 'bg-red-100 text-red-800' : 'bg-emerald-100 text-emerald-800'}">
-                            ${sub.isInvalid ? 'Geçersiz' : 'Geçerli'}
-                          </span>
-                        </td>
+                  </thead>
+                  <tbody class="divide-y divide-[#F1F5F9]">
+                    ${surveySubmissions.length === 0 ? `
+                      <tr>
+                        <td colspan="6" class="p-8 text-center text-slate-400 text-xs">Bu anket için henüz form yanıtı gönderilmedi.</td>
                       </tr>
+                    ` : surveySubmissions.map(sub => {
+                      const ansList = Object.entries(sub.answers || {}).slice(0, 2).map(([k, v]) => `${v}`).join(', ');
+                      return `
+                        <tr class="hover:bg-slate-50/60 transition-colors">
+                          <td class="py-3.5 px-4 font-mono text-[11px] text-slate-400">${sub.clientSubmissionId || sub.id}</td>
+                          <td class="py-3.5 px-4 font-semibold text-[#01214A]">${sub.fieldUserName || 'Saha Personeli'}</td>
+                          <td class="py-3.5 px-4 text-slate-500">${new Date(sub.submittedAt || Date.now()).toLocaleTimeString('tr-TR')}</td>
+                          <td class="py-3.5 px-4 text-slate-500">
+                            ${sub.latitude ? `${sub.latitude.toFixed(3)}, ${sub.longitude?.toFixed(3)}` : 'Çevrimdışı'}
+                          </td>
+                          <td class="py-3.5 px-4 text-slate-700 max-w-xs truncate">${ansList || 'Cevaplar kaydedildi'}</td>
+                          <td class="py-3.5 px-4 text-right">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${sub.isInvalid ? 'bg-red-100 text-red-800' : 'bg-emerald-100 text-emerald-800'}">
+                              ${sub.isInvalid ? 'Geçersiz' : 'Geçerli'}
+                            </span>
+                          </td>
+                        </tr>
+                      `;
+                    }).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ` : `
+            <!-- TAB 3: SAVED FORMAL REPORTS LIBRARY -->
+            <div class="space-y-4">
+              <div class="bg-white p-4 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+                <div class="relative w-full sm:w-72">
+                  <input type="text" id="input-search-reports" value="${state.reportSearchQuery || ''}" placeholder="Rapor adı veya bölge ara..." class="w-full h-9 pl-9 pr-3 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-[#2A9D38] font-normal placeholder:text-slate-400 transition-colors duration-150"/>
+                  <span class="absolute left-3 top-2.5 text-slate-400 pointer-events-none">${iconSvg('search', 'w-4 h-4 text-slate-400')}</span>
+                </div>
+
+                <!-- CATEGORY FILTER PILLS -->
+                <div class="flex items-center gap-2 overflow-x-auto pt-1 pb-0.5 scrollbar-none text-xs">
+                  ${reportCategories.map(cat => {
+                    const catKey = cat === 'Tümü' ? 'ALL' : cat;
+                    const isActiveCat = currentReportCategory === catKey;
+                    return `
+                      <button type="button" data-report-category="${catKey}" class="btn-filter-report-category px-3 py-1 rounded-[8px] text-xs transition-colors duration-150 whitespace-nowrap cursor-pointer ${isActiveCat ? 'bg-[#2A9D38] text-white font-semibold' : 'bg-[#F8FAFC] border border-[#E9EDF2] text-slate-600 hover:bg-slate-100 font-normal'}">
+                        ${cat}
+                      </button>
                     `;
                   }).join('')}
-                </tbody>
-              </table>
+                </div>
+              </div>
+
+              <div class="bg-white rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
+                <div class="overflow-x-auto">
+                  <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr class="bg-[#F8FAFC] border-b border-[#E9EDF2] text-slate-500 font-semibold text-[11px]">
+                        <th class="py-3 px-5">Rapor Adı</th>
+                        <th class="py-3 px-5">Kategori & Bölge</th>
+                        <th class="py-3 px-5">Kayıt Tarihi</th>
+                        <th class="py-3 px-5">Saha Katılımı</th>
+                        <th class="py-3 px-5">Durum</th>
+                        <th class="py-3 px-5 text-right">İşlem</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#F1F5F9]">
+                      ${savedReports.length === 0 ? `
+                        <tr>
+                          <td colspan="6" class="p-12 text-center text-slate-500 text-xs font-normal space-y-2">
+                            ${iconSvg('assessment', 'w-10 h-10 text-slate-300 mx-auto')}
+                            <div class="font-semibold text-[#01214A] text-sm">Henüz kayıtlı resmi rapor bulunmuyor.</div>
+                            <p class="text-slate-400 text-xs max-w-md mx-auto">Soru Bazlı Ham Analiz sekmesinden dilediğiniz anketin sonuçlarını anında inceleyebilirsiniz.</p>
+                          </td>
+                        </tr>
+                      ` : savedReports.map(rpt => `
+                        <tr class="hover:bg-slate-50/60 transition-colors duration-150">
+                          <td class="py-4 px-5 font-semibold text-[#01214A]">${rpt.surveyTitle}</td>
+                          <td class="py-4 px-5 text-slate-600">
+                            <span class="px-2 py-0.5 rounded-[4px] bg-slate-100 text-slate-700 font-medium text-[10px] mr-1">${rpt.category || 'Tarım'}</span>
+                            <span>${rpt.villageName || 'Sinan Köyü'}</span>
+                          </td>
+                          <td class="py-4 px-5 text-slate-500">${rpt.createdAt || '12 Ağustos 2026'}</td>
+                          <td class="py-4 px-5 font-semibold text-[#2A9D38]">${rpt.completedCount || 100} / ${rpt.targetCount || 100} Yanıt</td>
+                          <td class="py-4 px-5">
+                            <span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                              ${rpt.statusLabel || 'Hazır'}
+                            </span>
+                          </td>
+                          <td class="py-4 px-5 text-right">
+                            <button data-report-id="${rpt.id}" class="btn-open-report-modal h-8 px-3.5 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1.5 cursor-pointer ml-auto">
+                              ${iconSvg('search', 'w-3.5 h-3.5 text-white')}
+                              <span>İncele</span>
+                            </button>
+                          </td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
-          </div>
-        ` : `
-          <!-- TAB 3: SAVED FORMAL REPORTS LIBRARY -->
-          <div class="space-y-4">
-            <div class="bg-white p-4 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
-              <div class="relative w-full sm:w-72">
-                <input type="text" id="input-search-reports" value="${state.reportSearchQuery || ''}" placeholder="Rapor adı veya bölge ara..." class="w-full h-9 pl-9 pr-3 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-[#2A9D38] font-normal placeholder:text-slate-400 transition-colors duration-150"/>
+          `}
+        `;
+      }
+
+      // If no survey is selected, render the Survey Report Selection Hub (Anket Raporu Seçim Ekranı)
+      const filteredReportSurveys = allSurveys.filter(s => {
+        const matchCat = currentReportCategory === 'ALL' || s.category === currentReportCategory;
+        const q = (state.reportSearchQuery || '').toLowerCase().trim();
+        const matchSearch = !q || (s.title && s.title.toLowerCase().includes(q)) || (s.villageName && s.villageName.toLowerCase().includes(q)) || (s.category && s.category.toLowerCase().includes(q));
+        return matchCat && matchSearch;
+      });
+
+      return `
+        <!-- ANKET RAPOR SEÇİM EKRANI (SURVEY REPORT SELECTION HUB) -->
+        <div class="space-y-5">
+          <div class="bg-white p-5 rounded-[16px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="px-2.5 py-0.5 rounded-[6px] text-[10px] font-bold bg-[#01214A] text-white">RAPORLAR & ANALİZ MERKEZİ</span>
+                  <span class="px-2.5 py-0.5 rounded-[6px] text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">${allSurveys.length} Kayıtlı Anket</span>
+                </div>
+                <h2 class="text-lg font-bold text-[#01214A]">Raporunu İncelemek İstediğiniz Anketi Seçin</h2>
+                <p class="text-xs text-slate-500 font-normal">Sonuçlarını, soru bazlı dağılımlarını ve ham form kayıtlarını incelemek istediğiniz anketin üzerine tıklayın.</p>
+              </div>
+            </div>
+
+            <!-- SEARCH & FILTER BAR -->
+            <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 pt-3 border-t border-slate-100">
+              <div class="relative w-full sm:w-80">
+                <input type="text" id="input-search-reports" value="${state.reportSearchQuery || ''}" placeholder="Anket adı, bölge veya kategori ara..." class="w-full h-9 pl-9 pr-3 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-[#2A9D38] font-normal placeholder:text-slate-400 transition-colors duration-150"/>
                 <span class="absolute left-3 top-2.5 text-slate-400 pointer-events-none">${iconSvg('search', 'w-4 h-4 text-slate-400')}</span>
               </div>
 
@@ -3974,57 +4066,55 @@ function renderAdminTabContent(tab, state) {
                 }).join('')}
               </div>
             </div>
-
-            <div class="bg-white rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
-              <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-xs">
-                  <thead>
-                    <tr class="bg-[#F8FAFC] border-b border-[#E9EDF2] text-slate-500 font-semibold text-[11px]">
-                      <th class="py-3 px-5">Rapor Adı</th>
-                      <th class="py-3 px-5">Kategori & Bölge</th>
-                      <th class="py-3 px-5">Kayıt Tarihi</th>
-                      <th class="py-3 px-5">Saha Katılımı</th>
-                      <th class="py-3 px-5">Durum</th>
-                      <th class="py-3 px-5 text-right">İşlem</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-[#F1F5F9]">
-                    ${savedReports.length === 0 ? `
-                      <tr>
-                        <td colspan="6" class="p-12 text-center text-slate-500 text-xs font-normal space-y-2">
-                          ${iconSvg('assessment', 'w-10 h-10 text-slate-300 mx-auto')}
-                          <div class="font-semibold text-[#01214A] text-sm">Henüz kayıtlı resmi rapor bulunmuyor.</div>
-                          <p class="text-slate-400 text-xs max-w-md mx-auto">Soru Bazlı Ham Analiz sekmesinden dilediğiniz anketin sonuçlarını anında inceleyebilirsiniz.</p>
-                        </td>
-                      </tr>
-                    ` : savedReports.map(rpt => `
-                      <tr class="hover:bg-slate-50/60 transition-colors duration-150">
-                        <td class="py-4 px-5 font-semibold text-[#01214A]">${rpt.surveyTitle}</td>
-                        <td class="py-4 px-5 text-slate-600">
-                          <span class="px-2 py-0.5 rounded-[4px] bg-slate-100 text-slate-700 font-medium text-[10px] mr-1">${rpt.category || 'Tarım'}</span>
-                          <span>${rpt.villageName || 'Sinan Köyü'}</span>
-                        </td>
-                        <td class="py-4 px-5 text-slate-500">${rpt.createdAt || '12 Ağustos 2026'}</td>
-                        <td class="py-4 px-5 font-semibold text-[#2A9D38]">${rpt.completedCount || 100} / ${rpt.targetCount || 100} Yanıt</td>
-                        <td class="py-4 px-5">
-                          <span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                            ${rpt.statusLabel || 'Hazır'}
-                          </span>
-                        </td>
-                        <td class="py-4 px-5 text-right">
-                          <button data-report-id="${rpt.id}" class="btn-open-report-modal h-8 px-3.5 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1.5 cursor-pointer ml-auto">
-                            ${iconSvg('search', 'w-3.5 h-3.5 text-white')}
-                            <span>İncele</span>
-                          </button>
-                        </td>
-                      </tr>
-                    `).join('')}
-                  </tbody>
-                </table>
-              </div>
-            </div>
           </div>
-        `}
+
+          <!-- SURVEY CARDS GRID -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            ${filteredReportSurveys.length === 0 ? `
+              <div class="col-span-full bg-white p-12 rounded-[14px] border border-[#E9EDF2] text-center space-y-2">
+                ${iconSvg('poll', 'w-8 h-8 text-slate-300 mx-auto')}
+                <div class="font-semibold text-[#01214A]">Aramanıza uygun anket bulunamadı.</div>
+                <p class="text-slate-400 text-xs">Filtreleri temizleyerek diğer anketleri listeleyebilirsiniz.</p>
+              </div>
+            ` : filteredReportSurveys.map(s => {
+              const sSubs = (state.submissions || []).filter(sub => (sub.surveyId === s.id || sub.surveyTitle === s.title) && !sub.isInvalid);
+              const target = s.targetCount || 100;
+              const completed = sSubs.length > 0 ? sSubs.length : (typeof s.completedCount === 'number' ? s.completedCount : (s.status === 'COMPLETED' ? target : 0));
+              const percent = target > 0 ? Math.min(100, Math.round((completed / target) * 100)) : 0;
+              const qCount = s.questions?.length || 0;
+
+              return `
+                <div class="bg-white p-5 rounded-[14px] border border-[#E9EDF2] hover:border-[#2A9D38] shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-md transition-all flex flex-col justify-between space-y-4 group">
+                  <div class="space-y-2.5">
+                    <div class="flex items-center justify-between gap-2">
+                      <span class="px-2 py-0.5 rounded-[4px] bg-slate-100 text-slate-700 font-medium text-[10px]">${s.category || 'Genel'}</span>
+                      <span class="px-2.5 py-0.5 rounded-[6px] text-[10px] font-semibold ${s.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-blue-50 text-blue-800 border border-blue-200'}">
+                        ${s.status === 'COMPLETED' ? 'Tamamlandı' : 'Aktif'}
+                      </span>
+                    </div>
+                    <h3 class="font-bold text-[#01214A] text-sm group-hover:text-[#2A9D38] transition-colors leading-snug line-clamp-2">${s.title}</h3>
+                    <p class="text-xs text-slate-500 font-normal line-clamp-2">${s.description || 'Açıklama belirtilmedi.'}</p>
+                  </div>
+
+                  <div class="space-y-2 pt-2 border-t border-slate-100">
+                    <div class="flex items-center justify-between text-xs text-slate-500">
+                      <span>${s.villageName || 'Sinan Köyü'} · ${qCount} Soru</span>
+                      <span class="font-semibold text-[#01214A]">${completed} / ${target} Yanıt (%${percent})</span>
+                    </div>
+                    <div class="w-full bg-[#F1F5F9] h-1.5 rounded-full overflow-hidden">
+                      <div class="bg-[#2A9D38] h-full rounded-full transition-all duration-300" style="width: ${percent}%"></div>
+                    </div>
+                  </div>
+
+                  <button type="button" data-survey-id="${s.id}" class="btn-select-report-survey w-full py-2.5 px-4 bg-[#01214A] hover:bg-[#072446] text-white font-semibold text-xs rounded-[10px] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs">
+                    ${iconSvg('assessment', 'w-4 h-4 text-[#2A9D38]')}
+                    <span>Raporu ve Sonuçları İncele →</span>
+                  </button>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
       `;
 
     case 'personnel':

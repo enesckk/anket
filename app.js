@@ -209,6 +209,9 @@ if (typeof document !== 'undefined') {
     if (adminTabBtn) {
       const tab = adminTabBtn.getAttribute('data-admin-tab');
       if (tab) {
+        if (tab === 'reports') {
+          store.setReportSurveyFilter(null);
+        }
         store.setAdminTab(tab);
         return;
       }
@@ -639,6 +642,21 @@ if (typeof document !== 'undefined') {
     if (switchReportViewBtn) {
       const view = switchReportViewBtn.getAttribute('data-view');
       if (view) store.setReportActiveView(view);
+      return;
+    }
+
+    const selectSurveyReportBtn = e.target.closest('.btn-select-report-survey');
+    if (selectSurveyReportBtn) {
+      const surveyId = selectSurveyReportBtn.getAttribute('data-survey-id');
+      if (surveyId) {
+        store.setReportSurveyFilter(surveyId);
+      }
+      return;
+    }
+
+    const backToReportsHubBtn = e.target.closest('#btn-back-to-reports-hub');
+    if (backToReportsHubBtn) {
+      store.setReportSurveyFilter(null);
       return;
     }
 
@@ -1653,9 +1671,20 @@ function validatePersonnelInput(email, phone, password, isPasswordOptional = fal
   const selectReportSurvey = document.getElementById('select-report-survey-filter');
   if (selectReportSurvey) {
     selectReportSurvey.addEventListener('change', (e) => {
-      store.setReportSurveyFilter(e.target.value);
+      store.setReportSurveyFilter(e.target.value || null);
     });
   }
+
+  document.querySelectorAll('.btn-select-report-survey').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const surveyId = e.currentTarget.getAttribute('data-survey-id');
+      if (surveyId) store.setReportSurveyFilter(surveyId);
+    });
+  });
+
+  document.getElementById('btn-back-to-reports-hub')?.addEventListener('click', () => {
+    store.setReportSurveyFilter(null);
+  });
 
   document.querySelectorAll('.btn-switch-report-view').forEach(btn => {
     btn.addEventListener('click', (e) => {
