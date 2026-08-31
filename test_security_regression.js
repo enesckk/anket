@@ -51,4 +51,12 @@ store.apiFetch = async () => { throw new Error('server unavailable'); };
 await assert.rejects(() => store.createAdminPersonnel('Hayalet', 'hayalet@example.com', '555', 'Strong#123', 'FIELD_USER'));
 assert.equal(store.state.allPersonnel.length, 0);
 
-console.log('Security/regression tests passed: assignment isolation, dynamic questions, answer IDs, no ghost personnel.');
+// Geçerli ataması olmayan eski çevrimdışı sayaçlar takılı kalmamalı.
+store.state.assignedSurveys = [];
+store.state.submissions = [{ clientSubmissionId: 'legacy-1', synced: false }];
+store.state.offlineQueueCount = 1;
+await store.syncOfflineQueue();
+assert.equal(store.state.offlineQueueCount, 0);
+assert.equal(store.state.submissions.length, 0);
+
+console.log('Security/regression tests passed: assignment isolation, dynamic questions, answer IDs, no ghost personnel, queue cleanup.');

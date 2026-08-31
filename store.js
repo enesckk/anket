@@ -504,6 +504,10 @@ class Store {
             note: a.note,
             viewedAt: a.viewedAt
           }));
+          const validAssignmentIds = new Set(assignments.map(a => a.id));
+          // Eski sürümün atama bilgisi olmadan bıraktığı hayalet kuyruk kayıtlarını temizle.
+          this.state.submissions = (this.state.submissions || []).filter(s => s.synced || validAssignmentIds.has(s.assignmentId));
+          this.state.offlineQueueCount = this.state.submissions.filter(s => !s.synced).length;
         } else {
           this.state.allAssignments = assignments;
         }
@@ -1524,18 +1528,29 @@ class Store {
     this.saveState();
 
     try {
-      const pendingSubmissions = this.state.submissions.filter(s => !s.synced).map(s => ({
+      const validAssignmentIds = new Set((this.state.assignedSurveys || []).map(a => a.id));
+      const pendingLocal = this.state.submissions.filter(s => !s.synced && s.assignmentId && validAssignmentIds.has(s.assignmentId));
+      if (pendingLocal.length === 0) {
+        this.state.submissions = this.state.submissions.filter(s => s.synced);
+        this.state.offlineQueueCount = 0;
+        this.state.syncState = 'sync_success';
+        this.saveState();
+        return;
+      }
+      const pendingSubmissions = pendingLocal.map(s => ({
         clientSubmissionId: s.clientSubmissionId || ('sub-' + Date.now()),
-        surveyId: s.surveyId || '44444444-4444-4444-4444-444444444441',
-        startedAt: new Date().toISOString(),
-        completedAt: new Date().toISOString(),
-        latitude: 37.0662,
-        longitude: 37.3833,
-        accuracy: 8.0,
+        surveyId: s.surveyId,
+        assignmentId: s.assignmentId,
+        villageId: s.villageId || null,
+        startedAt: s.startedAt || new Date().toISOString(),
+        completedAt: s.completedAt || new Date().toISOString(),
+        latitude: s.latitude || null,
+        longitude: s.longitude || null,
+        accuracy: s.accuracy || null,
         syncSource: 'OFFLINE_SYNC',
         answers: Object.keys(s.data || {}).map(k => ({
-          questionId: '66666666-6666-6666-6666-666666666661',
-          answerValue: String(s.data[k])
+          questionId: k,
+          answerValue: Array.isArray(s.data[k]) ? s.data[k].join('|') : String(s.data[k])
         }))
       }));
 
@@ -1544,7 +1559,10 @@ class Store {
         body: JSON.stringify({ submissions: pendingSubmissions })
       });
 
-      this.state.submissions.forEach(s => s.synced = true);
+      const syncedIds = new Set(pendingLocal.map(s => s.clientSubmissionId));
+      this.state.submissions.forEach(s => {
+        if (syncedIds.has(s.clientSubmissionId)) s.synced = true;
+      });
       this.state.offlineQueueCount = 0;
       this.state.syncState = 'sync_success';
       this.saveState();
