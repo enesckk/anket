@@ -36,8 +36,6 @@ public class AuthService : IAuthService
             u.Username.ToLower() == input ||
             (u.Email != null && u.Email.ToLower() == input) ||
             u.Phone == input ||
-            (input.Contains("saha") && (u.Username == "saha" || u.Role == UserRole.FIELD_USER)) ||
-            (input.Contains("admin") && (u.Username == "admin" || u.Role == UserRole.ADMIN)) ||
             (phoneDigits.Length >= 10 && u.Phone.Replace(" ", "").Replace("-", "").Contains(phoneDigits)));
 
         if (user == null || !user.IsActive || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))

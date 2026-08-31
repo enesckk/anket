@@ -37,8 +37,38 @@ public class SubmissionService : ISubmissionService
 
         if (existing != null)
         {
+            if (existing.FieldUserId != userId)
+                throw new UnauthorizedAccessException("Bu kayıt başka bir kullanıcıya aittir.");
             return MapToSubmissionDto(existing);
         }
+
+        if (!request.AssignmentId.HasValue)
+            throw new ArgumentException("Anket gönderimi için geçerli bir görev ataması gereklidir.");
+
+        var assignment = await _db.SurveyAssignments
+            .Include(a => a.AssignedUsers)
+            .FirstOrDefaultAsync(a => a.Id == request.AssignmentId.Value);
+
+        if (assignment == null || !assignment.AssignedUsers.Any(au => au.UserId == userId))
+            throw new UnauthorizedAccessException("Bu anket kullanıcıya atanmamıştır.");
+        if (assignment.SurveyId != request.SurveyId)
+            throw new ArgumentException("Görev ile anket bilgisi eşleşmiyor.");
+        if (request.VillageId.HasValue && assignment.VillageId != request.VillageId.Value)
+            throw new ArgumentException("Görev ile bölge bilgisi eşleşmiyor.");
+
+        var surveyQuestions = await _db.SurveyQuestions
+            .Where(q => q.SurveyId == request.SurveyId && q.IsActive)
+            .Select(q => new { q.Id, q.IsRequired })
+            .ToListAsync();
+        var validQuestionIds = surveyQuestions.Select(q => q.Id).ToHashSet();
+        if (request.Answers.Any(a => !validQuestionIds.Contains(a.QuestionId)))
+            throw new ArgumentException("Yanıtlardan biri bu ankete ait olmayan bir soru içeriyor.");
+        var answeredQuestionIds = request.Answers
+            .Where(a => !string.IsNullOrWhiteSpace(a.AnswerValue) || !string.IsNullOrWhiteSpace(a.FileBase64))
+            .Select(a => a.QuestionId)
+            .ToHashSet();
+        if (surveyQuestions.Where(q => q.IsRequired).Any(q => !answeredQuestionIds.Contains(q.Id)))
+            throw new ArgumentException("Zorunlu soruların tamamı cevaplanmalıdır.");
 
         Enum.TryParse<SyncSource>(request.SyncSource, true, out var src);
 
@@ -48,7 +78,7 @@ public class SubmissionService : ISubmissionService
             SurveyId = request.SurveyId,
             AssignmentId = request.AssignmentId,
             FieldUserId = userId,
-            VillageId = request.VillageId,
+            VillageId = request.VillageId ?? assignment.VillageId,
             StartedAt = request.StartedAt,
             CompletedAt = request.CompletedAt,
             SubmittedAt = DateTime.UtcNow,

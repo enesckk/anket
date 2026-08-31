@@ -61,14 +61,19 @@ public class SurveysController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] string? status, [FromQuery] string? source)
     {
-        var surveys = await _surveyService.GetAllSurveysAsync(status, source);
+        var isAdmin = User.IsInRole("ADMIN");
+        var surveys = isAdmin
+            ? await _surveyService.GetAllSurveysAsync(status, source)
+            : await _surveyService.GetSurveysForUserAsync(Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!), status);
         return Ok(surveys);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(Guid id)
     {
-        var survey = await _surveyService.GetSurveyByIdAsync(id);
+        var survey = User.IsInRole("ADMIN")
+            ? await _surveyService.GetSurveyByIdAsync(id)
+            : await _surveyService.GetSurveyForUserAsync(id, Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!));
         if (survey == null) return NotFound();
         return Ok(survey);
     }
@@ -151,8 +156,15 @@ public class AssignmentsController : ControllerBase
     [Authorize(Roles = "ADMIN")]
     public async Task<IActionResult> Create([FromBody] CreateAssignmentRequest request)
     {
-        var created = await _assignmentService.CreateAssignmentAsync(request);
-        return Ok(created);
+        try
+        {
+            var created = await _assignmentService.CreateAssignmentAsync(request);
+            return Ok(created);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPost("{id}/viewed")]
@@ -181,8 +193,19 @@ public class SubmissionsController : ControllerBase
     public async Task<IActionResult> Create([FromBody] CreateSubmissionRequest request)
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var res = await _submissionService.CreateSubmissionAsync(request, userId);
-        return Ok(res);
+        try
+        {
+            var res = await _submissionService.CreateSubmissionAsync(request, userId);
+            return Ok(res);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpGet]
@@ -259,12 +282,19 @@ public class MessagesController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "ADMIN,FIELD_USER")]
     public async Task<IActionResult> Create([FromBody] CreateMessageRequest request)
     {
         var senderId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var msg = await _messageService.CreateMessageAsync(request, senderId);
-        return Ok(msg);
+        try
+        {
+            var msg = await _messageService.CreateMessageAsync(request, senderId);
+            return Ok(msg);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpGet("my-messages")]
@@ -315,8 +345,37 @@ public class PersonnelController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateUserRequest request)
     {
-        var user = await _personnelService.CreatePersonnelAsync(request);
-        return Ok(user);
+        try
+        {
+            var user = await _personnelService.CreatePersonnelAsync(request);
+            return Ok(user);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserRequest request)
+    {
+        try
+        {
+            var user = await _personnelService.UpdatePersonnelAsync(id, request);
+            return user == null ? NotFound() : Ok(user);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        if (id == Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!))
+            return BadRequest(new { message = "Kendi hesabınızı silemezsiniz." });
+        return await _personnelService.DeletePersonnelAsync(id) ? NoContent() : NotFound();
     }
 
     [HttpPost("{id}/toggle-status")]

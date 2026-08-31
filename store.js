@@ -364,6 +364,16 @@ class Store {
       this.saveState();
       await this.fetchInitialData();
     } catch (e) {
+      const isLocalDemo = typeof location === 'undefined' || location.hostname === 'localhost';
+      if (!isLocalDemo) {
+        let message = 'Geçersiz kullanıcı adı/e-posta veya şifre.';
+        try {
+          const parsed = JSON.parse(e.message || '{}');
+          if (parsed.message) message = parsed.message;
+        } catch (_) {}
+        this.setToast(message, 'error');
+        return;
+      }
       // ── Offline / Demo Mod Yetkilendirme ──
       const allPersonnel = this.state.allPersonnel || [];
 
@@ -459,48 +469,56 @@ class Store {
         return; // In offline/demo mode, preserve local state cleanly
       }
 
-      // Fetch All Surveys from Backend DB
+      const isFieldUser = this.state.auth.user?.role === 'FIELD_USER';
+
+      // Backend saha kullanıcıları için yalnızca atanmış anketleri döndürür.
       const surveys = await this.apiFetch('/surveys').catch(e => {
         console.warn('Surveys fetch from DB note:', e.message);
         return null;
       });
 
-      if (Array.isArray(surveys) && surveys.length > 0) {
-        const backendIds = new Set(surveys.map(s => s.id));
-        const localSurveys = (this.state.allSurveys || []).filter(s => s && !backendIds.has(s.id));
-        this.state.allSurveys = [...surveys, ...localSurveys];
+      if (Array.isArray(surveys)) {
+        this.state.allSurveys = surveys;
       }
 
       // Fetch All Submissions
-      const submissions = await this.apiFetch('/submissions').catch(() => null);
-      if (Array.isArray(submissions) && submissions.length > 0) {
-        const subIds = new Set(submissions.map(s => s.id));
-        const localSubs = (this.state.submissions || []).filter(s => s && !subIds.has(s.id));
-        this.state.submissions = [...submissions, ...localSubs];
+      const submissions = isFieldUser ? null : await this.apiFetch('/submissions').catch(() => null);
+      if (Array.isArray(submissions)) {
+        this.state.submissions = submissions;
       }
 
       // Fetch All Assignments
-      const assignments = await this.apiFetch('/assignments').catch(() => null);
-      if (Array.isArray(assignments) && assignments.length > 0) {
-        const asgIds = new Set(assignments.map(a => a.id));
-        const localAsgs = (this.state.allAssignments || []).filter(a => a && !asgIds.has(a.id));
-        this.state.allAssignments = [...assignments, ...localAsgs];
+      const assignments = await this.apiFetch(isFieldUser ? '/assignments/my-tasks' : '/assignments').catch(() => null);
+      if (Array.isArray(assignments)) {
+        if (isFieldUser) {
+          this.state.assignedSurveys = assignments.map(a => ({
+            id: a.id,
+            surveyId: a.surveyId,
+            title: a.surveyTitle,
+            village: a.villageName,
+            villageId: a.villageId,
+            completed: a.completedCount || 0,
+            target: a.targetCount || 0,
+            endDate: a.endDate,
+            priority: a.status === 'ASSIGNED' ? 'Yeni Görev' : 'Aktif',
+            note: a.note,
+            viewedAt: a.viewedAt
+          }));
+        } else {
+          this.state.allAssignments = assignments;
+        }
       }
 
       // Fetch Personnel
-      const personnel = await this.apiFetch('/personnel').catch(() => null);
-      if (Array.isArray(personnel) && personnel.length > 0) {
-        const pIds = new Set(personnel.map(p => p.id));
-        const localP = (this.state.allPersonnel || []).filter(p => p && !pIds.has(p.id));
-        this.state.allPersonnel = [...personnel, ...localP];
+      const personnel = isFieldUser ? null : await this.apiFetch('/personnel').catch(() => null);
+      if (Array.isArray(personnel)) {
+        this.state.allPersonnel = personnel;
       }
 
       // Fetch Messages
-      const messages = await this.apiFetch('/messages').catch(() => null);
-      if (Array.isArray(messages) && messages.length > 0) {
-        const mIds = new Set(messages.map(m => m.id));
-        const localM = (this.state.messages || []).filter(m => m && !mIds.has(m.id));
-        this.state.messages = [...messages, ...localM];
+      const messages = await this.apiFetch(isFieldUser ? '/messages/my-messages' : '/messages').catch(() => null);
+      if (Array.isArray(messages)) {
+        this.state.messages = messages;
       }
 
       this.saveState();
@@ -733,35 +751,21 @@ class Store {
   // PERSONNEL ACTIONS (0ms INSTANT OPTIMISTIC UI UPDATES)
   async createAdminPersonnel(fullName, email, phone, password, role) {
     const username = email.split('@')[0];
-    const newUser = {
-      id: 'user-' + Date.now(),
-      fullName,
-      username,
-      email,
-      phone,
-      role: role || 'FIELD_USER',
-      isActive: true
-    };
-    
-    // 1. Instant 0ms local state update & modal close
-    this.state.allPersonnel.push(newUser);
-    this.closeModal();
-    this.setToast(`'${fullName}' personeli başarıyla sisteme eklendi ve aktif edildi.`, 'success');
-    this.addNotification(
-      'SYSTEM',
-      'Yeni Personel Kaydı',
-      `"${fullName}" (${role === 'ADMIN' ? 'Yönetici' : 'Saha Personeli'}) hesabı sisteme başarıyla kaydedildi.`,
-      'ADMIN',
-      'person',
-      'emerald'
-    );
-    this.saveState();
-
-    // 2. Non-blocking background API sync
-    this.apiFetch('/personnel', {
-      method: 'POST',
-      body: JSON.stringify({ fullName, username, email, phone, password, role: role || 'FIELD_USER' })
-    }).catch(e => console.warn('Background create personnel note:', e.message));
+    try {
+      const created = await this.apiFetch('/personnel', {
+        method: 'POST',
+        body: JSON.stringify({ fullName, username, email, phone, password, role: role || 'FIELD_USER' })
+      });
+      this.state.allPersonnel = [created, ...(this.state.allPersonnel || []).filter(p => p.id !== created.id)];
+      this.closeModal();
+      this.setToast(`'${fullName}' personeli başarıyla sisteme eklendi ve aktif edildi.`, 'success');
+      this.addNotification('SYSTEM', 'Yeni Personel Kaydı', `"${fullName}" hesabı canlı sisteme kaydedildi.`, 'ADMIN', 'person', 'emerald');
+      this.saveState();
+      return created;
+    } catch (e) {
+      this.setToast('Personel canlı sisteme kaydedilemedi. Bilgileri ve bağlantıyı kontrol edin.', 'error');
+      throw e;
+    }
   }
 
   async togglePersonnelStatus(userId) {
@@ -776,35 +780,33 @@ class Store {
 
   async updateAdminPersonnel(userId, fullName, email, phone, role, password) {
     const username = email.split('@')[0];
-    const user = this.state.allPersonnel.find(p => p.id === userId);
-    if (user) {
-      user.fullName = fullName;
-      user.username = username;
-      user.email = email;
-      user.phone = phone;
-      user.role = role;
+    try {
+      const updated = await this.apiFetch(`/personnel/${userId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ fullName, username, email, phone, role, password: password || null })
+      });
+      const index = this.state.allPersonnel.findIndex(p => p.id === userId);
+      if (index >= 0) this.state.allPersonnel[index] = updated;
+      this.closeModal();
+      this.setToast(`'${fullName}' bilgileri güncellendi.`, 'success');
+      this.saveState();
+    } catch (e) {
+      this.setToast('Personel bilgileri güncellenemedi.', 'error');
+      throw e;
     }
-
-    // 1. Instant 0ms local state update & modal close
-    this.closeModal();
-    this.saveState();
-
-    // 2. Non-blocking background API sync
-    this.apiFetch(`/personnel/${userId}`, {
-      method: 'PUT',
-      body: JSON.stringify({ fullName, username, email, phone, role, password: password || undefined })
-    }).catch(e => console.warn('Background update personnel note:', e.message));
   }
 
   async deleteAdminPersonnel(userId) {
-    // 1. Instant 0ms local state update & modal close
-    this.state.allPersonnel = (this.state.allPersonnel || []).filter(p => p.id !== userId);
-    this.closeModal();
-    this.saveState();
-
-    // 2. Non-blocking background API sync
-    this.apiFetch(`/personnel/${userId}`, { method: 'DELETE' })
-      .catch(e => console.warn('Background delete personnel note:', e.message));
+    try {
+      await this.apiFetch(`/personnel/${userId}`, { method: 'DELETE' });
+      this.state.allPersonnel = (this.state.allPersonnel || []).filter(p => p.id !== userId);
+      this.closeModal();
+      this.setToast('Personel canlı sistemden silindi.', 'success');
+      this.saveState();
+    } catch (e) {
+      this.setToast('Personel silinemedi.', 'error');
+      throw e;
+    }
   }
 
   // 4-STEP SURVEY BUILDER WIZARD ACTIONS
@@ -1397,44 +1399,20 @@ class Store {
     }).catch(e => console.warn('Background survey approval submission note:', e.message));
   }
 
-  sendPwaMessageToAdmin(title, content) {
+  async sendPwaMessageToAdmin(title, content) {
     if (!title || !content) return;
-    const senderName = this.state.auth.user?.fullName || 'Saha Personeli';
-    const timeStr = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
-    const newMsg = {
-      id: 'msg-' + Date.now(),
-      title: title.trim(),
-      content: content.trim(),
-      sender: senderName,
-      senderRole: 'FIELD_USER',
-      recipient: 'Yönetici',
-      direction: 'TO_ADMIN', // PWA → Admin
-      date: 'Bugün ' + timeStr,
-      isUnread: true,
-      status: 'SENT_TO_ADMIN'
-    };
-    if (!Array.isArray(this.state.messages)) {
-      this.state.messages = [];
+    try {
+      await this.apiFetch('/messages', {
+        method: 'POST',
+        body: JSON.stringify({ title: title.trim(), content: content.trim(), recipientUserIds: null })
+      });
+      this.state.activeModal = null;
+      this.setToast('Mesajınız yöneticiye iletildi.', 'success');
+      await this.fetchInitialData();
+    } catch (e) {
+      this.setToast('Mesaj gönderilemedi.', 'error');
+      throw e;
     }
-    this.state.messages.unshift(newMsg);
-    this.state.activeModal = null;
-    // Admin paneli için bildirim oluştur (targetRole: 'ADMIN')
-    this.addNotification(
-      'NEW_MESSAGE',
-      `Yeni Mesaj: ${senderName}`,
-      `"${title.substring(0, 60)}${title.length > 60 ? '...' : ''}" — ${senderName} yöneticiye mesaj gönderdi.`,
-      'ADMIN',
-      'mail',
-      'blue'
-    );
-    this.setToast('Mesajınız başarıyla yöneticiye iletildi!', 'success');
-    this.saveState();
-    this.notify();
-
-    this.apiFetch('/messages', {
-      method: 'POST',
-      body: JSON.stringify(newMsg)
-    }).catch(e => console.warn('Background send message note:', e.message));
   }
 
   async approveAdminSurvey(surveyId) {
@@ -1681,8 +1659,16 @@ class Store {
   }
 
   acquireLocation() {
-    this.state.activeLocationAcquired = true;
-    this.saveState();
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      this.setToast('Bu cihaz konum hizmetini desteklemiyor.', 'error');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(pos => {
+      this.state.activeLocationAcquired = true;
+      this.state.activeLocation = { latitude: pos.coords.latitude, longitude: pos.coords.longitude, accuracy: pos.coords.accuracy };
+      this.setToast('Konum başarıyla alındı.', 'success');
+      this.saveState();
+    }, () => this.setToast('Konum alınamadı. Cihaz iznini kontrol edin.', 'error'), { enableHighAccuracy: true, timeout: 15000 });
   }
 
   async submitActiveSurvey() {
@@ -1690,15 +1676,23 @@ class Store {
     const task = this.state.assignedSurveys.find(t => t.id === taskId) || this.state.assignedSurveys[0];
     const clientSubId = 'sub-' + Date.now();
 
+    if (!task) {
+      this.setToast('Geçerli bir görev ataması bulunamadı.', 'error');
+      return;
+    }
+    const survey = (this.state.allSurveys || []).find(s => s.id === task.surveyId);
+    const questions = survey ? [...(survey.questions || []), ...(survey.sections || []).flatMap(s => s.questions || [])].filter((q, i, a) => a.findIndex(x => x.id === q.id) === i) : [];
+    const locationData = this.state.activeLocation || {};
     const submissionData = {
       clientSubmissionId: clientSubId,
       surveyId: task?.surveyId || '44444444-4444-4444-4444-444444444441',
       assignmentId: task?.id,
+      villageId: task?.villageId,
       startedAt: new Date().toISOString(),
       completedAt: new Date().toISOString(),
-      latitude: 37.0662,
-      longitude: 37.3833,
-      accuracy: 8.0,
+      latitude: locationData.latitude || null,
+      longitude: locationData.longitude || null,
+      accuracy: locationData.accuracy || null,
       syncSource: this.state.isOnline ? 'ONLINE' : 'OFFLINE_SYNC',
       data: { ...this.state.activeFormAnswers },
       synced: this.state.isOnline
@@ -1714,16 +1708,23 @@ class Store {
             clientSubmissionId: clientSubId,
             surveyId: task?.surveyId || '44444444-4444-4444-4444-444444444441',
             assignmentId: task?.id,
+            villageId: task?.villageId,
             startedAt: submissionData.startedAt,
             completedAt: submissionData.completedAt,
             latitude: submissionData.latitude,
             longitude: submissionData.longitude,
             accuracy: submissionData.accuracy,
             syncSource: 'ONLINE',
-            answers: Object.keys(this.state.activeFormAnswers).map(k => ({
-              questionId: '66666666-6666-6666-6666-666666666661',
-              answerValue: String(this.state.activeFormAnswers[k])
-            }))
+            answers: questions.map(q => {
+              const type = String(q.type || '').toUpperCase();
+              const raw = this.state.activeFormAnswers[q.id];
+              return {
+                questionId: q.id,
+                answerValue: Array.isArray(raw) ? raw.join('|') : String(raw ?? (type === 'LOCATION' && this.state.activeLocationAcquired ? `${locationData.latitude},${locationData.longitude}` : '')),
+                fileBase64: type === 'PHOTO' && this.state.activePhotoData ? String(this.state.activePhotoData).replace(/^data:[^;]+;base64,/, '') : null,
+                fileName: type === 'PHOTO' ? 'saha-fotografi.jpg' : null
+              };
+            })
           })
         });
         if (task) task.completed += 1;

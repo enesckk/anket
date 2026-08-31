@@ -53,6 +53,21 @@ public class AssignmentService : IAssignmentService
 
     public async Task<AssignmentDto> CreateAssignmentAsync(CreateAssignmentRequest request)
     {
+        var survey = await _db.Surveys.FindAsync(request.SurveyId);
+        if (survey == null) throw new ArgumentException("Atanacak anket bulunamadı.");
+        if (survey.Status != SurveyStatus.ACTIVE) throw new ArgumentException("Yalnızca aktif anketler atanabilir.");
+        if (!await _db.Villages.AnyAsync(v => v.Id == request.VillageId && v.IsActive))
+            throw new ArgumentException("Geçerli ve aktif bir bölge seçilmelidir.");
+        var requestedUserIds = request.AssignedUserIds.Distinct().ToList();
+        var validUserIds = await _db.Users
+            .Where(u => requestedUserIds.Contains(u.Id) && u.Role == UserRole.FIELD_USER && u.IsActive)
+            .Select(u => u.Id)
+            .ToListAsync();
+        if (requestedUserIds.Count == 0 || validUserIds.Count != requestedUserIds.Count)
+            throw new ArgumentException("Atamadaki tüm kullanıcılar aktif saha personeli olmalıdır.");
+        if (request.TargetCount <= 0 || request.EndDate <= request.StartDate)
+            throw new ArgumentException("Hedef sayı ve görev tarihleri geçerli olmalıdır.");
+
         var assignment = new SurveyAssignment
         {
             SurveyId = request.SurveyId,
@@ -68,7 +83,7 @@ public class AssignmentService : IAssignmentService
         _db.SurveyAssignments.Add(assignment);
         await _db.SaveChangesAsync();
 
-        foreach (var uid in request.AssignedUserIds)
+        foreach (var uid in validUserIds)
         {
             _db.SurveyAssignmentUsers.Add(new SurveyAssignmentUser
             {

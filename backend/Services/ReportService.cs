@@ -80,11 +80,15 @@ public class ReportService : IReportService
                     int cnt = 0;
                     if (q.Type == QuestionType.MULTIPLE_CHOICE)
                     {
-                        cnt = qAnswers.Count(a => a.AnswerValue.Contains(opt, StringComparison.OrdinalIgnoreCase));
+                        cnt = qAnswers.Count(a => a.AnswerValue
+                            .Split(new[] { '|', ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                            .Any(value => value.Equals(opt, StringComparison.OrdinalIgnoreCase) ||
+                                          q.Options.Any(o => o.Label.Equals(opt, StringComparison.OrdinalIgnoreCase) && o.Value.Equals(value, StringComparison.OrdinalIgnoreCase))));
                     }
                     else
                     {
-                        cnt = qAnswers.Count(a => a.AnswerValue.Equals(opt, StringComparison.OrdinalIgnoreCase));
+                        cnt = qAnswers.Count(a => a.AnswerValue.Equals(opt, StringComparison.OrdinalIgnoreCase) ||
+                            q.Options.Any(o => o.Label.Equals(opt, StringComparison.OrdinalIgnoreCase) && o.Value.Equals(a.AnswerValue, StringComparison.OrdinalIgnoreCase)));
                     }
 
                     double pct = qTotal > 0 ? Math.Round((double)cnt / qTotal * 100, 1) : 0;

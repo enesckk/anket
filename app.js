@@ -1856,6 +1856,14 @@ function attachPwaListeners() {
     });
   });
 
+  document.querySelectorAll('.runner-multi').forEach(input => {
+    input.addEventListener('change', (e) => {
+      const id = e.currentTarget.getAttribute('data-q-id');
+      const selected = Array.from(document.querySelectorAll(`.runner-multi[data-q-id="${id}"]:checked`)).map(x => x.value);
+      store.updateAnswer(id, selected);
+    });
+  });
+
   // GERÇEK KAMERA / GALERİ AÇMA & OTOMATİK SIKIŞTIRMA MOTORU
   const btnRunnerPhoto = document.getElementById('btn-runner-photo');
   const fileInput = document.getElementById('runner-camera-file');
@@ -1911,6 +1919,21 @@ function attachPwaListeners() {
     store.setPwaScreen('home');
   });
   document.getElementById('btn-runner-submit')?.addEventListener('click', async () => {
+    const state = store.getState();
+    const task = (state.assignedSurveys || []).find(t => t.id === state.selectedTaskId);
+    const survey = (state.allSurveys || []).find(s => s.id === task?.surveyId);
+    const questions = survey ? [...(survey.questions || []), ...(survey.sections || []).flatMap(s => s.questions || [])].filter((q, i, a) => a.findIndex(x => x.id === q.id) === i) : [];
+    const missing = questions.find(q => q.isRequired && String(q.type).toUpperCase() !== 'PHOTO' && String(q.type).toUpperCase() !== 'LOCATION' && (!state.activeFormAnswers[q.id] || state.activeFormAnswers[q.id].length === 0));
+    if (missing) {
+      store.setToast(`Lütfen zorunlu soruyu cevaplayın: ${missing.title}`, 'error');
+      return;
+    }
+    if (questions.some(q => q.isRequired && String(q.type).toUpperCase() === 'PHOTO') && !state.activePhotoUploaded) {
+      store.setToast('Zorunlu fotoğrafı ekleyin.', 'error'); return;
+    }
+    if (questions.some(q => q.isRequired && String(q.type).toUpperCase() === 'LOCATION') && !state.activeLocationAcquired) {
+      store.setToast('Zorunlu konumu alın.', 'error'); return;
+    }
     await store.submitActiveSurvey();
   });
 

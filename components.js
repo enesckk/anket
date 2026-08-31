@@ -1533,18 +1533,9 @@ export function renderPwaHome() {
   const user = state.auth?.user || {};
   const unreadMsg = (state.messages || []).find(m => m.isUnread) || (state.messages || [])[0];
   
-  const assignedList = Array.isArray(state.assignedSurveys) && state.assignedSurveys.length > 0
-    ? state.assignedSurveys
-    : (Array.isArray(state.allSurveys) && state.allSurveys.filter(s => s.status === 'ACTIVE').length > 0
-        ? state.allSurveys.filter(s => s.status === 'ACTIVE').map(s => ({
-            id: s.id,
-            title: s.title,
-            village: s.villageName || 'Saha Bölgesi',
-            completed: s.completedCount || 0,
-            target: s.targetCount || 100,
-            priority: 'Aktif Saha Anketi'
-          }))
-        : []);
+  // Saha kullanıcısına yalnızca sunucunun açıkça atadığı görevler gösterilir.
+  // Atama yoksa tüm aktif anketlere düşmek veri/yetki sızıntısına yol açar.
+  const assignedList = Array.isArray(state.assignedSurveys) ? state.assignedSurveys : [];
   const mainTask = assignedList[0] || null;
   const progressPct = mainTask ? Math.min(100, Math.round(((mainTask.completed || 0) / (mainTask.target || 100)) * 100)) : 0;
   const currentDateStr = new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' });
@@ -1772,6 +1763,45 @@ export function renderTaskDetail() {
 export function renderSurveyRunner() {
   const state = store.getState();
   const task = (state.assignedSurveys || []).find(t => t.id === state.selectedTaskId) || (state.assignedSurveys || [])[0];
+  const liveSurvey = (state.allSurveys || []).find(s => s.id === task?.surveyId);
+  const liveQuestions = liveSurvey
+    ? [...(liveSurvey.questions || []), ...(liveSurvey.sections || []).flatMap(sec => sec.questions || [])]
+        .filter((q, index, arr) => arr.findIndex(x => x.id === q.id) === index)
+        .sort((a, b) => (a.order || 0) - (b.order || 0))
+    : [];
+
+  if (task && liveSurvey && liveQuestions.length > 0) {
+    const answers = state.activeFormAnswers || {};
+    const renderLiveQuestion = (q, index) => {
+      const type = String(q.type || 'TEXT').toUpperCase();
+      const value = answers[q.id] ?? '';
+      const required = q.isRequired ? '<span class="text-red-500">*</span>' : '';
+      const label = `<label class="block text-sm font-semibold text-[#01214A]">${index + 1}. ${q.title} ${required}</label>`;
+      if (type === 'YES_NO') {
+        return `<div class="space-y-2">${label}<div class="grid grid-cols-2 gap-3">${['Evet','Hayır'].map(opt => `<button type="button" data-q-id="${q.id}" data-val="${opt}" class="btn-runner-yesno h-12 border ${value === opt ? 'border-[#2A9D38] bg-emerald-50 text-[#2A9D38]' : 'border-[#E9EDF2] bg-white text-slate-700'} rounded-[10px] font-semibold text-xs">${opt}</button>`).join('')}</div></div>`;
+      }
+      if (type === 'SINGLE_CHOICE') {
+        return `<div class="space-y-2">${label}<div class="space-y-2">${(q.options || []).map(opt => `<button type="button" data-q-id="${q.id}" data-opt="${opt.value || opt.label}" class="runner-radio-row w-full min-h-11 px-3 text-left border ${value === (opt.value || opt.label) ? 'border-[#2A9D38] bg-emerald-50' : 'border-[#E9EDF2] bg-white'} rounded-[10px] text-xs font-medium">${opt.label}</button>`).join('')}</div></div>`;
+      }
+      if (type === 'MULTIPLE_CHOICE') {
+        const selected = Array.isArray(value) ? value : String(value || '').split('|').filter(Boolean);
+        return `<div class="space-y-2">${label}<div class="space-y-2">${(q.options || []).map(opt => { const v = opt.value || opt.label; return `<label class="flex items-center gap-2 p-3 border border-[#E9EDF2] rounded-[10px] text-xs"><input type="checkbox" class="runner-multi" data-q-id="${q.id}" value="${v}" ${selected.includes(v) ? 'checked' : ''}/> ${opt.label}</label>`; }).join('')}</div></div>`;
+      }
+      if (type === 'PHOTO') {
+        return `<div class="space-y-2">${label}<input type="file" id="runner-camera-file" accept="image/*" capture="environment" class="hidden"/><button type="button" id="btn-runner-photo" class="w-full h-11 border border-[#E9EDF2] rounded-[10px] text-xs font-semibold">${state.activePhotoUploaded ? 'Fotoğraf Hazır ✓' : 'Fotoğraf Çek / Seç'}</button></div>`;
+      }
+      if (type === 'LOCATION') {
+        return `<div class="space-y-2">${label}<button type="button" id="btn-runner-location" class="w-full h-11 border border-[#E9EDF2] rounded-[10px] text-xs font-semibold">${state.activeLocationAcquired ? 'Konum Alındı ✓' : 'Konumu Al'}</button></div>`;
+      }
+      const htmlType = type === 'NUMBER' ? 'number' : type === 'DATE' ? 'date' : 'text';
+      return `<div class="space-y-2">${label}<input type="${htmlType}" data-q-id="${q.id}" value="${value}" class="runner-input w-full h-11 px-3.5 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs focus:outline-none focus:border-[#2A9D38]"/></div>`;
+    };
+
+    return `<div class="min-h-screen bg-[#F8FAFC] pb-24">
+      <header class="h-14 bg-white border-b border-[#E9EDF2] px-4 flex items-center justify-between sticky top-0 z-30"><button id="btn-cancel-runner" class="text-xs font-semibold">Geri</button><h2 class="text-sm font-semibold text-[#01214A] truncate max-w-[220px]">${liveSurvey.title}</h2><span class="text-[10px] text-emerald-700">${state.isOnline !== false ? 'Çevrimiçi' : 'Çevrimdışı'}</span></header>
+      <main class="px-4 py-5 max-w-md mx-auto space-y-4"><div class="bg-white rounded-[14px] border border-[#E9EDF2] p-5 space-y-6">${liveQuestions.map(renderLiveQuestion).join('')}</div><button id="btn-runner-submit" class="w-full h-12 bg-[#2A9D38] text-white font-semibold rounded-[12px] text-sm">Anketi Gönder</button></main>
+    </div>`;
+  }
   const secIndex = state.activeSectionIndex || 0;
   const answers = state.activeFormAnswers || {};
   const yesNoVal = answers['q4'] || 'evet';

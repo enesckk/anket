@@ -193,3 +193,12 @@ public record CreateUserRequest(
     string FullName,
     string Role
 );
+
+public record UpdateUserRequest(
+    string Username,
+    string Email,
+    string Phone,
+    string? Password,
+    string FullName,
+    string Role
+);

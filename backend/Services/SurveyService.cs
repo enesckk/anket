@@ -8,7 +8,9 @@ namespace SurveyAdmin.Api.Services;
 public interface ISurveyService
 {
     Task<List<SurveyDto>> GetAllSurveysAsync(string? status, string? source);
+    Task<List<SurveyDto>> GetSurveysForUserAsync(Guid userId, string? status);
     Task<SurveyDto?> GetSurveyByIdAsync(Guid id);
+    Task<SurveyDto?> GetSurveyForUserAsync(Guid id, Guid userId);
     Task<SurveyDto> CreateSurveyAsync(CreateSurveyRequest request, Guid userId);
     Task<SurveyDto?> CloneSurveyAsync(Guid surveyId, Guid userId);
     Task<SurveyDto?> UpdateSurveyStatusAsync(Guid id, string status);
@@ -50,6 +52,27 @@ public class SurveyService : ISurveyService
         return surveys.Select(MapToSurveyDto).ToList();
     }
 
+    public async Task<List<SurveyDto>> GetSurveysForUserAsync(Guid userId, string? status)
+    {
+        var query = _db.Surveys
+            .Include(s => s.CreatedByUser)
+            .Include(s => s.Sections)
+                .ThenInclude(sec => sec.Questions)
+                    .ThenInclude(q => q.Options)
+            .Include(s => s.Questions)
+                .ThenInclude(q => q.Options)
+            .Where(s => s.Assignments.Any(a => a.AssignedUsers.Any(au => au.UserId == userId)))
+            .AsNoTracking();
+
+        if (!string.IsNullOrEmpty(status) && Enum.TryParse<SurveyStatus>(status, true, out var statusEnum))
+        {
+            query = query.Where(s => s.Status == statusEnum);
+        }
+
+        var surveys = await query.OrderByDescending(s => s.CreatedAt).ToListAsync();
+        return surveys.Select(MapToSurveyDto).ToList();
+    }
+
     public async Task<SurveyDto?> GetSurveyByIdAsync(Guid id)
     {
         var survey = await _db.Surveys
@@ -59,6 +82,21 @@ public class SurveyService : ISurveyService
                     .ThenInclude(q => q.Options)
             .Include(s => s.Questions)
                 .ThenInclude(q => q.Options)
+            .FirstOrDefaultAsync(s => s.Id == id);
+
+        return survey == null ? null : MapToSurveyDto(survey);
+    }
+
+    public async Task<SurveyDto?> GetSurveyForUserAsync(Guid id, Guid userId)
+    {
+        var survey = await _db.Surveys
+            .Include(s => s.CreatedByUser)
+            .Include(s => s.Sections)
+                .ThenInclude(sec => sec.Questions)
+                    .ThenInclude(q => q.Options)
+            .Include(s => s.Questions)
+                .ThenInclude(q => q.Options)
+            .Where(s => s.Assignments.Any(a => a.AssignedUsers.Any(au => au.UserId == userId)))
             .FirstOrDefaultAsync(s => s.Id == id);
 
         return survey == null ? null : MapToSurveyDto(survey);
