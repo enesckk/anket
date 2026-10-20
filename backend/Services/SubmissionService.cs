@@ -63,7 +63,7 @@ public class SubmissionService : ISubmissionService
 
         var surveyQuestions = await _db.SurveyQuestions
             .Where(q => q.SurveyId == request.SurveyId && q.IsActive)
-            .Select(q => new { q.Id, q.IsRequired })
+            .Select(q => new { q.Id, q.Title, q.Type, q.IsRequired })
             .ToListAsync();
         var validQuestionIds = surveyQuestions.Select(q => q.Id).ToHashSet();
         if (request.Answers.Any(a => !validQuestionIds.Contains(a.QuestionId)))
@@ -74,6 +74,12 @@ public class SubmissionService : ISubmissionService
             .ToHashSet();
         if (surveyQuestions.Where(q => q.IsRequired).Any(q => !answeredQuestionIds.Contains(q.Id)))
             throw new ArgumentException("Zorunlu soruların tamamı cevaplanmalıdır.");
+        foreach (var answer in request.Answers)
+        {
+            var question = surveyQuestions.First(q => q.Id == answer.QuestionId);
+            var validationError = SurveyAnswerValidator.Validate(question.Title, question.Type, answer.AnswerValue);
+            if (validationError != null) throw new ArgumentException(validationError);
+        }
 
         Enum.TryParse<SyncSource>(request.SyncSource, true, out var src);
 
@@ -163,7 +169,7 @@ public class SubmissionService : ISubmissionService
 
         var surveyQuestions = await _db.SurveyQuestions
             .Where(q => q.SurveyId == surveyId && q.IsActive)
-            .Select(q => new { q.Id, q.IsRequired, q.ConditionSourceQuestionId, q.ConditionOperator, q.ConditionValue })
+            .Select(q => new { q.Id, q.Title, q.Type, q.IsRequired, q.ConditionSourceQuestionId, q.ConditionOperator, q.ConditionValue })
             .ToListAsync();
         var validQuestionIds = surveyQuestions.Select(q => q.Id).ToHashSet();
         if (request.Answers.GroupBy(a => a.QuestionId).Any(g => g.Count() > 1) ||
@@ -186,6 +192,12 @@ public class SubmissionService : ISubmissionService
             .Select(a => a.QuestionId).ToHashSet();
         if (visibleRequiredQuestionIds.Any(id => !answeredQuestionIds.Contains(id)))
             throw new ArgumentException("Zorunlu soruların tamamı cevaplanmalıdır.");
+        foreach (var answer in request.Answers)
+        {
+            var question = surveyQuestions.First(q => q.Id == answer.QuestionId);
+            var validationError = SurveyAnswerValidator.Validate(question.Title, question.Type, answer.AnswerValue);
+            if (validationError != null) throw new ArgumentException(validationError);
+        }
 
         var submission = new SurveySubmission
         {

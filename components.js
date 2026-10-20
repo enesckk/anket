@@ -1,6 +1,6 @@
 // SurveyAdmin Intelligence - Production Quality Modular UI Components
 
-import { store, isSurveyQuestionVisible, inferSurveyCategory, sanitizeLegacyRegionText, sanitizeRegionLabel } from './store.js';
+import { store, isSurveyQuestionVisible, inferSurveyCategory, sanitizeLegacyRegionText, sanitizeRegionLabel, getSurveyQuestionValidationKind } from './store.js';
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, char => ({
@@ -44,6 +44,27 @@ function getMessageSenderLabel(message) {
   const sender = String(message?.sender || message?.senderName || '').trim();
   if (sender) return sender;
   return message?.senderRole === 'ADMIN' || message?.direction === 'FROM_ADMIN' ? 'Yönetici' : 'Saha Personeli';
+}
+
+function getSurveyInputConfig(question, fallbackType = 'text') {
+  const validationKind = getSurveyQuestionValidationKind(question);
+  if (validationKind === 'turkish_id') {
+    return {
+      type: 'text',
+      attributes: 'inputmode="numeric" pattern="[0-9]*" maxlength="11" autocomplete="off"',
+      placeholder: '11 haneli T.C. kimlik numarası',
+      hint: '11 haneli ve kontrol basamakları geçerli olmalıdır.'
+    };
+  }
+  if (validationKind === 'turkish_phone') {
+    return {
+      type: 'tel',
+      attributes: 'inputmode="tel" maxlength="20" autocomplete="tel"',
+      placeholder: '05xx xxx xx xx',
+      hint: '05xx xxx xx xx veya 5xx xxx xx xx formatını kullanın.'
+    };
+  }
+  return { type: fallbackType, attributes: '', placeholder: '', hint: '' };
 }
 
 // SVG Icon Helpers (Lucide Icons & Material Symbols Style)
@@ -1362,7 +1383,8 @@ export function renderPublicSurvey() {
     if (type === 'PHOTO') return `<div class="space-y-2">${label}<input type="file" id="public-photo-file" accept="image/*" capture="environment" class="hidden"/><button type="button" id="btn-public-photo" class="w-full h-12 border border-slate-200 rounded-xl text-sm font-semibold">${session.photoData ? 'Fotoğraf Hazır ✓' : 'Fotoğraf Çek / Seç'}</button></div>`;
     if (type === 'LOCATION') return `<div class="space-y-2">${label}<button type="button" id="btn-public-location" class="w-full h-12 border border-slate-200 rounded-xl text-sm font-semibold">${session.location ? 'Konum Alındı ✓' : 'Konumumu Al'}</button></div>`;
     const htmlType = type === 'NUMBER' ? 'number' : type === 'DATE' ? 'date' : 'text';
-    return `<div class="space-y-2">${label}<input type="${htmlType}" data-q-id="${question.id}" value="${escapeHtml(value)}" class="public-input w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-[#2A9D38]"/></div>`;
+    const inputConfig = getSurveyInputConfig(question, htmlType);
+    return `<div class="space-y-2">${label}<input type="${inputConfig.type}" ${inputConfig.attributes} data-q-id="${question.id}" value="${escapeHtml(value)}" ${inputConfig.placeholder ? `placeholder="${inputConfig.placeholder}"` : ''} class="public-input w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-[#2A9D38]"/>${inputConfig.hint ? `<p class="text-[11px] text-slate-400">${inputConfig.hint}</p>` : ''}</div>`;
   };
   return `<div class="min-h-screen bg-[#F8FAFC] pb-8"><header class="bg-white border-b border-slate-200 px-4 py-4 sticky top-0 z-20"><div class="max-w-2xl mx-auto"><div class="text-[10px] font-bold text-[#2A9D38] uppercase">Şehitkamil Strateji Geliştirme Merkezi</div><h1 class="text-lg font-bold text-[#01214A] mt-1">${escapeHtml(survey.title)}</h1><p class="text-xs text-slate-500 mt-1">Anketör: ${escapeHtml(session.interviewerName)}</p></div></header><main class="max-w-2xl mx-auto px-4 py-5 space-y-4">${session.error ? `<div class="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700">${escapeHtml(session.error)}</div>` : ''}<div class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-7 space-y-6">${questions.map(renderQuestion).join('')}</div><button id="btn-public-submit" ${session.stage === 'submitting' ? 'disabled' : ''} class="w-full h-12 bg-[#2A9D38] disabled:opacity-60 text-white font-bold rounded-xl">${session.stage === 'submitting' ? 'Gönderiliyor...' : 'Anketi Gönder'}</button></main></div>`;
 }
@@ -1911,7 +1933,8 @@ export function renderSurveyRunner() {
         return `<div class="space-y-2">${label}<button type="button" id="btn-runner-location" class="w-full h-11 border border-[#E9EDF2] rounded-[10px] text-xs font-semibold">${state.activeLocationAcquired ? 'Konum Alındı ✓' : 'Konumu Al'}</button></div>`;
       }
       const htmlType = type === 'NUMBER' ? 'number' : type === 'DATE' ? 'date' : 'text';
-      return `<div class="space-y-2">${label}<input type="${htmlType}" data-q-id="${q.id}" value="${value}" class="runner-input w-full h-11 px-3.5 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs focus:outline-none focus:border-[#2A9D38]"/></div>`;
+      const inputConfig = getSurveyInputConfig(q, htmlType);
+      return `<div class="space-y-2">${label}<input type="${inputConfig.type}" ${inputConfig.attributes} data-q-id="${q.id}" value="${escapeHtml(value)}" ${inputConfig.placeholder ? `placeholder="${inputConfig.placeholder}"` : ''} class="runner-input w-full h-11 px-3.5 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs focus:outline-none focus:border-[#2A9D38]"/>${inputConfig.hint ? `<p class="text-[11px] text-slate-400">${inputConfig.hint}</p>` : ''}</div>`;
     };
 
     return `<div class="min-h-screen bg-[#F8FAFC] pb-24">

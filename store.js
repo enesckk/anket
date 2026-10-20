@@ -46,6 +46,63 @@ export function isSurveyQuestionVisible(question, answers = {}) {
     : matches;
 }
 
+function normalizeQuestionTitle(title) {
+  return String(title || '')
+    .toLocaleLowerCase('tr-TR')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '');
+}
+
+export function getSurveyQuestionValidationKind(question) {
+  const type = String(question?.type || 'TEXT').toUpperCase();
+  if (type !== 'TEXT' && type !== 'NUMBER') return null;
+  const title = normalizeQuestionTitle(question?.title);
+  if (title.includes('tckimlik') || title.includes('kimlikno') || title.includes('kimliknumara')) return 'turkish_id';
+  if (title.includes('telefon') || title.includes('ceptelefon') || title.includes('gsm')) return 'turkish_phone';
+  return null;
+}
+
+export function isValidTurkishId(value) {
+  const digits = String(value ?? '').trim();
+  if (!/^[1-9]\d{10}$/.test(digits)) return false;
+  const numbers = [...digits].map(Number);
+  const oddSum = numbers[0] + numbers[2] + numbers[4] + numbers[6] + numbers[8];
+  const evenSum = numbers[1] + numbers[3] + numbers[5] + numbers[7];
+  return ((oddSum * 7 - evenSum) % 10 + 10) % 10 === numbers[9]
+    && numbers.slice(0, 10).reduce((sum, number) => sum + number, 0) % 10 === numbers[10];
+}
+
+export function isValidTurkishPhone(value) {
+  const raw = String(value ?? '').trim();
+  if (!/^[0-9+()\s-]+$/.test(raw)) return false;
+  if ((raw.match(/\+/g) || []).length > 1 || (raw.includes('+') && !raw.startsWith('+'))) return false;
+  let digits = raw.replace(/\D/g, '');
+  if (digits.startsWith('90') && digits.length === 12) digits = digits.slice(2);
+  if (digits.startsWith('0') && digits.length === 11) digits = digits.slice(1);
+  return /^5\d{9}$/.test(digits);
+}
+
+export function validateSurveyAnswer(question, value) {
+  const kind = getSurveyQuestionValidationKind(question);
+  if (!kind || String(value ?? '').trim() === '') return null;
+  if (kind === 'turkish_id' && !isValidTurkishId(value)) {
+    return `${question.title}: 11 haneli, rakamlardan oluşan geçerli bir T.C. kimlik numarası giriniz.`;
+  }
+  if (kind === 'turkish_phone' && !isValidTurkishPhone(value)) {
+    return `${question.title}: Geçerli bir cep telefonu giriniz (05xx xxx xx xx veya 5xx xxx xx xx).`;
+  }
+  return null;
+}
+
+export function findInvalidSurveyAnswer(questions, answers = {}) {
+  for (const question of questions || []) {
+    const message = validateSurveyAnswer(question, answers?.[question.id]);
+    if (message) return { question, message };
+  }
+  return null;
+}
+
 export function normalizeSubmission(submission) {
   if (!submission || !Array.isArray(submission.answers)) return submission;
 
@@ -420,6 +477,12 @@ class Store {
       this.saveState();
       return false;
     }
+    const invalidAnswer = findInvalidSurveyAnswer(questions, session.answers || {});
+    if (invalidAnswer) {
+      session.error = invalidAnswer.message;
+      this.saveState();
+      return false;
+    }
 
     session.stage = 'submitting';
     session.error = null;
@@ -630,7 +693,9 @@ class Store {
 
       if (!response.ok) {
         const errText = await response.text();
-        throw new Error(errText || `API Error ${response.status}`);
+        const error = new Error(errText || `API Error ${response.status}`);
+        error.status = response.status;
+        throw error;
       }
 
       const contentType = response.headers.get('content-type');
@@ -2114,6 +2179,11 @@ class Store {
     const questions = survey ? [...(survey.questions || []), ...(survey.sections || []).flatMap(s => s.questions || [])]
       .filter((q, i, a) => a.findIndex(x => x.id === q.id) === i)
       .filter(q => isSurveyQuestionVisible(q, this.state.activeFormAnswers || {})) : [];
+    const invalidAnswer = findInvalidSurveyAnswer(questions, this.state.activeFormAnswers || {});
+    if (invalidAnswer) {
+      this.setToast(invalidAnswer.message, 'error');
+      return false;
+    }
     const locationData = this.state.activeLocation || {};
     const submissionData = {
       clientSubmissionId: clientSubId,
@@ -2162,6 +2232,15 @@ class Store {
         if (task) task.completed += 1;
         this.state.syncState = 'sync_success';
       } catch (e) {
+        if (e?.status >= 400 && e.status < 500) {
+          this.state.submissions = this.state.submissions.filter(submission => submission.clientSubmissionId !== clientSubId);
+          let message = 'Anket cevapları doğrulanamadı. Alanları kontrol ediniz.';
+          try { message = JSON.parse(e.message || '{}').message || message; } catch (_) {}
+          this.state.syncState = 'online';
+          this.setToast(message, 'error');
+          this.saveState();
+          return false;
+        }
         this.state.offlineQueueCount += 1;
         this.state.syncState = 'offline';
       }
@@ -2172,6 +2251,7 @@ class Store {
 
     this.state.pwaScreen = 'survey_success';
     this.saveState();
+    return true;
   }
 
   // EXCEL & PDF EXPORT (With Client-Side Instant Download Fallback)
