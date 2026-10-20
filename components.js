@@ -2605,11 +2605,11 @@ export function renderAdminView() {
           <div id="btn-close-mobile-sidebar-backdrop" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity cursor-pointer"></div>
           
           <aside class="relative flex flex-col w-72 max-w-[85vw] bg-white h-full shadow-2xl z-10 animate-in slide-in-from-left duration-200">
-            <div class="h-[72px] px-4 border-b border-[#E9EDF2] flex items-center justify-between shrink-0">
-              <div class="flex items-center gap-3">
+            <div class="min-h-[72px] px-4 py-2 border-b border-[#E9EDF2] flex items-center justify-between gap-2 shrink-0">
+              <div class="flex items-center gap-3 min-w-0 flex-1">
                 <img src="./logo_sehitkamil.png" alt="Şehitkamil Logo" class="h-9 w-auto object-contain shrink-0">
-                <div class="flex flex-col min-w-0">
-                  <span class="text-[13px] font-semibold text-[#01214A] leading-snug tracking-tight truncate">Şehitkamil Strateji Geliştirme Merkezi</span>
+                <div class="flex flex-col min-w-0 flex-1">
+                  <span class="text-[12px] font-semibold text-[#01214A] leading-[1.25] tracking-tight whitespace-normal break-words">Şehitkamil Strateji Geliştirme Merkezi</span>
                   <span class="text-[10px] font-normal text-slate-400">Yönetim Paneli</span>
                 </div>
               </div>
@@ -2656,8 +2656,8 @@ export function renderAdminView() {
         <!-- SIDEBAR TOP BRANDING BLOCK -->
         <div class="h-[72px] px-4 border-b border-[#E9EDF2] flex items-center gap-3 shrink-0">
           <img src="./logo_sehitkamil.png" alt="Şehitkamil Logo" class="h-9 w-auto object-contain shrink-0">
-          <div class="flex flex-col min-w-0">
-            <span class="text-[13px] sm:text-[14px] font-semibold text-[#01214A] leading-snug tracking-tight truncate">Şehitkamil Strateji Geliştirme Merkezi</span>
+          <div class="flex flex-col min-w-0 flex-1">
+            <span class="text-[13px] font-semibold text-[#01214A] leading-[1.25] tracking-tight whitespace-normal break-words">Şehitkamil Strateji Geliştirme Merkezi</span>
             <span class="text-[11px] font-normal text-slate-400 mt-0.5">Yönetim Paneli</span>
           </div>
         </div>

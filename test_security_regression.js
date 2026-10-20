@@ -309,6 +309,8 @@ assert(html.includes('btn-admin-create-survey-dashboard'));
 assert(html.includes('min-w-[680px] table-fixed'));
 assert(html.includes('whitespace-nowrap tabular-nums'));
 assert(!html.includes('Aktif / Yayında'));
+assert(html.includes('leading-[1.25] tracking-tight whitespace-normal break-words">Şehitkamil Strateji Geliştirme Merkezi'));
+assert(!html.includes('tracking-tight truncate">Şehitkamil Strateji Geliştirme Merkezi'));
 const responsiveCss = readFileSync(new URL('./styles.css', import.meta.url), 'utf8');
 assert(responsiveCss.includes('.app-modal-overlay > div'));
 assert(responsiveCss.includes('max-height: calc(100dvh - 1.5rem)'));
