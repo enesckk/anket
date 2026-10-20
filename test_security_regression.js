@@ -10,7 +10,12 @@ globalThis.localStorage = {
 };
 
 const { store } = await import('./store.js');
-const { renderPwaHome, renderSurveyRunner, renderProfile, renderAdminView, renderCustomModals } = await import('./components.js');
+const { renderLoginScreen, renderPwaHome, renderSurveyRunner, renderProfile, renderAdminView, renderCustomModals } = await import('./components.js');
+
+// Giriş ekranı gerçek yönetici hesabını veya adresini örnek olarak ifşa etmemeli.
+let html = renderLoginScreen();
+assert(html.includes('placeholder="Kullanıcı adı, e-posta veya telefon"'));
+assert(!html.includes('placeholder="admin veya'));
 
 // Soru ekleme metodu, hızlı tür kartlarından ve alt panelden gelen zorunluluk
 // seçimini ReferenceError üretmeden builder durumuna yansıtmalı.
@@ -65,11 +70,17 @@ store.state.allPersonnel = [
   { id: 'admin-1', fullName: 'Sistem Yöneticisi', email: 'admin@example.com', role: 'ADMIN', isActive: true }
 ];
 store.state.activeModal = { type: 'assign_survey', survey: { id: 'survey-1', title: 'Atama Testi' } };
-let html = renderCustomModals(store.state);
+html = renderCustomModals(store.state);
 assert(html.includes('Aykut Bilici'));
 assert(!html.includes('Sistem Yöneticisi'));
 assert(html.includes('value="Genel Saha"'));
 assert(!html.includes('absolute bottom-full'));
+
+// Aynı anket daha önce personele atandıysa hızlı atama modalı o personeli
+// tekrar seçilebilir göstermemeli.
+store.state.allAssignments = [{ surveyId: 'survey-1', assignedUsers: [{ id: 'field-1' }] }];
+html = renderCustomModals(store.state);
+assert(!html.includes('Aykut Bilici'));
 
 // API başarısızsa hayalet atama oluşmamalı; başarılı istekte bölge adı ve
 // yayınlama talebi backend'e açıkça gönderilmeli.
@@ -93,6 +104,14 @@ assert.equal(assignmentPayload.villageName, 'Gazikent Mahallesi');
 assert.equal(assignmentPayload.publishSurvey, true);
 assert.deepEqual(assignmentPayload.assignedUserIds, ['field-1']);
 
+// Tarayıcı tarafındaki erken kontrol de aynı anket-personel çiftini API'ye
+// ikinci kez göndermemeli; esas güvence backend'de ayrıca uygulanır.
+store.state.allAssignments = [{ surveyId: 'survey-1', assignedUsers: [{ id: 'field-1' }] }];
+let duplicateAssignmentApiCalled = false;
+store.apiFetch = async () => { duplicateAssignmentApiCalled = true; };
+await assert.rejects(() => store.createAdminAssignment('survey-1', 'Gazikent Mahallesi', 25, new Date(Date.now() + 86400000).toISOString(), '', ['field-1']));
+assert.equal(duplicateAssignmentApiCalled, false);
+
 // Atama yoksa aktif anket hiçbir şekilde saha ekranına sızmamalı.
 store.state.auth = { isLoggedIn: true, token: 'real-token', user: { id: 'u1', fullName: 'Test', role: 'FIELD_USER' } };
 store.state.currentRole = 'pwa';
@@ -101,6 +120,16 @@ store.state.allSurveys = [{ id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', title: '
 html = renderPwaHome();
 assert(!html.includes('Atanmamış Gizli Anket'));
 assert(html.includes('Görevlerim'));
+
+// Ana sayfa yalnızca son görevi değil, kullanıcıya atanmış tüm aktif görevleri göstermeli.
+store.state.assignedSurveys = [
+  { id: 'task-1', surveyId: 'survey-1', title: 'Birinci Aktif Anket', target: 10, completed: 1 },
+  { id: 'task-2', surveyId: 'survey-2', title: 'İkinci Aktif Anket', target: 20, completed: 2 }
+];
+html = renderPwaHome();
+assert(html.includes('Birinci Aktif Anket'));
+assert(html.includes('İkinci Aktif Anket'));
+assert(html.includes('Şehitkamil Strateji Geliştirme Merkezi'));
 
 // Saha kullanıcısı yönetici geçişini görmemeli ve state manipülasyonu ile
 // yönetici paneline geçememeli.

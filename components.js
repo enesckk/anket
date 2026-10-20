@@ -1102,8 +1102,13 @@ export function renderCustomModals(state) {
 
   if (state.activeModal.type === 'assign_survey') {
     const survey = state.activeModal.survey || (state.allSurveys || [])[0] || { id: 'srv-1', title: 'Saha Anketi' };
+    const previouslyAssignedUserIds = new Set(
+      (Array.isArray(state.allAssignments) ? state.allAssignments : [])
+        .filter(assignment => assignment.surveyId === survey.id)
+        .flatMap(assignment => (assignment.assignedUsers || []).map(person => person.id))
+    );
     const assignablePersonnel = (Array.isArray(state.allPersonnel) ? state.allPersonnel : [])
-      .filter(person => person.role === 'FIELD_USER' && person.isActive !== false);
+      .filter(person => person.role === 'FIELD_USER' && person.isActive !== false && !previouslyAssignedUserIds.has(person.id));
     return `
       <div class="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white border-none rounded-3xl p-6 max-w-lg w-full max-h-[calc(100vh-2rem)] overflow-y-auto shadow-2xl space-y-5 animate-in zoom-in-95 duration-150">
@@ -1289,7 +1294,7 @@ export function renderLoginScreen() {
             <div class="space-y-1.5">
               <label for="login-email" class="block text-xs font-semibold text-[#1F2937]">Kullanıcı Adı / E-posta / Telefon</label>
               <div class="relative">
-                <input type="text" id="login-email" required autocomplete="username" placeholder="admin veya admin@sahaanket.gov.tr" class="w-full h-[50px] pl-11 pr-4 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-xs sm:text-sm font-medium text-slate-900 focus:outline-none focus:bg-white focus:border-[#0B315D] focus:ring-4 focus:ring-[#0B315D]/10 transition-all placeholder:text-slate-400"/>
+                <input type="text" id="login-email" required autocomplete="username" placeholder="Kullanıcı adı, e-posta veya telefon" class="w-full h-[50px] pl-11 pr-4 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-xs sm:text-sm font-medium text-slate-900 focus:outline-none focus:bg-white focus:border-[#0B315D] focus:ring-4 focus:ring-[#0B315D]/10 transition-all placeholder:text-slate-400"/>
                 <span class="absolute left-3.5 top-3.5 text-slate-400 pointer-events-none">
                   ${iconSvg('user', 'w-5 h-5 text-slate-400')}
                 </span>
@@ -1538,8 +1543,6 @@ export function renderPwaHome() {
   // Saha kullanıcısına yalnızca sunucunun açıkça atadığı görevler gösterilir.
   // Atama yoksa tüm aktif anketlere düşmek veri/yetki sızıntısına yol açar.
   const assignedList = Array.isArray(state.assignedSurveys) ? state.assignedSurveys : [];
-  const mainTask = assignedList[0] || null;
-  const progressPct = mainTask ? Math.min(100, Math.round(((mainTask.completed || 0) / (mainTask.target || 100)) * 100)) : 0;
   const currentDateStr = new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' });
 
   // Sync status
@@ -1554,7 +1557,7 @@ export function renderPwaHome() {
         <div class="flex items-center gap-3">
           <img src="./logo_sehitkamil.png" alt="Şehitkamil Logo" class="h-9 w-auto object-contain shrink-0">
           <div class="flex flex-col min-w-0">
-            <span class="text-xs font-bold text-[#01214A] leading-tight tracking-tight truncate">Şehitkamil Strateji Merkezi</span>
+            <span class="text-xs font-bold text-[#01214A] leading-tight tracking-tight truncate">Şehitkamil Strateji Geliştirme Merkezi</span>
             <span class="text-[10px] font-normal text-slate-400 mt-0.5">Saha Uygulaması</span>
           </div>
         </div>
@@ -1606,18 +1609,20 @@ export function renderPwaHome() {
             <h2 class="text-base font-semibold text-[#01214A]">Görevlerim</h2>
           </div>
 
-          ${mainTask ? `
+          ${assignedList.length > 0 ? assignedList.map(task => {
+            const progressPct = Math.min(100, Math.round(((task.completed || 0) / (task.target || 1)) * 100));
+            return `
             <div class="bg-white rounded-[14px] p-5 border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-4">
               <div class="flex justify-between items-start gap-2">
                 <div class="space-y-1">
                   <div class="inline-flex items-center gap-1 text-slate-500 text-xs font-normal">
                     ${iconSvg('mapPin', 'w-3.5 h-3.5 text-[#2A9D38]')}
-                    <span>${mainTask.village || 'Saha Bölgesi'}</span>
+                    <span>${task.village || 'Saha Bölgesi'}</span>
                   </div>
-                  <h3 class="font-bold text-[#01214A] text-base leading-snug">${mainTask.title}</h3>
+                  <h3 class="font-bold text-[#01214A] text-base leading-snug">${task.title}</h3>
                 </div>
                 <span class="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-semibold px-2.5 py-0.5 rounded-[6px] shrink-0">
-                  ${mainTask.priority || 'Aktif'}
+                  ${task.priority || 'Aktif'}
                 </span>
               </div>
 
@@ -1625,7 +1630,7 @@ export function renderPwaHome() {
               <div class="space-y-1.5 pt-1">
                 <div class="flex justify-between text-xs text-slate-500 font-normal">
                   <span>İlerleme</span>
-                  <span class="font-semibold text-[#01214A]">${mainTask.completed || 0} / ${mainTask.target || 100} · %${progressPct}</span>
+                  <span class="font-semibold text-[#01214A]">${task.completed || 0} / ${task.target || 0} · %${progressPct}</span>
                 </div>
                 <div class="w-full bg-[#F1F5F9] h-1.5 rounded-full overflow-hidden">
                   <div class="bg-[#2A9D38] h-full rounded-full transition-all duration-500" style="width: ${progressPct}%"></div>
@@ -1633,12 +1638,13 @@ export function renderPwaHome() {
               </div>
 
               <!-- PRIMARY BUTTON CTA (SECTION 9 & 17) -->
-              <button data-task-id="${mainTask.id}" class="btn-start-survey-direct h-12 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-sm rounded-[12px] w-full flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98">
+              <button data-task-id="${task.id}" class="btn-start-survey-direct h-12 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-sm rounded-[12px] w-full flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98">
                 ${iconSvg('play', 'w-4 h-4 text-white')}
-                <span>${(mainTask.completed || 0) > 0 ? 'Devam Et' : 'Ankete Başla'}</span>
+                <span>${(task.completed || 0) > 0 ? 'Devam Et' : 'Ankete Başla'}</span>
               </button>
             </div>
-          ` : `
+          `;
+          }).join('') : `
             <div class="bg-white rounded-[14px] p-8 border border-[#E9EDF2] text-center space-y-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
               <div class="w-12 h-12 rounded-full bg-emerald-50 text-[#2A9D38] mx-auto flex items-center justify-center">
                 ${iconSvg('poll', 'w-6 h-6 text-[#2A9D38]')}
@@ -2157,7 +2163,7 @@ export function renderPwaSurveyBuilderContainer(state) {
         </button>
         <div class="text-center">
           <h1 class="text-xs font-bold text-[#01214A]">Saha Anket Oluşturucu</h1>
-          <span class="text-[10px] text-[#2A9D38] font-semibold">Şehitkamil Strateji Merkezi</span>
+          <span class="text-[10px] text-[#2A9D38] font-semibold">Şehitkamil Strateji Geliştirme Merkezi</span>
         </div>
         <div class="w-8"></div>
       </header>
@@ -2444,7 +2450,7 @@ export function renderAdminView() {
               <div class="flex items-center gap-3">
                 <img src="./logo_sehitkamil.png" alt="Şehitkamil Logo" class="h-9 w-auto object-contain shrink-0">
                 <div class="flex flex-col min-w-0">
-                  <span class="text-[13px] font-semibold text-[#01214A] leading-snug tracking-tight truncate">Şehitkamil Strateji</span>
+                  <span class="text-[13px] font-semibold text-[#01214A] leading-snug tracking-tight truncate">Şehitkamil Strateji Geliştirme Merkezi</span>
                   <span class="text-[10px] font-normal text-slate-400">Yönetim Paneli</span>
                 </div>
               </div>
@@ -2492,7 +2498,7 @@ export function renderAdminView() {
         <div class="h-[72px] px-4 border-b border-[#E9EDF2] flex items-center gap-3 shrink-0">
           <img src="./logo_sehitkamil.png" alt="Şehitkamil Logo" class="h-9 w-auto object-contain shrink-0">
           <div class="flex flex-col min-w-0">
-            <span class="text-[13px] sm:text-[14px] font-semibold text-[#01214A] leading-snug tracking-tight truncate">Şehitkamil Strateji Merkezi</span>
+            <span class="text-[13px] sm:text-[14px] font-semibold text-[#01214A] leading-snug tracking-tight truncate">Şehitkamil Strateji Geliştirme Merkezi</span>
             <span class="text-[11px] font-normal text-slate-400 mt-0.5">Yönetim Paneli</span>
           </div>
         </div>
@@ -3656,7 +3662,7 @@ function renderAdminTabContent(tab, state) {
               <div class="flex items-center justify-between mb-1">
                 <label class="text-xs font-semibold text-[#667085] uppercase tracking-wider">Görev Atanacak Saha Personelleri *</label>
                 <span id="label-assign-selected-badge" class="text-[11px] font-medium text-slate-500">
-                  <span class="bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-[6px]">Tüm Ekip Seçili (${state.allPersonnel.length}/${state.allPersonnel.length})</span>
+                  <span class="bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-[6px]">Uygun Saha Ekibi Seçili (${(state.allPersonnel || []).filter(p => p.role === 'FIELD_USER' && p.isActive !== false).length}/${(state.allPersonnel || []).filter(p => p.role === 'FIELD_USER' && p.isActive !== false).length})</span>
                 </span>
               </div>
 
@@ -3664,7 +3670,7 @@ function renderAdminTabContent(tab, state) {
               <button type="button" id="btn-toggle-assign-personnel-dropdown" class="w-full h-10 px-3 bg-[#F8FAFC] border border-[#E9EDF2] hover:border-[#2A9D38] rounded-[10px] text-xs font-normal text-[#01214A] flex items-center justify-between transition-colors cursor-pointer">
                 <div class="flex items-center gap-2 truncate" id="label-assign-selected-personnel-count">
                   ${iconSvg('group', 'w-4 h-4 text-[#2A9D38]')}
-                  <span class="font-medium text-xs text-[#01214A] truncate">Tüm Ekip Seçili (${state.allPersonnel.length} Personel)</span>
+                  <span class="font-medium text-xs text-[#01214A] truncate">Uygun Saha Ekibi Seçili (${(state.allPersonnel || []).filter(p => p.role === 'FIELD_USER' && p.isActive !== false).length} Personel)</span>
                 </div>
                 
                 <div class="flex items-center gap-1 shrink-0">
@@ -3686,11 +3692,11 @@ function renderAdminTabContent(tab, state) {
                     <span class="text-slate-300">|</span>
                     <button type="button" id="btn-assign-clear-all" class="text-slate-500 hover:text-slate-700 hover:underline cursor-pointer">Temizle</button>
                   </div>
-                  <span class="text-slate-400 text-[10px]" id="info-assign-visible-count">${state.allPersonnel.length} personel</span>
+                  <span class="text-slate-400 text-[10px]" id="info-assign-visible-count">${(state.allPersonnel || []).filter(p => p.role === 'FIELD_USER' && p.isActive !== false).length} personel</span>
                 </div>
 
                 <div id="container-assign-personnel-list" class="max-h-48 overflow-y-auto space-y-1 pr-1">
-                  ${state.allPersonnel.map(p => `
+                  ${(state.allPersonnel || []).filter(p => p.role === 'FIELD_USER' && p.isActive !== false).map(p => `
                     <label data-search-text="${(p.fullName + ' ' + (p.phone || '') + ' ' + (p.email || '')).toLowerCase()}" class="assign-personnel-item flex items-center justify-between p-2 rounded-[8px] border border-[#E9EDF2] hover:bg-slate-50 cursor-pointer transition-colors">
                       <div class="flex items-center gap-2.5">
                         <input type="checkbox" name="assign-personnel" value="${p.id}" checked class="cb-assign-personnel rounded text-[#2A9D38] focus:ring-[#2A9D38] w-4 h-4 cursor-pointer"/>

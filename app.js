@@ -1386,7 +1386,7 @@ function validatePersonnelInput(email, phone, password, isPasswordOptional = fal
   // UPDATE ASSIGNMENT SELECTED PERSONNEL COUNT LABEL & BADGE
   const updateAssignSelectedPersonnelCountLabel = () => {
     const checked = document.querySelectorAll('.cb-assign-personnel:checked');
-    const total = document.querySelectorAll('.cb-assign-personnel').length;
+    const total = document.querySelectorAll('.cb-assign-personnel:not(:disabled)').length;
     const labelContainer = document.getElementById('label-assign-selected-personnel-count');
     const badgeContainer = document.getElementById('label-assign-selected-badge');
 
@@ -1437,13 +1437,38 @@ function validatePersonnelInput(email, phone, password, isPasswordOptional = fal
     }
   };
 
+  const updateAssignmentPersonnelEligibility = () => {
+    const surveyId = document.getElementById('assign-survey-id')?.value;
+    if (!surveyId) return;
+
+    const assignedUserIds = new Set(
+      (store.getState().allAssignments || [])
+        .filter(assignment => assignment.surveyId === surveyId)
+        .flatMap(assignment => (assignment.assignedUsers || []).map(person => person.id))
+    );
+
+    document.querySelectorAll('.cb-assign-personnel').forEach(cb => {
+      const alreadyAssigned = assignedUserIds.has(cb.value);
+      cb.disabled = alreadyAssigned;
+      cb.checked = !alreadyAssigned;
+      const item = cb.closest('.assign-personnel-item');
+      item?.classList.toggle('opacity-50', alreadyAssigned);
+      item?.classList.toggle('cursor-not-allowed', alreadyAssigned);
+      if (item) item.title = alreadyAssigned ? 'Bu anket bu personele daha önce atanmış.' : '';
+    });
+    updateAssignSelectedPersonnelCountLabel();
+  };
+
+  document.getElementById('assign-survey-id')?.addEventListener('change', updateAssignmentPersonnelEligibility);
+  updateAssignmentPersonnelEligibility();
+
   document.querySelectorAll('.cb-assign-personnel').forEach(cb => {
     cb.addEventListener('change', updateAssignSelectedPersonnelCountLabel);
   });
 
   // ASSIGNMENT SELECT ALL & CLEAR ALL
   document.getElementById('btn-assign-select-all')?.addEventListener('click', () => {
-    document.querySelectorAll('.assign-personnel-item:not(.hidden) .cb-assign-personnel').forEach(cb => {
+    document.querySelectorAll('.assign-personnel-item:not(.hidden) .cb-assign-personnel:not(:disabled)').forEach(cb => {
       cb.checked = true;
     });
     updateAssignSelectedPersonnelCountLabel();

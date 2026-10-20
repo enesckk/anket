@@ -30,11 +30,20 @@ public class AssignmentService : IAssignmentService
             .Include(a => a.AssignedUsers)
                 .ThenInclude(au => au.User)
             .Include(a => a.Submissions)
-            .Where(a => a.AssignedUsers.Any(au => au.UserId == userId))
+            .Where(a => a.Survey != null &&
+                        a.Survey.Status == SurveyStatus.ACTIVE &&
+                        a.Status != AssignmentStatus.COMPLETED &&
+                        a.AssignedUsers.Any(au => au.UserId == userId))
             .OrderByDescending(a => a.CreatedAt)
             .ToListAsync();
 
-        return assignments.Select(a => MapToAssignmentDto(a, userId)).ToList();
+        // Older deployments allowed the same survey to be assigned to one user
+        // more than once. Keep those historical rows intact, but expose only the
+        // newest active task for each survey so field users never see duplicates.
+        return assignments
+            .GroupBy(a => a.SurveyId)
+            .Select(group => MapToAssignmentDto(group.First(), userId))
+            .ToList();
     }
 
     public async Task<List<AssignmentDto>> GetAllAssignmentsAsync()
@@ -98,6 +107,17 @@ public class AssignmentService : IAssignmentService
             throw new ArgumentException("Atamadaki tüm kullanıcılar aktif saha personeli olmalıdır.");
         if (request.TargetCount <= 0 || request.EndDate <= request.StartDate)
             throw new ArgumentException("Hedef sayı ve görev tarihleri geçerli olmalıdır.");
+
+        var alreadyAssignedUserIds = await _db.SurveyAssignmentUsers
+            .Where(au => validUserIds.Contains(au.UserId) &&
+                         au.Assignment != null &&
+                         au.Assignment.SurveyId == request.SurveyId)
+            .Select(au => au.UserId)
+            .Distinct()
+            .ToListAsync();
+
+        if (alreadyAssignedUserIds.Count > 0)
+            throw new ArgumentException("Seçilen personellerden birine bu anket daha önce atanmış. Aynı anket aynı personele yalnızca bir kez atanabilir.");
 
         var assignment = new SurveyAssignment
         {

@@ -3,6 +3,17 @@ const API_BASE_URL = (typeof window !== 'undefined' && window.SAHA_ANKET_API_URL
   : (typeof location !== 'undefined' && location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://anket-45so.onrender.com/api');
 const STORAGE_KEY = 'surveyadmin_pro_state_v8';
 
+function uniqueAssignedSurveys(assignments) {
+  const seenSurveyIds = new Set();
+  return (Array.isArray(assignments) ? assignments : []).filter(assignment => {
+    if (!assignment) return false;
+    const key = assignment.surveyId || assignment.id;
+    if (seenSurveyIds.has(key)) return false;
+    seenSurveyIds.add(key);
+    return true;
+  });
+}
+
 // Smart High-Speed Client-Side Image Compression Engine (HTML5 Canvas)
 export async function compressImageFile(file, maxWidth = 1280, maxHeight = 1280, quality = 0.75) {
   return new Promise((resolve, reject) => {
@@ -243,7 +254,7 @@ class Store {
           }
 
           if (Array.isArray(parsed.allAssignments)) merged.allAssignments = parsed.allAssignments.filter(Boolean);
-          if (Array.isArray(parsed.assignedSurveys)) merged.assignedSurveys = parsed.assignedSurveys.filter(Boolean);
+          if (Array.isArray(parsed.assignedSurveys)) merged.assignedSurveys = uniqueAssignedSurveys(parsed.assignedSurveys);
           if (Array.isArray(parsed.myQuickSurveys)) merged.myQuickSurveys = parsed.myQuickSurveys.filter(Boolean);
           if (Array.isArray(parsed.messages)) merged.messages = parsed.messages.filter(Boolean);
           if (Array.isArray(parsed.submissions)) merged.submissions = parsed.submissions.filter(Boolean);
@@ -502,7 +513,7 @@ class Store {
       const assignments = await this.apiFetch(isFieldUser ? '/assignments/my-tasks' : '/assignments').catch(() => null);
       if (Array.isArray(assignments)) {
         if (isFieldUser) {
-          this.state.assignedSurveys = assignments.map(a => ({
+          this.state.assignedSurveys = uniqueAssignedSurveys(assignments.map(a => ({
             id: a.id,
             surveyId: a.surveyId,
             title: a.surveyTitle,
@@ -514,7 +525,7 @@ class Store {
             priority: a.status === 'ASSIGNED' ? 'Yeni Görev' : 'Aktif',
             note: a.note,
             viewedAt: a.viewedAt
-          }));
+          })));
           const validAssignmentIds = new Set(assignments.map(a => a.id));
           // Eski sürümün atama bilgisi olmadan bıraktığı hayalet kuyruk kayıtlarını temizle.
           this.state.submissions = (this.state.submissions || []).filter(s => s.synced || validAssignmentIds.has(s.assignmentId));
@@ -2038,6 +2049,17 @@ class Store {
     if (finalUserIds.length === 0) {
       this.setToast('Lütfen en az bir aktif saha personeli seçiniz.', 'error');
       throw new Error('Atama için saha personeli seçilmedi.');
+    }
+
+    const previouslyAssignedUserIds = new Set(
+      (this.state.allAssignments || [])
+        .filter(assignment => assignment.surveyId === surveyId)
+        .flatMap(assignment => (assignment.assignedUsers || []).map(person => person.id))
+    );
+    if (finalUserIds.some(userId => previouslyAssignedUserIds.has(userId))) {
+      const message = 'Seçilen personellerden birine bu anket daha önce atanmış. Aynı anket aynı personele yalnızca bir kez atanabilir.';
+      this.setToast(message, 'error');
+      throw new Error(message);
     }
 
     try {
