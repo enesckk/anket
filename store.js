@@ -3,6 +3,19 @@ const API_BASE_URL = (typeof window !== 'undefined' && window.SAHA_ANKET_API_URL
   : (typeof location !== 'undefined' && location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://anket-45so.onrender.com/api');
 const STORAGE_KEY = 'surveyadmin_pro_state_v8';
 
+export function sanitizeLegacyRegionText(value) {
+  return String(value ?? '').replace(/Sinan\s+K[oö]y[uü]/giu, 'Genel Saha');
+}
+
+export function sanitizeRegionLabel(value, fallback = 'Genel Saha') {
+  const regions = sanitizeLegacyRegionText(value)
+    .split(',')
+    .map(region => region.trim())
+    .filter(Boolean);
+  const uniqueRegions = [...new Set(regions)];
+  return uniqueRegions.join(', ') || fallback;
+}
+
 function uniqueAssignedSurveys(assignments) {
   const seenSurveyIds = new Set();
   return (Array.isArray(assignments) ? assignments : []).filter(assignment => {
@@ -42,7 +55,12 @@ export function normalizeSubmission(submission) {
     return result;
   }, {});
 
-  return { ...submission, answerItems, answers };
+  return {
+    ...submission,
+    villageName: sanitizeRegionLabel(submission.villageName),
+    answerItems,
+    answers
+  };
 }
 
 export function normalizeMessage(message, currentUser = null) {
@@ -62,6 +80,8 @@ export function normalizeMessage(message, currentUser = null) {
   }
   return {
     ...message,
+    title: sanitizeLegacyRegionText(message?.title),
+    content: sanitizeLegacyRegionText(message?.content),
     sender,
     senderName: sender,
     senderRole,
@@ -213,7 +233,7 @@ const defaultState = {
       title: 'Şehitkamil Tarımsal İhtiyaç ve Arazi Değerlendirme Anketi',
       description: 'Köylerde çiftçilerin ve üreticilerin tohum, sulama ve ekipman taleplerini belirlemek için saha çalışması.',
       category: 'Tarım',
-      villageName: 'Sinan Köyü',
+      villageName: 'Genel Saha',
       targetCount: 100,
       completedCount: 0,
       status: 'ACTIVE',
@@ -490,7 +510,10 @@ class Store {
           merged.adminKpis = { ...defaultState.adminKpis, ...(parsed.adminKpis || {}) };
 
           if (Array.isArray(parsed.allSurveys) && parsed.allSurveys.length > 0) {
-            merged.allSurveys = parsed.allSurveys.filter(Boolean);
+            merged.allSurveys = parsed.allSurveys.filter(Boolean).map(survey => ({
+              ...survey,
+              villageName: survey.villageName ? sanitizeRegionLabel(survey.villageName) : ''
+            }));
           } else {
             merged.allSurveys = [...defaultState.allSurveys];
           }
@@ -501,15 +524,38 @@ class Store {
             merged.allPersonnel = [...defaultState.allPersonnel];
           }
 
-          if (Array.isArray(parsed.allAssignments)) merged.allAssignments = parsed.allAssignments.filter(Boolean);
-          if (Array.isArray(parsed.assignedSurveys)) merged.assignedSurveys = uniqueAssignedSurveys(parsed.assignedSurveys);
+          if (Array.isArray(parsed.allAssignments)) {
+            merged.allAssignments = parsed.allAssignments.filter(Boolean).map(assignment => ({
+              ...assignment,
+              villageName: sanitizeRegionLabel(assignment.villageName),
+              note: sanitizeLegacyRegionText(assignment.note)
+            }));
+          }
+          if (Array.isArray(parsed.assignedSurveys)) {
+            merged.assignedSurveys = uniqueAssignedSurveys(parsed.assignedSurveys.map(assignment => ({
+              ...assignment,
+              village: sanitizeRegionLabel(assignment.village),
+              note: sanitizeLegacyRegionText(assignment.note)
+            })));
+          }
           if (Array.isArray(parsed.myQuickSurveys)) merged.myQuickSurveys = parsed.myQuickSurveys.filter(Boolean);
           if (Array.isArray(parsed.messages)) {
             merged.messages = parsed.messages.filter(Boolean).map(message => normalizeMessage(message, merged.auth?.user));
           }
-          if (Array.isArray(parsed.submissions)) merged.submissions = parsed.submissions.filter(Boolean);
-          if (Array.isArray(parsed.reports)) merged.reports = parsed.reports.filter(Boolean);
-          if (Array.isArray(parsed.notifications)) merged.notifications = parsed.notifications.filter(Boolean);
+          if (Array.isArray(parsed.submissions)) merged.submissions = parsed.submissions.filter(Boolean).map(normalizeSubmission);
+          if (Array.isArray(parsed.reports)) {
+            merged.reports = parsed.reports.filter(Boolean).map(report => ({
+              ...report,
+              villageName: sanitizeRegionLabel(report.villageName)
+            }));
+          }
+          if (Array.isArray(parsed.notifications)) {
+            merged.notifications = parsed.notifications.filter(Boolean).map(notification => ({
+              ...notification,
+              title: sanitizeLegacyRegionText(notification.title),
+              message: sanitizeLegacyRegionText(notification.message)
+            }));
+          }
 
           return merged;
         }
@@ -753,7 +799,11 @@ class Store {
       });
 
       if (Array.isArray(surveys)) {
-        this.state.allSurveys = surveys.map(survey => ({ ...survey, category: inferSurveyCategory(survey) }));
+        this.state.allSurveys = surveys.map(survey => ({
+          ...survey,
+          category: inferSurveyCategory(survey),
+          villageName: survey.villageName ? sanitizeRegionLabel(survey.villageName) : ''
+        }));
       }
 
       // Fetch All Submissions
@@ -765,8 +815,13 @@ class Store {
       // Fetch All Assignments
       const assignments = await this.apiFetch(isFieldUser ? '/assignments/my-tasks' : '/assignments').catch(() => null);
       if (Array.isArray(assignments)) {
+        const safeAssignments = assignments.map(assignment => ({
+          ...assignment,
+          villageName: sanitizeRegionLabel(assignment.villageName),
+          note: sanitizeLegacyRegionText(assignment.note)
+        }));
         if (isFieldUser) {
-          this.state.assignedSurveys = uniqueAssignedSurveys(assignments.map(a => ({
+          this.state.assignedSurveys = uniqueAssignedSurveys(safeAssignments.map(a => ({
             id: a.id,
             surveyId: a.surveyId,
             title: a.surveyTitle,
@@ -779,12 +834,12 @@ class Store {
             note: a.note,
             viewedAt: a.viewedAt
           })));
-          const validAssignmentIds = new Set(assignments.map(a => a.id));
+          const validAssignmentIds = new Set(safeAssignments.map(a => a.id));
           // Eski sürümün atama bilgisi olmadan bıraktığı hayalet kuyruk kayıtlarını temizle.
           this.state.submissions = (this.state.submissions || []).filter(s => s.synced || validAssignmentIds.has(s.assignmentId));
           this.state.offlineQueueCount = this.state.submissions.filter(s => !s.synced).length;
         } else {
-          this.state.allAssignments = assignments;
+          this.state.allAssignments = safeAssignments;
         }
       }
 
@@ -2145,7 +2200,7 @@ class Store {
     // Client-side instant fallback generator for Excel (.csv / .xlsx)
     const report = (this.state.reports || []).find(r => r.surveyId === surveyId || r.id === surveyId) || (this.state.reports || [])[0];
     const surveyTitle = report ? report.surveyTitle : 'Şehitkamil Tarımsal İhtiyaç ve Arazi Değerlendirme Anketi';
-    const village = report ? (report.villageName || 'Bölge belirtilmedi') : 'Bölge belirtilmedi';
+    const village = sanitizeRegionLabel(report?.villageName);
 
     const csvLines = [
       "KURUM,ANKET ADI,BÖLGE,TOPLAM YANIT,TAMAMLAMA ORANI,DURUM",
@@ -2201,7 +2256,7 @@ class Store {
     // Client-side valid %PDF-1.4 binary stream generator
     const report = (this.state.reports || []).find(r => r.surveyId === surveyId || r.id === surveyId) || (this.state.reports || [])[0];
     const surveyTitle = report ? report.surveyTitle : 'Şehitkamil Tarımsal İhtiyaç ve Arazi Değerlendirme Anketi';
-    const village = report ? (report.villageName || 'Bölge belirtilmedi') : 'Bölge belirtilmedi';
+    const village = sanitizeRegionLabel(report?.villageName);
 
     const textLines = [
       'BT',
@@ -2232,7 +2287,7 @@ class Store {
       '0 -30 Td',
       '(DEGERLENDIRME OZETI:) Tj',
       '0 -20 Td',
-      '(Sinan Koyu genelinde 100 kisi katilimi ile tamamlanan anket sonucunda) Tj',
+      '(Genel saha genelinde 100 kisi katilimi ile tamamlanan anket sonucunda) Tj',
       '0 -20 Td',
       '(bolge halkinin %88 oraninda destek ihtiyaci duydugu tespit edilmistir.) Tj',
       'ET'
@@ -2301,7 +2356,8 @@ class Store {
   async createAdminAssignment(surveyId, villageName, targetCount, endDate, note, userIds) {
     const survey = (this.state.allSurveys || []).find(s => s.id === surveyId);
     const surveyTitle = survey ? survey.title : 'Saha Anketi';
-    const finalVillageName = (villageName || '').trim() || 'Genel Saha';
+    const finalVillageName = sanitizeRegionLabel(villageName);
+    const safeNote = sanitizeLegacyRegionText(note).trim();
     const finalUserIds = Array.isArray(userIds) ? [...new Set(userIds)] : [];
 
     if (finalUserIds.length === 0) {
@@ -2330,7 +2386,7 @@ class Store {
           targetCount: parseInt(targetCount) || 50,
           startDate: new Date().toISOString(),
           endDate: new Date(endDate || Date.now() + 7 * 86400000).toISOString(),
-          note: note || 'Yönetici Notu: Saha kontrollerini yapınız.',
+          note: safeNote || 'Yönetici Notu: Saha kontrollerini yapınız.',
           assignedUserIds: finalUserIds,
           publishSurvey: true
         })
@@ -2359,7 +2415,7 @@ class Store {
     this.addNotification(
       'NEW_ASSIGNMENT',
       `Saha Görevi Hatırlatması: ${asg.surveyTitle}`,
-      `"${asg.villageName}" bölgesi saha görevi için hedef: ${asg.targetCount} anket. Lütfen verileri tamamlayınız.`,
+      `"${sanitizeRegionLabel(asg.villageName)}" bölgesi saha görevi için hedef: ${asg.targetCount} anket. Lütfen verileri tamamlayınız.`,
       'ALL',
       'assignment',
       'emerald'
@@ -2416,7 +2472,7 @@ class Store {
       id: 'rpt-' + (surveyId || Date.now()),
       surveyId: survey.id,
       surveyTitle: survey.title,
-      villageName: survey.villageName || '',
+      villageName: sanitizeRegionLabel(survey.villageName),
       targetCount: survey.targetCount || 100,
       completedCount: survey.targetCount || 100,
       completionRate: 100,

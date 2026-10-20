@@ -310,7 +310,7 @@ public class SubmissionService : ISubmissionService
             s.FieldUserId,
             fieldUserName,
             s.VillageId,
-            publicInterviewerName != null ? "Anketör Linki" : s.Village?.Name ?? "Köy",
+            publicInterviewerName != null ? "Anketör Linki" : DisplayTextSanitizer.Region(s.Village?.Name),
             s.StartedAt,
             s.CompletedAt,
             s.SubmittedAt,

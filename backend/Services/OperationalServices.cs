@@ -130,8 +130,8 @@ public class MessageService : IMessageService
 
         return new MessageDto(
             m.Id,
-            m.Title,
-            m.Content,
+            DisplayTextSanitizer.Text(m.Title),
+            DisplayTextSanitizer.Text(m.Content),
             m.SenderId,
             m.Sender?.FullName ?? "Admin",
             m.Sender?.Role.ToString() ?? UserRole.ADMIN.ToString(),

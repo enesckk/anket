@@ -169,7 +169,7 @@ public class ReportService : IReportService
         {
             col = 1;
             worksheet.Cell(row, col++).Value = sub.SubmittedAt.ToString("dd.MM.yyyy HH:mm");
-            worksheet.Cell(row, col++).Value = SanitizeFormula(sub.Village?.Name ?? "-");
+            worksheet.Cell(row, col++).Value = SanitizeFormula(DisplayTextSanitizer.Region(sub.Village?.Name));
             worksheet.Cell(row, col++).Value = SanitizeFormula(sub.FieldUser?.FullName ?? "-");
 
             foreach (var q in questions)

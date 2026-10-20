@@ -1,6 +1,6 @@
 // SurveyAdmin Intelligence - Production Quality Modular UI Components
 
-import { store, isSurveyQuestionVisible, inferSurveyCategory } from './store.js';
+import { store, isSurveyQuestionVisible, inferSurveyCategory, sanitizeLegacyRegionText, sanitizeRegionLabel } from './store.js';
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, char => ({
@@ -31,13 +31,13 @@ function getSurveyCategoryLabel(survey) {
 
 function getSurveyRegionLabel(state, survey) {
   const explicitRegion = String(survey?.villageName || survey?.village || '').trim();
-  if (explicitRegion) return explicitRegion;
+  if (explicitRegion) return sanitizeRegionLabel(explicitRegion);
 
   const regions = [...new Set((state?.allAssignments || [])
     .filter(assignment => assignment?.surveyId === survey?.id)
-    .map(assignment => String(assignment.villageName || '').trim())
+    .map(assignment => sanitizeRegionLabel(assignment.villageName, ''))
     .filter(Boolean))];
-  return regions.length > 0 ? regions.join(', ') : 'Henüz bölge atanmadı';
+  return regions.length > 0 ? sanitizeRegionLabel(regions.join(', ')) : 'Genel Saha';
 }
 
 function getMessageSenderLabel(message) {
@@ -437,7 +437,7 @@ export function renderCustomModals(state) {
             <div>
               <div class="text-[11px] text-slate-400 font-normal">Rapor Kütüphanesi / Analitik Rapor Detayı</div>
               <h2 class="text-lg sm:text-xl font-bold text-[#01214A] leading-snug mt-0.5">${rpt.surveyTitle}</h2>
-              <div class="text-xs text-slate-500 font-normal mt-0.5">Bölge: <strong class="text-slate-700 font-medium">${rpt.villageName || 'Bölge belirtilmedi'}</strong> · Tarih: <strong class="text-slate-700 font-medium">${rpt.createdAt || '12 Ağustos 2026'}</strong></div>
+              <div class="text-xs text-slate-500 font-normal mt-0.5">Bölge: <strong class="text-slate-700 font-medium">${sanitizeRegionLabel(rpt.villageName)}</strong> · Tarih: <strong class="text-slate-700 font-medium">${rpt.createdAt || '12 Ağustos 2026'}</strong></div>
             </div>
 
             <div class="flex items-center gap-2 shrink-0">
@@ -468,7 +468,7 @@ export function renderCustomModals(state) {
               </div>
               <div class="p-4 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px]">
                 <span class="text-[10px] text-slate-400 font-semibold uppercase block tracking-wider">BÖLGE</span>
-                <span class="text-lg font-bold text-[#01214A] leading-tight truncate block mt-1">${rpt.villageName || 'Bölge belirtilmedi'}</span>
+                <span class="text-lg font-bold text-[#01214A] leading-tight truncate block mt-1">${sanitizeRegionLabel(rpt.villageName)}</span>
               </div>
               <div class="p-4 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px]">
                 <span class="text-[10px] text-slate-400 font-semibold uppercase block tracking-wider">DURUM</span>
@@ -1201,7 +1201,7 @@ export function renderCustomModals(state) {
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label class="block text-xs font-bold text-[#01214A] mb-1">Hedef Köy / Mahalle / Bölge *</label>
-                <input type="text" id="modal-assign-village" required value="${survey.villageName || 'Genel Saha'}" placeholder="Örn: Mahalle / Köy Adı" class="w-full h-11 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#2A9D38]"/>
+                <input type="text" id="modal-assign-village" required value="${sanitizeRegionLabel(survey.villageName)}" placeholder="Örn: Mahalle / Bölge Adı" class="w-full h-11 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#2A9D38]"/>
               </div>
 
               <div>
@@ -1725,7 +1725,7 @@ export function renderPwaHome() {
                 <div class="space-y-1">
                   <div class="inline-flex items-center gap-1 text-slate-500 text-xs font-normal">
                     ${iconSvg('mapPin', 'w-3.5 h-3.5 text-[#2A9D38]')}
-                    <span>${task.village || 'Saha Bölgesi'}</span>
+                    <span>${sanitizeRegionLabel(task.village)}</span>
                   </div>
                   <h3 class="font-bold text-[#01214A] text-base leading-snug">${task.title}</h3>
                 </div>
@@ -2197,7 +2197,7 @@ export function renderMySurveys() {
                     <div>
                       <h3 class="text-sm font-bold text-[#01214A] leading-snug">${task.title}</h3>
                       <span class="text-xs text-slate-500 flex items-center gap-1 mt-1 font-normal">
-                        ${iconSvg('mapPin', 'w-3.5 h-3.5 text-[#2A9D38]')} ${task.village || 'Bölge belirtilmedi'}
+                        ${iconSvg('mapPin', 'w-3.5 h-3.5 text-[#2A9D38]')} ${sanitizeRegionLabel(task.village)}
                       </span>
                     </div>
                     <span class="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-semibold px-2 py-0.5 rounded-[4px]">
@@ -3871,8 +3871,8 @@ function renderAdminTabContent(tab, state) {
                 ${(Array.isArray(state.allAssignments) ? state.allAssignments : []).map(a => `
                   <tr class="hover:bg-slate-50/60 transition-colors duration-150">
                     <td class="py-4 px-5 font-semibold text-[#01214A]">${a.surveyTitle}</td>
-                    <td class="py-4 px-5 text-slate-500 font-normal">${a.villageName}</td>
-                    <td class="py-4 px-5 text-slate-600 font-normal max-w-xs truncate">${a.note || 'Özel not eklenmedi.'}</td>
+                    <td class="py-4 px-5 text-slate-500 font-normal">${sanitizeRegionLabel(a.villageName)}</td>
+                    <td class="py-4 px-5 text-slate-600 font-normal max-w-xs truncate">${sanitizeLegacyRegionText(a.note) || 'Özel not eklenmedi.'}</td>
                     <td class="py-4 px-5 font-semibold text-[#2A9D38]">${a.completedCount} / ${a.targetCount}</td>
                     <td class="py-4 px-5 text-center">
                       <span class="px-2.5 py-1 rounded-[6px] text-[11px] font-semibold ${a.viewedAt ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-amber-50 text-amber-900 border border-amber-200'}">
@@ -4179,7 +4179,7 @@ function renderAdminTabContent(tab, state) {
                           <td class="py-4 px-5 font-semibold text-[#01214A]">${rpt.surveyTitle}</td>
                           <td class="py-4 px-5 text-slate-600">
                             <span class="px-2 py-0.5 rounded-[4px] bg-slate-100 text-slate-700 font-medium text-[10px] mr-1">${getSurveyCategoryLabel(rpt)}</span>
-                            <span>${rpt.villageName || 'Bölge belirtilmedi'}</span>
+                            <span>${sanitizeRegionLabel(rpt.villageName)}</span>
                           </td>
                           <td class="py-4 px-5 text-slate-500">${rpt.createdAt || '12 Ağustos 2026'}</td>
                           <td class="py-4 px-5 font-semibold text-[#2A9D38]">${rpt.completedCount || 100} / ${rpt.targetCount || 100} Yanıt</td>
@@ -4470,7 +4470,7 @@ function renderAdminTabContent(tab, state) {
 
               <div>
                 <label class="block text-xs font-semibold text-[#667085] uppercase tracking-wider mb-1">Mesaj Başlığı *</label>
-                <input type="text" id="admin-msg-title" required placeholder="Örn: Sinan Köyü Saha Hatırlatması" class="w-full h-10 px-3 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-[#2A9D38] font-normal"/>
+                <input type="text" id="admin-msg-title" required placeholder="Örn: Genel Saha Hatırlatması" class="w-full h-10 px-3 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-[#2A9D38] font-normal"/>
               </div>
 
               <div>

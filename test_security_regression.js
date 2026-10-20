@@ -9,7 +9,7 @@ globalThis.localStorage = {
   clear: () => storage.clear()
 };
 
-const { store, isSurveyQuestionVisible, normalizeSubmission, normalizeMessage, inferSurveyCategory } = await import('./store.js');
+const { store, isSurveyQuestionVisible, normalizeSubmission, normalizeMessage, inferSurveyCategory, sanitizeLegacyRegionText, sanitizeRegionLabel } = await import('./store.js');
 const { renderLoginScreen, renderPwaHome, renderSurveyRunner, renderProfile, renderAdminView, renderCustomModals, renderPublicSurvey, renderMessages } = await import('./components.js');
 
 // Giriş ekranı gerçek yönetici hesabını veya adresini örnek olarak ifşa etmemeli.
@@ -19,6 +19,8 @@ assert(!html.includes('placeholder="admin veya'));
 assert.equal(inferSurveyCategory({ title: 'Sağlık Taraması Mahalle/Aile Anketi' }), 'Sağlık');
 assert.equal(inferSurveyCategory({ title: 'Çocuk Dostu Alanlar Hane Anketi' }), 'Sosyal Destek');
 assert.equal(inferSurveyCategory({ title: 'Tarımsal Üretici İhtiyaç Anketi' }), 'Tarım');
+assert.equal(sanitizeRegionLabel('Sinan Köyü, Genel Saha'), 'Genel Saha');
+assert.equal(sanitizeLegacyRegionText('Sinan Köyü saha notu'), 'Genel Saha saha notu');
 const normalizedMessage = normalizeMessage({ id: 'message-1', title: 'Saha Mesajı', content: 'Kontrol edildi.', senderName: 'Aykut Bilici', senderRole: 'FIELD_USER', createdAt: '2026-10-20T10:00:00Z', seenAt: null }, { id: 'admin-1', role: 'ADMIN' });
 assert.equal(normalizedMessage.sender, 'Aykut Bilici');
 assert.equal(normalizedMessage.direction, 'TO_ADMIN');
@@ -253,14 +255,14 @@ store.state.allSurveys = [
   { id: 'survey-child', title: 'Çocuk Dostu Alanlar Hane Anketi', status: 'ACTIVE' }
 ];
 store.state.allAssignments = [
-  { id: 'assignment-child', surveyId: 'survey-child', villageName: 'Gazikent Mahallesi' }
+  { id: 'assignment-child-legacy', surveyId: 'survey-child', villageName: 'Sinan Köyü' },
+  { id: 'assignment-child-general', surveyId: 'survey-child', villageName: 'Genel Saha' }
 ];
 store.state.surveyStatusFilter = 'ACTIVE_ONLY';
 html = renderAdminView();
 assert(html.includes('Sağlık'));
 assert(html.includes('Sosyal Destek'));
-assert(html.includes('Gazikent Mahallesi'));
-assert(html.includes('Henüz bölge atanmadı'));
+assert(html.includes('Genel Saha'));
 assert(!html.includes('Sinan Köyü'));
 
 // Cevap içerdiği için backend tarafından CLOSED yapılan anketler aktif listede

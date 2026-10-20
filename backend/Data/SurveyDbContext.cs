@@ -75,7 +75,7 @@ public class SurveyDbContext : DbContext
         var v3Id = Guid.Parse("33333333-3333-3333-3333-333333333333");
 
         modelBuilder.Entity<Village>().HasData(
-            new Village { Id = v1Id, Name = "Sinan Köyü", Region = "Güneydoğu Anadolu", IsActive = true },
+            new Village { Id = v1Id, Name = "Genel Saha", Region = "Şehitkamil", IsActive = true },
             new Village { Id = v2Id, Name = "Merkez Mahalle", Region = "Güneydoğu Anadolu", IsActive = true },
             new Village { Id = v3Id, Name = "Yeşilyurt", Region = "Güneydoğu Anadolu", IsActive = true }
         );
@@ -121,7 +121,7 @@ public class SurveyDbContext : DbContext
                 TargetCount = 50,
                 StartDate = DateTime.UtcNow,
                 EndDate = DateTime.UtcNow.AddDays(14),
-                Note = "Sinan Köyü üreticileriyle yüz yüze görüşünüz.",
+                Note = "Genel saha üreticileriyle yüz yüze görüşünüz.",
                 Status = AssignmentStatus.ASSIGNED,
                 CreatedAt = DateTime.UtcNow
             }

@@ -1,4 +1,4 @@
-import { store, compressImageFile, isSurveyQuestionVisible } from './store.js';
+import { store, compressImageFile, isSurveyQuestionVisible, sanitizeRegionLabel } from './store.js';
 import {
   iconSvg,
   renderSystemBar,
@@ -507,11 +507,11 @@ if (typeof document !== 'undefined') {
       const submissions = (state.submissions || []).filter(sub => curSurvey && (sub.surveyId === curSurvey.id || sub.surveyTitle === curSurvey.title) && !sub.isInvalid);
       const assignedRegions = [...new Set((state.allAssignments || [])
         .filter(assignment => assignment.surveyId === curSurvey?.id)
-        .map(assignment => assignment.villageName)
+        .map(assignment => sanitizeRegionLabel(assignment.villageName, ''))
         .filter(Boolean))];
       const surveyRegion = curSurvey
-        ? (curSurvey.villageName || curSurvey.village || assignedRegions.join(', ') || 'Bölge belirtilmedi')
-        : 'Bölge belirtilmedi';
+        ? sanitizeRegionLabel(curSurvey.villageName || curSurvey.village || assignedRegions.join(', '))
+        : 'Genel Saha';
 
       let csvLines = [];
       csvLines.push(`Anket Adı;${curSurvey ? curSurvey.title : 'Saha Anketi'}`);
