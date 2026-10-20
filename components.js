@@ -1,6 +1,6 @@
 // SurveyAdmin Intelligence - Production Quality Modular UI Components
 
-import { store } from './store.js';
+import { store, isSurveyQuestionVisible } from './store.js';
 
 // SVG Icon Helpers (Lucide Icons & Material Symbols Style)
 export function iconSvg(name, extraClass = 'w-5 h-5') {
@@ -1780,6 +1780,7 @@ export function renderSurveyRunner() {
 
   if (task && liveSurvey && liveQuestions.length > 0) {
     const answers = state.activeFormAnswers || {};
+    const visibleQuestions = liveQuestions.filter(q => isSurveyQuestionVisible(q, answers));
     const renderLiveQuestion = (q, index) => {
       const type = String(q.type || 'TEXT').toUpperCase();
       const value = answers[q.id] ?? '';
@@ -1807,7 +1808,7 @@ export function renderSurveyRunner() {
 
     return `<div class="min-h-screen bg-[#F8FAFC] pb-24">
       <header class="h-14 bg-white border-b border-[#E9EDF2] px-4 flex items-center justify-between sticky top-0 z-30"><button id="btn-cancel-runner" class="text-xs font-semibold">Geri</button><h2 class="text-sm font-semibold text-[#01214A] truncate max-w-[220px]">${liveSurvey.title}</h2><span class="text-[10px] text-emerald-700">${state.isOnline !== false ? 'Çevrimiçi' : 'Çevrimdışı'}</span></header>
-      <main class="px-4 py-5 max-w-md mx-auto space-y-4"><div class="bg-white rounded-[14px] border border-[#E9EDF2] p-5 space-y-6">${liveQuestions.map(renderLiveQuestion).join('')}</div><button id="btn-runner-submit" class="w-full h-12 bg-[#2A9D38] text-white font-semibold rounded-[12px] text-sm">Anketi Gönder</button></main>
+      <main class="px-4 py-5 max-w-md mx-auto space-y-4"><div class="bg-white rounded-[14px] border border-[#E9EDF2] p-5 space-y-6">${visibleQuestions.map(renderLiveQuestion).join('')}</div><button id="btn-runner-submit" class="w-full h-12 bg-[#2A9D38] text-white font-semibold rounded-[12px] text-sm">Anketi Gönder</button></main>
     </div>`;
   }
   const secIndex = state.activeSectionIndex || 0;

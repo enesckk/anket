@@ -1,4 +1,4 @@
-import { store, compressImageFile } from './store.js';
+import { store, compressImageFile, isSurveyQuestionVisible } from './store.js';
 import {
   iconSvg,
   renderSystemBar,
@@ -1947,7 +1947,9 @@ function attachPwaListeners() {
     const state = store.getState();
     const task = (state.assignedSurveys || []).find(t => t.id === state.selectedTaskId);
     const survey = (state.allSurveys || []).find(s => s.id === task?.surveyId);
-    const questions = survey ? [...(survey.questions || []), ...(survey.sections || []).flatMap(s => s.questions || [])].filter((q, i, a) => a.findIndex(x => x.id === q.id) === i) : [];
+    const questions = survey ? [...(survey.questions || []), ...(survey.sections || []).flatMap(s => s.questions || [])]
+      .filter((q, i, a) => a.findIndex(x => x.id === q.id) === i)
+      .filter(q => isSurveyQuestionVisible(q, state.activeFormAnswers || {})) : [];
     const missing = questions.find(q => q.isRequired && String(q.type).toUpperCase() !== 'PHOTO' && String(q.type).toUpperCase() !== 'LOCATION' && (!state.activeFormAnswers[q.id] || state.activeFormAnswers[q.id].length === 0));
     if (missing) {
       store.setToast(`Lütfen zorunlu soruyu cevaplayın: ${missing.title}`, 'error');

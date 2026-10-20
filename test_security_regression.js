@@ -9,7 +9,7 @@ globalThis.localStorage = {
   clear: () => storage.clear()
 };
 
-const { store } = await import('./store.js');
+const { store, isSurveyQuestionVisible } = await import('./store.js');
 const { renderLoginScreen, renderPwaHome, renderSurveyRunner, renderProfile, renderAdminView, renderCustomModals } = await import('./components.js');
 
 // Giriş ekranı gerçek yönetici hesabını veya adresini örnek olarak ifşa etmemeli.
@@ -130,6 +130,25 @@ html = renderPwaHome();
 assert(html.includes('Birinci Aktif Anket'));
 assert(html.includes('İkinci Aktif Anket'));
 assert(html.includes('Şehitkamil Strateji Geliştirme Merkezi'));
+
+// Koşullu sorular yalnızca kaynak cevap eşleştiğinde görünmeli. Çoklu seçim
+// cevaplarında EQUALS, beklenen seçeneğin cevap dizisinde bulunmasını ifade eder.
+const conditionalQuestion = {
+  id: 'conditional-1',
+  conditionSourceQuestionId: 'source-1',
+  conditionOperator: 'EQUALS',
+  conditionValue: 'Diğer'
+};
+assert.equal(isSurveyQuestionVisible(conditionalQuestion, { 'source-1': ['Gıda', 'Diğer'] }), true);
+assert.equal(isSurveyQuestionVisible(conditionalQuestion, { 'source-1': ['Gıda'] }), false);
+assert.equal(isSurveyQuestionVisible({ ...conditionalQuestion, conditionOperator: 'NOT_EQUALS', conditionValue: 'Yok' }, { 'source-1': 'Var' }), true);
+assert.equal(isSurveyQuestionVisible({ ...conditionalQuestion, conditionOperator: 'NOT_EQUALS', conditionValue: 'Yok' }, {}), false);
+
+// Çıkış onay modalı oturum kapandıktan sonra state'te kalmamalı; aksi halde
+// bir sonraki girişte yeni ana sayfanın üstünde tekrar görünür.
+store.state.activeModal = { type: 'logout_confirm' };
+store.logout();
+assert.equal(store.state.activeModal, null);
 
 // Saha kullanıcısı yönetici geçişini görmemeli ve state manipülasyonu ile
 // yönetici paneline geçememeli.

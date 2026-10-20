@@ -1,6 +1,6 @@
 import { strict as assert } from 'assert';
 
-if (typeof globalThis.localStorage === 'undefined') {
+if (typeof globalThis.localStorage?.getItem !== 'function') {
   const storage = new Map();
   globalThis.localStorage = {
     getItem: (k) => storage.get(k) || null,

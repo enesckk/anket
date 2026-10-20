@@ -14,6 +14,25 @@ function uniqueAssignedSurveys(assignments) {
   });
 }
 
+export function isSurveyQuestionVisible(question, answers = {}) {
+  if (!question?.conditionSourceQuestionId) return true;
+
+  const sourceAnswer = answers[question.conditionSourceQuestionId];
+  const hasAnswer = Array.isArray(sourceAnswer)
+    ? sourceAnswer.length > 0
+    : String(sourceAnswer ?? '').length > 0;
+  if (!hasAnswer) return false;
+
+  const expectedValue = String(question.conditionValue ?? '');
+  const matches = Array.isArray(sourceAnswer)
+    ? sourceAnswer.map(String).includes(expectedValue)
+    : String(sourceAnswer ?? '') === expectedValue;
+
+  return String(question.conditionOperator || 'EQUALS').toUpperCase() === 'NOT_EQUALS'
+    ? !matches
+    : matches;
+}
+
 // Smart High-Speed Client-Side Image Compression Engine (HTML5 Canvas)
 export async function compressImageFile(file, maxWidth = 1280, maxHeight = 1280, quality = 0.75) {
   return new Promise((resolve, reject) => {
@@ -376,6 +395,7 @@ class Store {
         refreshToken: res.refreshToken,
         user: res.user
       };
+      this.state.activeModal = null;
       this.state.currentRole = res.user.role === 'ADMIN' ? 'admin' : 'pwa';
       if (this.state.currentRole === 'admin') {
         this.state.adminTab = 'dashboard';
@@ -463,6 +483,7 @@ class Store {
           isActive: matched.isActive
         }
       };
+      this.state.activeModal = null;
       this.state.currentRole = isUserAdmin ? 'admin' : 'pwa';
       if (isUserAdmin) {
         this.state.adminTab = 'dashboard';
@@ -478,6 +499,7 @@ class Store {
   logout() {
     this.state.auth = { isLoggedIn: false, token: null, refreshToken: null, user: null };
     this.state.pwaScreen = 'home';
+    this.state.activeModal = null;
     this.saveState();
     this.setToast('Oturum başarıyla kapatıldı.', 'info');
   }
@@ -1800,7 +1822,9 @@ class Store {
       return;
     }
     const survey = (this.state.allSurveys || []).find(s => s.id === task.surveyId);
-    const questions = survey ? [...(survey.questions || []), ...(survey.sections || []).flatMap(s => s.questions || [])].filter((q, i, a) => a.findIndex(x => x.id === q.id) === i) : [];
+    const questions = survey ? [...(survey.questions || []), ...(survey.sections || []).flatMap(s => s.questions || [])]
+      .filter((q, i, a) => a.findIndex(x => x.id === q.id) === i)
+      .filter(q => isSurveyQuestionVisible(q, this.state.activeFormAnswers || {})) : [];
     const locationData = this.state.activeLocation || {};
     const submissionData = {
       clientSubmissionId: clientSubId,

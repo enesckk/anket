@@ -2,7 +2,7 @@
 import { strict as assert } from 'assert';
 
 // Mock localStorage for Node.js environment
-if (typeof globalThis.localStorage === 'undefined') {
+if (typeof globalThis.localStorage?.getItem !== 'function') {
   const storage = new Map();
   globalThis.localStorage = {
     getItem: (k) => storage.get(k) || null,
@@ -61,7 +61,12 @@ assert(store.state.pwaScreen === 'home', 'PWA görev bildirimine basınca ana sa
 
 // Test: Personel Kayıt Edilince Bildirim Tetiklenmesi
 store.state.allPersonnel = [];
-store.createAdminPersonnel('Deneme Personel', 'deneme@sahaanket.gov.tr', '05551112233', 'Demo123!', 'FIELD_USER');
+store.apiFetch = async (endpoint, options) => ({
+  id: 'person-test-1',
+  ...JSON.parse(options.body),
+  isActive: true
+});
+await store.createAdminPersonnel('Deneme Personel', 'deneme@sahaanket.gov.tr', '05551112233', 'Demo123!', 'FIELD_USER');
 assert(store.state.allPersonnel.length === 1, 'Personel başarıyla kaydedilmeli');
 assert(store.state.notifications[0].type === 'SYSTEM' && store.state.notifications[0].title.includes('Yeni Personel Kaydı'), 'Personel kaydedilince anında bildirim üretilmeli');
 
@@ -79,6 +84,9 @@ console.log('✅ [3/5] Bildirim yönlendirme rotaları, kayıt bildirimleri, tek
 // 3. Progress Calculation Integrity Test in components.js
 const testState = {
   ...store.state,
+  auth: { isLoggedIn: true, token: 'test-admin-token', user: { id: 'admin-test', fullName: 'Test Admin', role: 'ADMIN' } },
+  currentRole: 'admin',
+  adminTab: 'surveys',
   allSurveys: [
     { id: 's1', title: 'Anket 1', category: 'Tarım', targetCount: 200, status: 'ACTIVE' },
     { id: 's2', title: 'Anket 2', category: 'Altyapı', targetCount: 100, status: 'COMPLETED' },
@@ -208,4 +216,3 @@ console.log('✅ [7/7] Rapor oluşturmadan soru bazlı ham sonuçları görme ve
 console.log('\n======================================================================');
 console.log('🎉 TÜM DENETİMLER BAŞARIYLA GEÇTİ! HİÇBİR HATA VEYA KOPUKLUK YOKTUR.');
 console.log('======================================================================');
-
