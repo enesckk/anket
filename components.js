@@ -3597,9 +3597,9 @@ function renderAdminTabContent(tab, state) {
                           </div>
                         </div>
                       </td>
-                      <td class="py-4 px-5 text-right">
-                        <div class="flex items-center justify-end gap-1.5">
-                          <button type="button" data-survey-id="${s.id}" class="btn-view-live-results h-8 px-3 bg-[#2A9D38] hover:bg-[#22822e] text-white font-bold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Anlık Gelen Cevapları ve Canlı Sonuçları Gör">
+                      <td class="py-4 px-5 text-right whitespace-nowrap">
+                        <div class="flex flex-nowrap items-center justify-end gap-1.5 min-w-max">
+                          <button type="button" data-survey-id="${s.id}" class="btn-view-live-results h-8 px-3 shrink-0 whitespace-nowrap bg-[#2A9D38] hover:bg-[#22822e] text-white font-bold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Anlık Gelen Cevapları ve Canlı Sonuçları Gör">
                             ${iconSvg('poll', 'w-3.5 h-3.5 text-white')}
                             <span>Cevapları Gör</span>
                           </button>
@@ -3610,13 +3610,13 @@ function renderAdminTabContent(tab, state) {
                               <span>Rapor</span>
                             </button>
                           ` : s.status === 'ACTIVE' ? `
-                            <button type="button" data-survey-id="${s.id}" class="btn-open-assign-survey-modal h-8 px-2.5 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-[#01214A] font-semibold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1 cursor-pointer">
+                            <button type="button" data-survey-id="${s.id}" class="btn-open-assign-survey-modal h-8 px-2.5 shrink-0 whitespace-nowrap bg-white border border-[#E9EDF2] hover:bg-slate-50 text-[#01214A] font-semibold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1 cursor-pointer">
                               ${iconSvg('send', 'w-3.5 h-3.5 text-slate-600')}
                               <span>Atama Yap</span>
                             </button>
-                            <button type="button" data-survey-id="${s.id}" class="btn-share-survey-link h-8 px-2.5 bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-800 font-semibold text-xs rounded-[8px] transition-colors flex items-center gap-1 cursor-pointer">
+                            <button type="button" data-survey-id="${s.id}" class="btn-share-survey-link h-8 px-2.5 shrink-0 whitespace-nowrap bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-800 font-semibold text-xs rounded-[8px] transition-colors flex items-center gap-1 cursor-pointer" title="Anketi bağlantı olarak paylaş">
                               ${iconSvg('copy', 'w-3.5 h-3.5')}
-                              <span>Link Olarak Paylaş</span>
+                              <span>Linki Paylaş</span>
                             </button>
                           ` : `
                             <button type="button" data-survey-id="${s.id}" class="btn-open-review-survey-modal h-8 px-2.5 bg-[#01214A] hover:bg-[#082d5e] text-white font-semibold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1 cursor-pointer">
@@ -3624,7 +3624,7 @@ function renderAdminTabContent(tab, state) {
                             </button>
                           `}
 
-                          <button type="button" data-survey-id="${s.id}" class="btn-admin-clone-survey h-8 px-2 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 text-xs font-normal rounded-[8px] transition-colors cursor-pointer">
+                          <button type="button" data-survey-id="${s.id}" class="btn-admin-clone-survey h-8 px-2 shrink-0 whitespace-nowrap bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 text-xs font-normal rounded-[8px] transition-colors cursor-pointer">
                             Kopyala
                           </button>
 
@@ -3635,7 +3635,7 @@ function renderAdminTabContent(tab, state) {
                               Yayına Al
                             </button>
                           ` : `
-                            <button type="button" data-survey-id="${s.id}" class="btn-archive-survey h-8 px-2 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-500 hover:text-slate-800 text-xs font-normal rounded-[8px] transition-colors cursor-pointer">
+                            <button type="button" data-survey-id="${s.id}" class="btn-archive-survey h-8 px-2 shrink-0 whitespace-nowrap bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-500 hover:text-slate-800 text-xs font-normal rounded-[8px] transition-colors cursor-pointer">
                               Arşivle
                             </button>
                           `}
@@ -3700,9 +3700,9 @@ function renderAdminTabContent(tab, state) {
                         ${iconSvg('send', 'w-3.5 h-3.5 text-white')}
                         <span>Atama Yap</span>
                       </button>
-                      <button type="button" data-survey-id="${s.id}" class="btn-share-survey-link h-9 px-3 bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-800 font-semibold text-xs rounded-[10px] flex items-center gap-1 cursor-pointer">
+                      <button type="button" data-survey-id="${s.id}" class="btn-share-survey-link h-9 px-3 shrink-0 whitespace-nowrap bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-800 font-semibold text-xs rounded-[10px] flex items-center gap-1 cursor-pointer">
                         ${iconSvg('copy', 'w-3.5 h-3.5')}
-                        <span>Link Olarak Paylaş</span>
+                        <span>Linki Paylaş</span>
                       </button>
                     ` : s.status === 'COMPLETED' ? `
                       <button type="button" data-survey-id="${s.id}" class="btn-view-survey-report h-9 px-3 bg-[#01214A] hover:bg-[#082d5e] text-white font-semibold text-xs rounded-[10px] transition-colors cursor-pointer flex items-center gap-1">

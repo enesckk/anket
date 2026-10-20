@@ -228,6 +228,8 @@ store.state.adminTab = 'surveys';
 html = renderAdminView();
 assert(!html.includes('btn-admin-create-survey-dashboard'));
 assert(html.includes('btn-admin-create-survey-modal'));
+assert(html.includes('Linki Paylaş'));
+assert(html.includes('whitespace-nowrap'));
 
 // Cevap içerdiği için backend tarafından CLOSED yapılan anketler aktif listede
 // görünmemeli; denetim kaydı olarak yalnızca arşiv görünümünde kalmalıdır.
