@@ -40,6 +40,8 @@ assert.equal(store.state.builderSurvey.questions[1].isRequired, true);
 // Soru türü kartları yalnızca merkezi delegated listener tarafından
 // işlenmeli; doğrudan ikinci listener aynı tıklamada çift soru eklerdi.
 const appSource = readFileSync(new URL('./app.js', import.meta.url), 'utf8');
+const storeSource = readFileSync(new URL('./store.js', import.meta.url), 'utf8');
+assert(storeSource.includes("if (!surveyId) {\n      this.state.publicSession = { ...defaultState.publicSession, answers: {} };"));
 assert(!appSource.includes("document.querySelectorAll('.btn-add-question-type')"));
 assert(!appSource.includes("document.getElementById('btn-builder-step3-next')?.addEventListener"));
 

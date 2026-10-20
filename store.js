@@ -263,7 +263,10 @@ class Store {
   initializePublicSurveyFromUrl() {
     if (typeof location === 'undefined') return;
     const surveyId = new URLSearchParams(location.search).get('survey');
-    if (!surveyId) return;
+    if (!surveyId) {
+      this.state.publicSession = { ...defaultState.publicSession, answers: {} };
+      return;
+    }
     this.state.publicSession = {
       active: true, surveyId, survey: null, stage: 'loading', respondentName: '', answers: {},
       startedAt: null, clientSubmissionId: null, photoData: null, location: null, error: null
@@ -420,6 +423,9 @@ class Store {
           merged.showPwaNotifications = false;
           merged.mobileSidebarOpen = false;
           merged.activeModal = null;
+          // Paylaşım bağlantısı oturumu kalıcı uygulama oturumu değildir.
+          // Normal URL tekrar açıldığında eski katılımcı ekranı gösterilmemelidir.
+          merged.publicSession = { ...defaultState.publicSession, answers: {} };
 
           if (parsed.auth && parsed.auth.isLoggedIn && parsed.auth.token) {
             merged.auth = parsed.auth;
