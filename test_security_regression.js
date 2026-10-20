@@ -10,7 +10,7 @@ globalThis.localStorage = {
 };
 
 const { store, isSurveyQuestionVisible, normalizeSubmission, normalizeMessage, inferSurveyCategory } = await import('./store.js');
-const { renderLoginScreen, renderPwaHome, renderSurveyRunner, renderProfile, renderAdminView, renderCustomModals, renderPublicSurvey } = await import('./components.js');
+const { renderLoginScreen, renderPwaHome, renderSurveyRunner, renderProfile, renderAdminView, renderCustomModals, renderPublicSurvey, renderMessages } = await import('./components.js');
 
 // Giriş ekranı gerçek yönetici hesabını veya adresini örnek olarak ifşa etmemeli.
 let html = renderLoginScreen();
@@ -19,10 +19,14 @@ assert(!html.includes('placeholder="admin veya'));
 assert.equal(inferSurveyCategory({ title: 'Sağlık Taraması Mahalle/Aile Anketi' }), 'Sağlık');
 assert.equal(inferSurveyCategory({ title: 'Çocuk Dostu Alanlar Hane Anketi' }), 'Sosyal Destek');
 assert.equal(inferSurveyCategory({ title: 'Tarımsal Üretici İhtiyaç Anketi' }), 'Tarım');
-const normalizedMessage = normalizeMessage({ senderName: 'Aykut Bilici', senderRole: 'FIELD_USER', createdAt: '2026-10-20T10:00:00Z', seenAt: null }, { id: 'admin-1', role: 'ADMIN' });
+const normalizedMessage = normalizeMessage({ id: 'message-1', title: 'Saha Mesajı', content: 'Kontrol edildi.', senderName: 'Aykut Bilici', senderRole: 'FIELD_USER', createdAt: '2026-10-20T10:00:00Z', seenAt: null }, { id: 'admin-1', role: 'ADMIN' });
 assert.equal(normalizedMessage.sender, 'Aykut Bilici');
 assert.equal(normalizedMessage.direction, 'TO_ADMIN');
 assert.equal(normalizedMessage.isUnread, true);
+store.state.messages = [normalizedMessage];
+html = renderMessages();
+assert(html.includes('Aykut Bilici'));
+assert(!html.includes('undefined'));
 
 // Soru ekleme metodu, hızlı tür kartlarından ve alt panelden gelen zorunluluk
 // seçimini ReferenceError üretmeden builder durumuna yansıtmalı.
@@ -51,6 +55,8 @@ const storeSource = readFileSync(new URL('./store.js', import.meta.url), 'utf8')
 assert(storeSource.includes("if (!surveyId) {\n      this.state.publicSession = { ...defaultState.publicSession, answers: {} };"));
 assert(!appSource.includes("document.querySelectorAll('.btn-add-question-type')"));
 assert(!appSource.includes("document.getElementById('btn-builder-step3-next')?.addEventListener"));
+assert(appSource.includes('bottom: calc(82px + env(safe-area-inset-bottom))'));
+assert(appSource.includes('Cihaza yükle, çevrimdışı çalış'));
 
 // Yayınlama sırasında sorular yalnızca tarayıcı state'inde kalmamalı;
 // anket, sorular ve yönetici durumu sırasıyla API'ye kaydedilmeli.
