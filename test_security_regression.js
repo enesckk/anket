@@ -228,6 +228,23 @@ store.state.adminTab = 'surveys';
 html = renderAdminView();
 assert(!html.includes('btn-admin-create-survey-dashboard'));
 assert(html.includes('btn-admin-create-survey-modal'));
+
+// Cevap içerdiği için backend tarafından CLOSED yapılan anketler aktif listede
+// görünmemeli; denetim kaydı olarak yalnızca arşiv görünümünde kalmalıdır.
+store.state.allSurveys = [
+  { id: 'survey-active', title: 'Aktif Anket', status: 'ACTIVE' },
+  { id: 'survey-closed', title: 'Kapalı Test Anketi', status: 'CLOSED' }
+];
+store.state.surveyStatusFilter = 'ACTIVE_ONLY';
+assert.deepEqual(store.getFilteredSurveys().map(s => s.id), ['survey-active']);
+store.state.surveyStatusFilter = 'ARCHIVED_ONLY';
+assert.deepEqual(store.getFilteredSurveys().map(s => s.id), ['survey-closed']);
+html = renderAdminView();
+assert(html.includes('Kapalı Test Anketi'));
+assert(html.includes('Kapalı'));
+assert(!html.includes('btn-unarchive-survey'));
+store.state.surveyStatusFilter = 'ACTIVE_ONLY';
+
 store.state.adminTab = 'dashboard';
 html = renderAdminView();
 assert(html.includes('btn-admin-create-survey-dashboard'));

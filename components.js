@@ -3488,6 +3488,7 @@ function renderAdminTabContent(tab, state) {
                   ` : filteredSurveys.map(s => {
                     const surveySubmissions = (state.submissions || []).filter(sub => (sub.surveyId === s.id || sub.surveyTitle === s.title) && !sub.isInvalid);
                     const target = getSurveyTargetCount(state, s);
+                    const isArchived = Boolean(s.isArchived) || s.status === 'CLOSED';
                     const completed = surveySubmissions.length > 0
                       ? surveySubmissions.length
                       : (typeof s.completedCount === 'number' ? s.completedCount : (s.status === 'COMPLETED' ? target : 0));
@@ -3507,11 +3508,11 @@ function renderAdminTabContent(tab, state) {
                       </td>
                       <td class="py-4 px-5 text-slate-500 font-normal">${s.createdBy || 'Yönetici'}</td>
                       <td class="py-4 px-5">
-                        ${s.isArchived ? `<span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">Arşivlendi</span>` : ''}
-                        ${!s.isArchived && s.status === 'COMPLETED' ? `<span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">Tamamlandı</span>` : ''}
-                        ${!s.isArchived && s.status === 'ACTIVE' ? `<span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">Aktif</span>` : ''}
-                        ${!s.isArchived && s.status === 'PENDING_APPROVAL' ? `<span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold bg-amber-50 text-amber-900 border border-amber-200">Onay Bekliyor</span>` : ''}
-                        ${!s.isArchived && s.status === 'DRAFT' ? `<span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">Taslak</span>` : ''}
+                        ${isArchived ? `<span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">${s.status === 'CLOSED' ? 'Kapalı' : 'Arşivlendi'}</span>` : ''}
+                        ${!isArchived && s.status === 'COMPLETED' ? `<span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">Tamamlandı</span>` : ''}
+                        ${!isArchived && s.status === 'ACTIVE' ? `<span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">Aktif</span>` : ''}
+                        ${!isArchived && s.status === 'PENDING_APPROVAL' ? `<span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold bg-amber-50 text-amber-900 border border-amber-200">Onay Bekliyor</span>` : ''}
+                        ${!isArchived && s.status === 'DRAFT' ? `<span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">Taslak</span>` : ''}
                       </td>
                       <td class="py-4 px-5">
                         <div data-survey-id="${s.id}" class="btn-view-live-results space-y-1 max-w-[140px] cursor-pointer group" title="Canlı sonuçları ve gelen cevapları gör">
@@ -3548,7 +3549,9 @@ function renderAdminTabContent(tab, state) {
                             Kopyala
                           </button>
 
-                          ${s.isArchived ? `
+                          ${s.status === 'CLOSED' ? `
+                            <span class="h-8 px-2 inline-flex items-center text-slate-400 text-xs font-normal">Kapalı</span>
+                          ` : s.isArchived ? `
                             <button type="button" data-survey-id="${s.id}" class="btn-unarchive-survey h-8 px-2 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 text-xs font-normal rounded-[8px] transition-colors cursor-pointer">
                               Yayına Al
                             </button>
@@ -3572,6 +3575,7 @@ function renderAdminTabContent(tab, state) {
             ${filteredSurveys.map(s => {
               const surveySubmissions = (state.submissions || []).filter(sub => (sub.surveyId === s.id || sub.surveyTitle === s.title) && !sub.isInvalid);
               const target = getSurveyTargetCount(state, s);
+              const isArchived = Boolean(s.isArchived) || s.status === 'CLOSED';
               const completed = surveySubmissions.length > 0
                 ? surveySubmissions.length
                 : (typeof s.completedCount === 'number' ? s.completedCount : (s.status === 'COMPLETED' ? target : 0));
@@ -3586,10 +3590,11 @@ function renderAdminTabContent(tab, state) {
                       <h3 class="font-semibold text-[#01214A] text-base leading-snug">${s.title}</h3>
                     </div>
                     <div class="shrink-0">
-                      ${s.status === 'COMPLETED' ? `<span class="px-2.5 py-1 rounded-[6px] text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">Tamamlandı</span>` : ''}
-                      ${s.status === 'ACTIVE' ? `<span class="px-2.5 py-1 rounded-[6px] text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">Aktif</span>` : ''}
-                      ${s.status === 'PENDING_APPROVAL' ? `<span class="px-2.5 py-1 rounded-[6px] text-[11px] font-semibold bg-amber-50 text-amber-900 border border-amber-200">Onay Bekliyor</span>` : ''}
-                      ${s.status === 'DRAFT' ? `<span class="px-2.5 py-1 rounded-[6px] text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">Taslak</span>` : ''}
+                      ${isArchived ? `<span class="px-2.5 py-1 rounded-[6px] text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">${s.status === 'CLOSED' ? 'Kapalı' : 'Arşivlendi'}</span>` : ''}
+                      ${!isArchived && s.status === 'COMPLETED' ? `<span class="px-2.5 py-1 rounded-[6px] text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">Tamamlandı</span>` : ''}
+                      ${!isArchived && s.status === 'ACTIVE' ? `<span class="px-2.5 py-1 rounded-[6px] text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">Aktif</span>` : ''}
+                      ${!isArchived && s.status === 'PENDING_APPROVAL' ? `<span class="px-2.5 py-1 rounded-[6px] text-[11px] font-semibold bg-amber-50 text-amber-900 border border-amber-200">Onay Bekliyor</span>` : ''}
+                      ${!isArchived && s.status === 'DRAFT' ? `<span class="px-2.5 py-1 rounded-[6px] text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">Taslak</span>` : ''}
                     </div>
                   </div>
                   <p class="text-xs text-slate-500 font-normal leading-relaxed">${s.description || 'Açıklama belirtilmedi.'}</p>
@@ -3625,7 +3630,9 @@ function renderAdminTabContent(tab, state) {
                       <button type="button" data-survey-id="${s.id}" class="btn-open-review-survey-modal h-9 px-3 bg-[#01214A] hover:bg-[#082d5e] text-white font-semibold text-xs rounded-[10px] cursor-pointer">İncele</button>
                     `}
                     <button type="button" data-survey-id="${s.id}" class="btn-admin-clone-survey h-9 px-2.5 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 text-xs rounded-[10px] cursor-pointer">Kopyala</button>
-                    ${s.isArchived ? `
+                    ${s.status === 'CLOSED' ? `
+                      <span class="h-9 px-2.5 inline-flex items-center text-slate-400 text-xs">Kapalı</span>
+                    ` : s.isArchived ? `
                       <button type="button" data-survey-id="${s.id}" class="btn-unarchive-survey h-9 px-2.5 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 text-xs rounded-[10px] cursor-pointer">Yayına Al</button>
                     ` : `
                       <button type="button" data-survey-id="${s.id}" class="btn-archive-survey h-9 px-2.5 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-500 hover:text-slate-800 text-xs rounded-[10px] cursor-pointer">Arşivle</button>

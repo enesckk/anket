@@ -724,9 +724,11 @@ class Store {
     const statusFilter = this.state.surveyStatusFilter || 'ACTIVE_ONLY';
 
     return (this.state.allSurveys || []).filter(s => {
+      const isArchived = Boolean(s.isArchived) || s.status === 'CLOSED';
+
       // Archive Filter
-      if (statusFilter === 'ACTIVE_ONLY' && s.isArchived) return false;
-      if (statusFilter === 'ARCHIVED_ONLY' && !s.isArchived) return false;
+      if (statusFilter === 'ACTIVE_ONLY' && isArchived) return false;
+      if (statusFilter === 'ARCHIVED_ONLY' && !isArchived) return false;
 
       // Category Filter
       if (category !== 'ALL' && s.category !== category) return false;
