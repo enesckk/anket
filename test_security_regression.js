@@ -94,6 +94,16 @@ assert.equal(store.state.currentRole, 'admin');
 assert.equal(store.setAdminTab('personnel'), true);
 assert.equal(store.state.adminTab, 'personnel');
 
+// Anketler sayfasının üst başlığında yinelenen "Yeni Anket" CTA'sı
+// gösterilmemeli; sayfa içindeki asıl oluşturma düğmesi kalmalı.
+store.state.adminTab = 'surveys';
+html = renderAdminView();
+assert(!html.includes('btn-admin-create-survey-dashboard'));
+assert(html.includes('btn-admin-create-survey-modal'));
+store.state.adminTab = 'dashboard';
+html = renderAdminView();
+assert(html.includes('btn-admin-create-survey-dashboard'));
+
 // Takip eden saha testleri saha rolüyle çalışmalı.
 store.state.auth = { isLoggedIn: true, token: 'real-token', user: { id: 'u1', fullName: 'Test', role: 'FIELD_USER' } };
 store.state.currentRole = 'pwa';

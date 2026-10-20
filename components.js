@@ -2559,7 +2559,7 @@ export function renderAdminView() {
           <div class="flex items-center gap-3.5 shrink-0">
             
             <!-- CONTEXTUAL PRIMARY CTA -->
-            ${activeTab === 'dashboard' || activeTab === 'surveys' ? `
+            ${activeTab === 'dashboard' ? `
               <button id="btn-admin-create-survey-dashboard" class="h-[38px] px-4 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[10px] shadow-none transition-all duration-150 flex items-center gap-2 cursor-pointer active:scale-98">
                 ${iconSvg('plus', 'w-4 h-4 text-white')}
                 <span>Yeni Anket</span>
