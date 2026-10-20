@@ -309,6 +309,9 @@ assert(html.includes('btn-admin-create-survey-dashboard'));
 assert(html.includes('min-w-[680px] table-fixed'));
 assert(html.includes('whitespace-nowrap tabular-nums'));
 assert(!html.includes('Aktif / Yayında'));
+const responsiveCss = readFileSync(new URL('./styles.css', import.meta.url), 'utf8');
+assert(responsiveCss.includes('.app-modal-overlay > div'));
+assert(responsiveCss.includes('max-height: calc(100dvh - 1.5rem)'));
 
 // Takip eden saha testleri saha rolüyle çalışmalı.
 store.state.auth = { isLoggedIn: true, token: 'real-token', user: { id: 'u1', fullName: 'Test', role: 'FIELD_USER' } };
@@ -333,6 +336,14 @@ store.apiFetch = async (endpoint, options) => {
   if (endpoint === '/submissions') sentPayload = JSON.parse(options.body);
   return { id: 'submission-ok' };
 };
+store.state.activeFormAnswers = {};
+assert.equal(await store.submitActiveSurvey(), false);
+assert.equal(store.state.activeValidationQuestionId, questionId);
+assert.equal(sentPayload, null);
+html = renderSurveyRunner();
+assert(html.includes(`runner-question-${questionId}`));
+assert(html.includes('ring-red-400'));
+store.state.activeFormAnswers = { [questionId]: 'Gerçek Cevap' };
 await store.submitActiveSurvey();
 assert.equal(sentPayload.surveyId, surveyId);
 assert.equal(sentPayload.assignmentId, assignmentId);
@@ -386,6 +397,11 @@ store.apiFetch = async (endpoint, options) => { publicRequest = { endpoint, payl
 assert.equal(await store.submitPublicSurvey(), false);
 assert.equal(publicRequest, null);
 assert.match(store.state.publicSession.error, /T\.C\. kimlik no/);
+assert.equal(store.state.publicSession.validationQuestionId, 'public-tc');
+html = renderPublicSurvey();
+assert(html.includes('id="public-validation-popup"'));
+assert(html.includes('id="public-question-public-tc"'));
+assert(html.includes('ring-red-400'));
 store.setPublicAnswer('public-tc', '10000000146', true);
 store.setPublicAnswer('public-phone', '0532 123 45 67', true);
 assert.equal(await store.submitPublicSurvey(), false);
@@ -411,6 +427,7 @@ assert.deepEqual(store.state.publicSession.answers, {});
 assert.match(store.state.publicSession.clientSubmissionId, /^public-/);
 assert.equal(store.state.publicSession.photoData, null);
 assert.equal(store.state.publicSession.location, null);
+assert.equal(store.state.publicSession.validationQuestionId, null);
 store.resetPublicSurvey({ changeInterviewer: true });
 assert.equal(store.state.publicSession.stage, 'name');
 assert.equal(store.state.publicSession.interviewerName, '');

@@ -1,4 +1,4 @@
-import { store, compressImageFile, isSurveyQuestionVisible, sanitizeRegionLabel } from './store.js';
+import { store, compressImageFile, sanitizeRegionLabel } from './store.js';
 import {
   iconSvg,
   renderSystemBar,
@@ -77,6 +77,19 @@ function restoreActiveFocus(info) {
       }
     } catch (e) {}
   }
+}
+
+function focusSurveyValidation(prefix, questionId) {
+  if (!questionId || typeof document === 'undefined') return;
+  requestAnimationFrame(() => {
+    const container = document.getElementById(`${prefix}-question-${questionId}`);
+    if (!container) return;
+    container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const focusable = container.querySelector('input:not([type="hidden"]), textarea, select, button');
+    if (focusable) {
+      try { focusable.focus({ preventScroll: true }); } catch (_) { focusable.focus(); }
+    }
+  });
 }
 
 function renderApp() {
@@ -202,7 +215,10 @@ function attachPublicSurveyListeners() {
     }
   });
   document.getElementById('btn-public-location')?.addEventListener('click', () => store.acquirePublicLocation());
-  document.getElementById('btn-public-submit')?.addEventListener('click', () => store.submitPublicSurvey());
+  document.getElementById('btn-public-submit')?.addEventListener('click', async () => {
+    const submitted = await store.submitPublicSurvey();
+    if (!submitted) focusSurveyValidation('public', store.getState().publicSession?.validationQuestionId);
+  });
   document.getElementById('btn-public-new-response')?.addEventListener('click', () => store.resetPublicSurvey());
   document.getElementById('btn-public-change-interviewer')?.addEventListener('click', () => store.resetPublicSurvey({ changeInterviewer: true }));
 }
@@ -2017,24 +2033,8 @@ function attachPwaListeners() {
     store.setPwaScreen('home');
   });
   document.getElementById('btn-runner-submit')?.addEventListener('click', async () => {
-    const state = store.getState();
-    const task = (state.assignedSurveys || []).find(t => t.id === state.selectedTaskId);
-    const survey = (state.allSurveys || []).find(s => s.id === task?.surveyId);
-    const questions = survey ? [...(survey.questions || []), ...(survey.sections || []).flatMap(s => s.questions || [])]
-      .filter((q, i, a) => a.findIndex(x => x.id === q.id) === i)
-      .filter(q => isSurveyQuestionVisible(q, state.activeFormAnswers || {})) : [];
-    const missing = questions.find(q => q.isRequired && String(q.type).toUpperCase() !== 'PHOTO' && String(q.type).toUpperCase() !== 'LOCATION' && (!state.activeFormAnswers[q.id] || state.activeFormAnswers[q.id].length === 0));
-    if (missing) {
-      store.setToast(`Lütfen zorunlu soruyu cevaplayın: ${missing.title}`, 'error');
-      return;
-    }
-    if (questions.some(q => q.isRequired && String(q.type).toUpperCase() === 'PHOTO') && !state.activePhotoUploaded) {
-      store.setToast('Zorunlu fotoğrafı ekleyin.', 'error'); return;
-    }
-    if (questions.some(q => q.isRequired && String(q.type).toUpperCase() === 'LOCATION') && !state.activeLocationAcquired) {
-      store.setToast('Zorunlu konumu alın.', 'error'); return;
-    }
-    await store.submitActiveSurvey();
+    const submitted = await store.submitActiveSurvey();
+    if (!submitted) focusSurveyValidation('runner', store.getState().activeValidationQuestionId);
   });
 
   // SUCCESS SCREEN

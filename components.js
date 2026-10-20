@@ -438,7 +438,7 @@ export function renderCustomModals(state) {
       ? `${location.origin}${location.pathname}?survey=${encodeURIComponent(survey.id || '')}`
       : `https://anket-psi.vercel.app/?survey=${encodeURIComponent(survey.id || '')}`;
     return `
-      <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="app-modal-overlay fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-[20px] p-6 max-w-lg w-full shadow-2xl space-y-5">
           <div class="flex items-start justify-between gap-3 border-b border-slate-100 pb-4">
             <div><h3 class="text-lg font-bold text-[#01214A]">Anketi Link Olarak Paylaş</h3><p class="text-xs text-slate-500 mt-1">Bağlantıyı alan kişi giriş yapmadan ankete katılabilir.</p></div>
@@ -472,7 +472,7 @@ export function renderCustomModals(state) {
     };
 
     return `
-      <div class="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+      <div class="app-modal-overlay fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
         <div class="bg-white rounded-[16px] border border-[#E9EDF2] max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
           
           <!-- HEADER BAR WITH BREADCRUMB & DOWNLOAD BUTTONS -->
@@ -535,7 +535,7 @@ export function renderCustomModals(state) {
 
   if (state.activeModal.type === 'add_section') {
     return `
-      <div class="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="app-modal-overlay fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-surface border border-border rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5 animate-in zoom-in-95 duration-150">
           <div class="text-center space-y-1">
             <div class="w-12 h-12 rounded-2xl bg-[#2A9D38]/10 text-[#2A9D38] flex items-center justify-center mx-auto mb-3 font-bold">
@@ -567,7 +567,7 @@ export function renderCustomModals(state) {
 
   if (state.activeModal.type === 'confirm_delete') {
     return `
-      <div class="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="app-modal-overlay fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-surface border border-border rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5 text-center animate-in zoom-in-95 duration-150">
           <div class="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-1">
             ${iconSvg('trash', 'w-6 h-6')}
@@ -592,7 +592,7 @@ export function renderCustomModals(state) {
 
   if (state.activeModal.type === 'compose_message') {
     return `
-      <div class="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="app-modal-overlay fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white border-none rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5 animate-in zoom-in-95 duration-150">
           <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <div class="flex items-center gap-2">
@@ -632,7 +632,7 @@ export function renderCustomModals(state) {
 
   if (state.activeModal.type === 'add_personnel') {
     return `
-      <div class="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="app-modal-overlay fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-surface border border-border rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-5 animate-in zoom-in-95 duration-150">
           <div class="text-center space-y-1">
             <div class="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-2">
@@ -717,7 +717,7 @@ export function renderCustomModals(state) {
   if (state.activeModal.type === 'edit_personnel') {
     const user = state.activeModal.user || {};
     return `
-      <div class="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="app-modal-overlay fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-surface border border-border rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-5 animate-in zoom-in-95 duration-150">
           <div class="text-center space-y-1">
             <div class="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center mx-auto mb-2">
@@ -780,7 +780,7 @@ export function renderCustomModals(state) {
   if (state.activeModal.type === 'confirm_delete_personnel') {
     const user = state.activeModal.user || {};
     return `
-      <div class="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="app-modal-overlay fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-surface border border-border rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5 text-center animate-in zoom-in-95 duration-150">
           <div class="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-1">
             ${iconSvg('trash', 'w-6 h-6')}
@@ -806,7 +806,7 @@ export function renderCustomModals(state) {
   if (state.activeModal.type === 'reject_survey') {
     const survey = state.activeModal.survey || {};
     return `
-      <div class="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="app-modal-overlay fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-surface border border-border rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5 animate-in zoom-in-95 duration-150">
           <div class="text-center space-y-1">
             <div class="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-2">
@@ -842,7 +842,7 @@ export function renderCustomModals(state) {
     const hasRevisionRequested = questions.some(q => q.reviewStatus === 'REVISION_REQUESTED') || state.showRevisionBox;
 
     return `
-      <div class="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-4">
+      <div class="app-modal-overlay fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl p-6 max-w-xl w-full shadow-2xl space-y-5 max-h-[88vh] flex flex-col animate-in zoom-in-95 duration-150 border-none font-sans">
           
           <!-- SADE KADEMELİ KURUMSAL HEADER -->
@@ -971,7 +971,7 @@ export function renderCustomModals(state) {
     const questions = Array.isArray(survey.questions) ? survey.questions : [];
 
     return `
-      <div class="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+      <div class="app-modal-overlay fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
         <div class="bg-white rounded-[20px] border border-[#E9EDF2] max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150 font-sans">
           
           <!-- TOP HEADER -->
@@ -1157,7 +1157,7 @@ export function renderCustomModals(state) {
     const isCompleted = survey?.status === 'COMPLETED' || percent >= 100;
 
     return `
-      <div class="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-4">
+      <div class="app-modal-overlay fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <div class="bg-white border-none rounded-3xl p-6 sm:p-8 max-w-3xl w-full shadow-2xl space-y-6 max-h-[92vh] overflow-y-auto animate-in zoom-in-95 duration-150 font-sans">
           
           <!-- HEADER -->
@@ -1223,7 +1223,7 @@ export function renderCustomModals(state) {
     const assignablePersonnel = (Array.isArray(state.allPersonnel) ? state.allPersonnel : [])
       .filter(person => person.role === 'FIELD_USER' && person.isActive !== false && !previouslyAssignedUserIds.has(person.id));
     return `
-      <div class="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="app-modal-overlay fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white border-none rounded-3xl p-6 max-w-lg w-full max-h-[calc(100vh-2rem)] overflow-y-auto shadow-2xl space-y-5 animate-in zoom-in-95 duration-150">
           <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <div class="flex items-center gap-2">
@@ -1335,7 +1335,7 @@ export function renderCustomModals(state) {
 
   if (state.activeModal.type === 'logout_confirm') {
     return `
-      <div class="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="app-modal-overlay fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-[20px] p-6 max-w-sm w-full shadow-2xl space-y-5 animate-in zoom-in-95 duration-150 text-center">
           <div class="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center mx-auto">
             ${iconSvg('logOut', 'w-6 h-6 text-red-500')}
@@ -1398,17 +1398,20 @@ export function renderPublicSurvey() {
   const renderQuestion = (question, index) => {
     const type = String(question.type || 'TEXT').toUpperCase();
     const value = answer(question.id);
+    const hasError = session.validationQuestionId === question.id;
     const label = `<label class="block text-sm font-semibold text-[#01214A]">${index + 1}. ${escapeHtml(question.title)} ${question.isRequired ? '<span class="text-red-500">*</span>' : ''}</label>`;
-    if (type === 'YES_NO') return `<div class="space-y-2">${label}<div class="grid grid-cols-2 gap-3">${['Evet','Hayır'].map(option => `<button type="button" data-q-id="${question.id}" data-val="${option}" class="btn-public-choice h-12 border ${value === option ? 'border-[#2A9D38] bg-emerald-50 text-[#2A9D38]' : 'border-slate-200 bg-white text-slate-700'} rounded-xl font-semibold text-sm">${option}</button>`).join('')}</div></div>`;
-    if (type === 'SINGLE_CHOICE') return `<div class="space-y-2">${label}<div class="space-y-2">${(question.options || []).map(option => { const optionValue = option.value || option.label; return `<button type="button" data-q-id="${question.id}" data-val="${escapeHtml(optionValue)}" class="btn-public-choice w-full min-h-12 px-4 text-left border ${value === optionValue ? 'border-[#2A9D38] bg-emerald-50' : 'border-slate-200 bg-white'} rounded-xl text-sm">${escapeHtml(option.label)}</button>`; }).join('')}</div></div>`;
-    if (type === 'MULTIPLE_CHOICE') { const selected = Array.isArray(value) ? value : []; return `<div class="space-y-2">${label}<div class="space-y-2">${(question.options || []).map(option => { const optionValue = option.value || option.label; return `<label class="flex items-center gap-3 p-3 border border-slate-200 rounded-xl text-sm"><input type="checkbox" class="public-multi" data-q-id="${question.id}" value="${escapeHtml(optionValue)}" ${selected.includes(optionValue) ? 'checked' : ''}/> ${escapeHtml(option.label)}</label>`; }).join('')}</div></div>`; }
-    if (type === 'PHOTO') return `<div class="space-y-2">${label}<input type="file" id="public-photo-file" accept="image/*" capture="environment" class="hidden"/><button type="button" id="btn-public-photo" class="w-full h-12 border border-slate-200 rounded-xl text-sm font-semibold">${session.photoData ? 'Fotoğraf Hazır ✓' : 'Fotoğraf Çek / Seç'}</button></div>`;
-    if (type === 'LOCATION') return `<div class="space-y-2">${label}<button type="button" id="btn-public-location" class="w-full h-12 border border-slate-200 rounded-xl text-sm font-semibold">${session.location ? 'Konum Alındı ✓' : 'Konumumu Al'}</button></div>`;
+    const shell = content => `<div id="public-question-${escapeHtml(question.id)}" data-survey-question-id="${escapeHtml(question.id)}" class="space-y-2 rounded-xl transition-all ${hasError ? 'ring-2 ring-red-400 bg-red-50/70 p-3 -mx-1' : ''}">${content}</div>`;
+    if (type === 'YES_NO') return shell(`${label}<div class="grid grid-cols-2 gap-3">${['Evet','Hayır'].map(option => `<button type="button" data-q-id="${question.id}" data-val="${option}" class="btn-public-choice h-12 border ${value === option ? 'border-[#2A9D38] bg-emerald-50 text-[#2A9D38]' : 'border-slate-200 bg-white text-slate-700'} rounded-xl font-semibold text-sm">${option}</button>`).join('')}</div>`);
+    if (type === 'SINGLE_CHOICE') return shell(`${label}<div class="space-y-2">${(question.options || []).map(option => { const optionValue = option.value || option.label; return `<button type="button" data-q-id="${question.id}" data-val="${escapeHtml(optionValue)}" class="btn-public-choice w-full min-h-12 px-4 text-left border ${value === optionValue ? 'border-[#2A9D38] bg-emerald-50' : 'border-slate-200 bg-white'} rounded-xl text-sm">${escapeHtml(option.label)}</button>`; }).join('')}</div>`);
+    if (type === 'MULTIPLE_CHOICE') { const selected = Array.isArray(value) ? value : []; return shell(`${label}<div class="space-y-2">${(question.options || []).map(option => { const optionValue = option.value || option.label; return `<label class="flex items-center gap-3 p-3 border border-slate-200 rounded-xl text-sm"><input type="checkbox" class="public-multi" data-q-id="${question.id}" value="${escapeHtml(optionValue)}" ${selected.includes(optionValue) ? 'checked' : ''}/> ${escapeHtml(option.label)}</label>`; }).join('')}</div>`); }
+    if (type === 'PHOTO') return shell(`${label}<input type="file" id="public-photo-file" accept="image/*" capture="environment" class="hidden"/><button type="button" id="btn-public-photo" class="w-full h-12 border border-slate-200 rounded-xl text-sm font-semibold">${session.photoData ? 'Fotoğraf Hazır ✓' : 'Fotoğraf Çek / Seç'}</button>`);
+    if (type === 'LOCATION') return shell(`${label}<button type="button" id="btn-public-location" class="w-full h-12 border border-slate-200 rounded-xl text-sm font-semibold">${session.location ? 'Konum Alındı ✓' : 'Konumumu Al'}</button>`);
     const htmlType = type === 'NUMBER' ? 'number' : type === 'DATE' ? 'date' : 'text';
     const inputConfig = getSurveyInputConfig(question, htmlType);
-    return `<div class="space-y-2">${label}<input type="${inputConfig.type}" ${inputConfig.attributes} data-q-id="${question.id}" value="${escapeHtml(value)}" ${inputConfig.placeholder ? `placeholder="${inputConfig.placeholder}"` : ''} class="public-input w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-[#2A9D38]"/>${inputConfig.hint ? `<p class="text-[11px] text-slate-400">${inputConfig.hint}</p>` : ''}</div>`;
+    return shell(`${label}<input type="${inputConfig.type}" ${inputConfig.attributes} data-q-id="${question.id}" value="${escapeHtml(value)}" ${inputConfig.placeholder ? `placeholder="${inputConfig.placeholder}"` : ''} class="public-input w-full h-12 px-4 bg-slate-50 border ${hasError ? 'border-red-400' : 'border-slate-200'} rounded-xl text-sm focus:outline-none focus:border-[#2A9D38]"/>${inputConfig.hint ? `<p class="text-[11px] text-slate-400">${inputConfig.hint}</p>` : ''}`);
   };
-  return `<div class="min-h-screen bg-[#F8FAFC] pb-8"><header class="bg-white border-b border-slate-200 px-4 py-4 sticky top-0 z-20"><div class="max-w-2xl mx-auto"><div class="text-[10px] font-bold text-[#2A9D38] uppercase">Şehitkamil Strateji Geliştirme Merkezi</div><h1 class="text-lg font-bold text-[#01214A] mt-1">${escapeHtml(survey.title)}</h1><p class="text-xs text-slate-500 mt-1">Anketör: ${escapeHtml(session.interviewerName)}</p></div></header><main class="max-w-2xl mx-auto px-4 py-5 space-y-4">${session.error ? `<div class="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700">${escapeHtml(session.error)}</div>` : ''}<div class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-7 space-y-6">${questions.map(renderQuestion).join('')}</div><button id="btn-public-submit" ${session.stage === 'submitting' ? 'disabled' : ''} class="w-full h-12 bg-[#2A9D38] disabled:opacity-60 text-white font-bold rounded-xl">${session.stage === 'submitting' ? 'Gönderiliyor...' : 'Anketi Gönder'}</button></main></div>`;
+  const errorPopup = session.error ? `<div id="public-validation-popup" role="alert" aria-live="assertive" class="fixed top-3 left-3 right-3 sm:left-auto sm:right-5 sm:top-5 sm:w-full sm:max-w-sm z-[99999] bg-red-950 text-white border border-red-600 shadow-xl rounded-xl px-3 py-2.5 sm:px-4 sm:py-3 flex items-start gap-2.5"><span class="shrink-0 mt-0.5">⚠️</span><span class="text-[11px] sm:text-xs font-semibold leading-snug">${escapeHtml(session.error)}</span></div>` : '';
+  return `<div class="min-h-screen bg-[#F8FAFC] pb-8">${errorPopup}<header class="bg-white border-b border-slate-200 px-4 py-4 sticky top-0 z-20"><div class="max-w-2xl mx-auto"><div class="text-[10px] font-bold text-[#2A9D38] uppercase">Şehitkamil Strateji Geliştirme Merkezi</div><h1 class="text-lg font-bold text-[#01214A] mt-1">${escapeHtml(survey.title)}</h1><p class="text-xs text-slate-500 mt-1">Anketör: ${escapeHtml(session.interviewerName)}</p></div></header><main class="max-w-2xl mx-auto px-4 py-5 space-y-4"><div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-7 space-y-6">${questions.map(renderQuestion).join('')}</div><button id="btn-public-submit" ${session.stage === 'submitting' ? 'disabled' : ''} class="w-full h-12 bg-[#2A9D38] disabled:opacity-60 text-white font-bold rounded-xl">${session.stage === 'submitting' ? 'Gönderiliyor...' : 'Anketi Gönder'}</button></main></div>`;
 }
 
 // 1. STANDALONE EXECUTIVE LOGIN EKRANI (MASTERWORK DESIGN)
@@ -1936,27 +1939,29 @@ export function renderSurveyRunner() {
     const renderLiveQuestion = (q, index) => {
       const type = String(q.type || 'TEXT').toUpperCase();
       const value = answers[q.id] ?? '';
+      const hasError = state.activeValidationQuestionId === q.id;
       const required = q.isRequired ? '<span class="text-red-500">*</span>' : '';
       const label = `<label class="block text-sm font-semibold text-[#01214A]">${index + 1}. ${q.title} ${required}</label>`;
+      const shell = content => `<div id="runner-question-${escapeHtml(q.id)}" data-survey-question-id="${escapeHtml(q.id)}" class="space-y-2 rounded-xl transition-all ${hasError ? 'ring-2 ring-red-400 bg-red-50/70 p-3 -mx-1' : ''}">${content}</div>`;
       if (type === 'YES_NO') {
-        return `<div class="space-y-2">${label}<div class="grid grid-cols-2 gap-3">${['Evet','Hayır'].map(opt => `<button type="button" data-q-id="${q.id}" data-val="${opt}" class="btn-runner-yesno h-12 border ${value === opt ? 'border-[#2A9D38] bg-emerald-50 text-[#2A9D38]' : 'border-[#E9EDF2] bg-white text-slate-700'} rounded-[10px] font-semibold text-xs">${opt}</button>`).join('')}</div></div>`;
+        return shell(`${label}<div class="grid grid-cols-2 gap-3">${['Evet','Hayır'].map(opt => `<button type="button" data-q-id="${q.id}" data-val="${opt}" class="btn-runner-yesno h-12 border ${value === opt ? 'border-[#2A9D38] bg-emerald-50 text-[#2A9D38]' : 'border-[#E9EDF2] bg-white text-slate-700'} rounded-[10px] font-semibold text-xs">${opt}</button>`).join('')}</div>`);
       }
       if (type === 'SINGLE_CHOICE') {
-        return `<div class="space-y-2">${label}<div class="space-y-2">${(q.options || []).map(opt => `<button type="button" data-q-id="${q.id}" data-opt="${opt.value || opt.label}" class="runner-radio-row w-full min-h-11 px-3 text-left border ${value === (opt.value || opt.label) ? 'border-[#2A9D38] bg-emerald-50' : 'border-[#E9EDF2] bg-white'} rounded-[10px] text-xs font-medium">${opt.label}</button>`).join('')}</div></div>`;
+        return shell(`${label}<div class="space-y-2">${(q.options || []).map(opt => `<button type="button" data-q-id="${q.id}" data-opt="${opt.value || opt.label}" class="runner-radio-row w-full min-h-11 px-3 text-left border ${value === (opt.value || opt.label) ? 'border-[#2A9D38] bg-emerald-50' : 'border-[#E9EDF2] bg-white'} rounded-[10px] text-xs font-medium">${opt.label}</button>`).join('')}</div>`);
       }
       if (type === 'MULTIPLE_CHOICE') {
         const selected = Array.isArray(value) ? value : String(value || '').split('|').filter(Boolean);
-        return `<div class="space-y-2">${label}<div class="space-y-2">${(q.options || []).map(opt => { const v = opt.value || opt.label; return `<label class="flex items-center gap-2 p-3 border border-[#E9EDF2] rounded-[10px] text-xs"><input type="checkbox" class="runner-multi" data-q-id="${q.id}" value="${v}" ${selected.includes(v) ? 'checked' : ''}/> ${opt.label}</label>`; }).join('')}</div></div>`;
+        return shell(`${label}<div class="space-y-2">${(q.options || []).map(opt => { const v = opt.value || opt.label; return `<label class="flex items-center gap-2 p-3 border border-[#E9EDF2] rounded-[10px] text-xs"><input type="checkbox" class="runner-multi" data-q-id="${q.id}" value="${v}" ${selected.includes(v) ? 'checked' : ''}/> ${opt.label}</label>`; }).join('')}</div>`);
       }
       if (type === 'PHOTO') {
-        return `<div class="space-y-2">${label}<input type="file" id="runner-camera-file" accept="image/*" capture="environment" class="hidden"/><button type="button" id="btn-runner-photo" class="w-full h-11 border border-[#E9EDF2] rounded-[10px] text-xs font-semibold">${state.activePhotoUploaded ? 'Fotoğraf Hazır ✓' : 'Fotoğraf Çek / Seç'}</button></div>`;
+        return shell(`${label}<input type="file" id="runner-camera-file" accept="image/*" capture="environment" class="hidden"/><button type="button" id="btn-runner-photo" class="w-full h-11 border border-[#E9EDF2] rounded-[10px] text-xs font-semibold">${state.activePhotoUploaded ? 'Fotoğraf Hazır ✓' : 'Fotoğraf Çek / Seç'}</button>`);
       }
       if (type === 'LOCATION') {
-        return `<div class="space-y-2">${label}<button type="button" id="btn-runner-location" class="w-full h-11 border border-[#E9EDF2] rounded-[10px] text-xs font-semibold">${state.activeLocationAcquired ? 'Konum Alındı ✓' : 'Konumu Al'}</button></div>`;
+        return shell(`${label}<button type="button" id="btn-runner-location" class="w-full h-11 border border-[#E9EDF2] rounded-[10px] text-xs font-semibold">${state.activeLocationAcquired ? 'Konum Alındı ✓' : 'Konumu Al'}</button>`);
       }
       const htmlType = type === 'NUMBER' ? 'number' : type === 'DATE' ? 'date' : 'text';
       const inputConfig = getSurveyInputConfig(q, htmlType);
-      return `<div class="space-y-2">${label}<input type="${inputConfig.type}" ${inputConfig.attributes} data-q-id="${q.id}" value="${escapeHtml(value)}" ${inputConfig.placeholder ? `placeholder="${inputConfig.placeholder}"` : ''} class="runner-input w-full h-11 px-3.5 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px] text-xs focus:outline-none focus:border-[#2A9D38]"/>${inputConfig.hint ? `<p class="text-[11px] text-slate-400">${inputConfig.hint}</p>` : ''}</div>`;
+      return shell(`${label}<input type="${inputConfig.type}" ${inputConfig.attributes} data-q-id="${q.id}" value="${escapeHtml(value)}" ${inputConfig.placeholder ? `placeholder="${inputConfig.placeholder}"` : ''} class="runner-input w-full h-11 px-3.5 bg-[#F8FAFC] border ${hasError ? 'border-red-400' : 'border-[#E9EDF2]'} rounded-[10px] text-xs focus:outline-none focus:border-[#2A9D38]"/>${inputConfig.hint ? `<p class="text-[11px] text-slate-400">${inputConfig.hint}</p>` : ''}`);
     };
 
     return `<div class="min-h-screen bg-[#F8FAFC] pb-24">

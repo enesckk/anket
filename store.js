@@ -329,7 +329,8 @@ const defaultState = {
     startedAt: null,
     photoData: null,
     location: null,
-    error: null
+    error: null,
+    validationQuestionId: null
   },
 
   // Active Selected Item IDs for detail views
@@ -406,6 +407,7 @@ const defaultState = {
   activeSectionIndex: 0,
   activePhotoUploaded: false,
   activeLocationAcquired: false,
+  activeValidationQuestionId: null,
 
   // Live Search & Filter State
   searchSubmissionsQuery: '',
@@ -452,7 +454,7 @@ class Store {
     }
     this.state.publicSession = {
       active: true, surveyId, survey: null, stage: 'loading', interviewerName: '', answers: {},
-      startedAt: null, clientSubmissionId: null, photoData: null, location: null, error: null
+      startedAt: null, clientSubmissionId: null, photoData: null, location: null, error: null, validationQuestionId: null
     };
     this.apiFetch(`/public-surveys/${encodeURIComponent(surveyId)}`)
       .then(survey => {
@@ -482,12 +484,17 @@ class Store {
     this.state.publicSession.clientSubmissionId = `public-${typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now()}`;
     this.state.publicSession.stage = 'form';
     this.state.publicSession.error = null;
+    this.state.publicSession.validationQuestionId = null;
     this.saveState();
     return true;
   }
 
   setPublicAnswer(questionId, value, silent = false) {
     this.state.publicSession.answers[questionId] = value;
+    if (this.state.publicSession.validationQuestionId === questionId) {
+      this.state.publicSession.validationQuestionId = null;
+      this.state.publicSession.error = null;
+    }
     this.saveState(silent);
   }
 
@@ -540,6 +547,7 @@ class Store {
     });
     if (missing) {
       session.error = `Lütfen zorunlu soruyu cevaplayın: ${missing.title}`;
+      session.validationQuestionId = missing.id;
       this.saveState();
       return false;
     }
@@ -552,12 +560,14 @@ class Store {
     const invalidAnswer = findInvalidSurveyAnswer(questions, answersForValidation);
     if (invalidAnswer) {
       session.error = invalidAnswer.message;
+      session.validationQuestionId = invalidAnswer.question.id;
       this.saveState();
       return false;
     }
 
     session.stage = 'submitting';
     session.error = null;
+    session.validationQuestionId = null;
     this.saveState();
     try {
       const locationData = session.location || {};
@@ -595,6 +605,7 @@ class Store {
       try { message = JSON.parse(error.message || '{}').message || message; } catch (_) {}
       session.stage = 'form';
       session.error = message;
+      session.validationQuestionId = null;
       this.saveState();
       return false;
     }
@@ -609,7 +620,7 @@ class Store {
       answers: {},
       startedAt: changeInterviewer ? null : new Date().toISOString(),
       clientSubmissionId: changeInterviewer ? null : `public-${typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now()}`,
-      photoData: null, location: null, error: null
+      photoData: null, location: null, error: null, validationQuestionId: null
     };
     this.saveState();
   }
@@ -1794,7 +1805,7 @@ class Store {
       if (!toastContainer) {
         toastContainer = document.createElement('div');
         toastContainer.id = 'global-toast-container';
-        toastContainer.className = 'fixed top-5 right-5 z-[99999] pointer-events-none flex flex-col gap-2 max-w-sm w-full';
+        toastContainer.className = 'fixed top-3 left-3 right-3 sm:top-5 sm:left-auto sm:right-5 z-[99999] pointer-events-none flex flex-col gap-2 sm:max-w-sm sm:w-full';
         document.body.appendChild(toastContainer);
       }
       const isSuccess = type === 'success';
@@ -1812,12 +1823,13 @@ class Store {
             : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>');
 
       const toastItem = document.createElement('div');
-      toastItem.className = `pointer-events-auto cursor-pointer px-4 py-3 rounded-xl flex items-center gap-3 border text-xs font-semibold ${bgClass} transition-all duration-200 transform translate-y-0 opacity-100`;
+      const safeMessage = String(message ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+      toastItem.className = `pointer-events-auto cursor-pointer px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl flex items-center gap-2.5 sm:gap-3 border text-[11px] sm:text-xs font-semibold ${bgClass} transition-all duration-200 transform translate-y-0 opacity-100`;
       toastItem.innerHTML = `
         <svg class="w-4 h-4 ${iconColor} shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           ${iconPath}
         </svg>
-        <span class="leading-snug flex-1">${message}</span>
+        <span class="leading-snug flex-1">${safeMessage}</span>
         <svg class="w-3.5 h-3.5 text-slate-400 hover:text-white shrink-0 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       `;
       toastItem.onclick = () => {
@@ -2152,6 +2164,7 @@ class Store {
       this.state.activeFormAnswers = {};
       this.state.activePhotoUploaded = false;
       this.state.activeLocationAcquired = false;
+      this.state.activeValidationQuestionId = null;
     }
     this.saveState();
   }
@@ -2190,6 +2203,7 @@ class Store {
 
   updateAnswer(questionId, value, silent = false) {
     this.state.activeFormAnswers[questionId] = value;
+    if (this.state.activeValidationQuestionId === questionId) this.state.activeValidationQuestionId = null;
     this.saveState(silent);
   }
 
@@ -2260,7 +2274,9 @@ class Store {
       return Array.isArray(value) ? value.length === 0 : String(value ?? '').trim().length === 0;
     });
     if (missing) {
+      this.state.activeValidationQuestionId = missing.id;
       this.setToast(`Lütfen zorunlu soruyu cevaplayın: ${missing.title}`, 'error');
+      this.saveState();
       return false;
     }
     const answersForValidation = { ...(this.state.activeFormAnswers || {}) };
@@ -2271,9 +2287,12 @@ class Store {
     }
     const invalidAnswer = findInvalidSurveyAnswer(questions, answersForValidation);
     if (invalidAnswer) {
+      this.state.activeValidationQuestionId = invalidAnswer.question.id;
       this.setToast(invalidAnswer.message, 'error');
+      this.saveState();
       return false;
     }
+    this.state.activeValidationQuestionId = null;
     const locationData = this.state.activeLocation || {};
     const submissionData = {
       clientSubmissionId: clientSubId,
