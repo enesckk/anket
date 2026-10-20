@@ -10,7 +10,7 @@ globalThis.localStorage = {
 };
 
 const { store, isSurveyQuestionVisible, normalizeSubmission } = await import('./store.js');
-const { renderLoginScreen, renderPwaHome, renderSurveyRunner, renderProfile, renderAdminView, renderCustomModals } = await import('./components.js');
+const { renderLoginScreen, renderPwaHome, renderSurveyRunner, renderProfile, renderAdminView, renderCustomModals, renderPublicSurvey } = await import('./components.js');
 
 // Giriş ekranı gerçek yönetici hesabını veya adresini örnek olarak ifşa etmemeli.
 let html = renderLoginScreen();
@@ -291,5 +291,30 @@ store.state.offlineQueueCount = 1;
 await store.syncOfflineQueue();
 assert.equal(store.state.offlineQueueCount, 0);
 assert.equal(store.state.submissions.length, 0);
+
+// Aktif anket yönetici tarafından bağlantı olarak paylaşılabilmeli; bağlantı
+// ekranı önce katılımcı adını almalı ve cevabı anonim public API'ye göndermeli.
+const publicSurvey = {
+  id: 'public-survey-1', title: 'Paylaşımlı Anket', description: 'Bağlantı testi', status: 'ACTIVE',
+  sections: [], questions: [
+    { id: 'public-q1', title: 'Memnuniyet', type: 'SINGLE_CHOICE', isRequired: true, order: 1, options: [{ label: 'Memnun', value: 'Memnun' }] }
+  ]
+};
+store.state.activeModal = { type: 'share_survey_link', survey: publicSurvey };
+html = renderCustomModals(store.state);
+assert(html.includes('Link Olarak Paylaş'));
+assert(html.includes('?survey=public-survey-1'));
+store.state.publicSession = { active: true, surveyId: publicSurvey.id, survey: publicSurvey, stage: 'name', respondentName: '', answers: {}, error: null };
+html = renderPublicSurvey();
+assert(html.includes('Adınız Soyadınız'));
+assert(store.startPublicSurvey('Test Katılımcısı'));
+store.setPublicAnswer('public-q1', 'Memnun', true);
+let publicRequest = null;
+store.apiFetch = async (endpoint, options) => { publicRequest = { endpoint, payload: JSON.parse(options.body) }; return { id: 'public-submission-1' }; };
+assert.equal(await store.submitPublicSurvey(), true);
+assert.equal(publicRequest.endpoint, '/public-surveys/public-survey-1/submissions');
+assert.equal(publicRequest.payload.respondentName, 'Test Katılımcısı');
+assert.equal(publicRequest.payload.answers[0].answerValue, 'Memnun');
+assert.equal(store.state.publicSession.stage, 'success');
 
 console.log('Security/regression tests passed: assignment isolation, dynamic questions, answer IDs, no ghost personnel, queue cleanup.');

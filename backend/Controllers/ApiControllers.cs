@@ -47,6 +47,50 @@ public class AuthController : ControllerBase
 }
 
 [ApiController]
+[Route("api/public-surveys")]
+[AllowAnonymous]
+public class PublicSurveysController : ControllerBase
+{
+    private readonly ISurveyService _surveyService;
+    private readonly ISubmissionService _submissionService;
+
+    public PublicSurveysController(ISurveyService surveyService, ISubmissionService submissionService)
+    {
+        _surveyService = surveyService;
+        _submissionService = submissionService;
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> Get(Guid id)
+    {
+        var survey = await _surveyService.GetSurveyByIdAsync(id);
+        if (survey == null || !string.Equals(survey.Status, "ACTIVE", StringComparison.OrdinalIgnoreCase))
+            return NotFound(new { message = "Bu anket bağlantısı aktif değil veya artık kullanılamıyor." });
+        return Ok(new
+        {
+            survey.Id,
+            survey.Title,
+            survey.Description,
+            survey.Status,
+            survey.Sections,
+            survey.Questions
+        });
+    }
+
+    [HttpPost("{id}/submissions")]
+    public async Task<IActionResult> Submit(Guid id, [FromBody] CreatePublicSubmissionRequest request)
+    {
+        try
+        {
+            var submission = await _submissionService.CreatePublicSubmissionAsync(id, request);
+            return Ok(new { submission.Id, submission.SubmittedAt });
+        }
+        catch (InvalidOperationException ex) { return NotFound(new { message = ex.Message }); }
+        catch (ArgumentException ex) { return BadRequest(new { message = ex.Message }); }
+    }
+}
+
+[ApiController]
 [Route("api/[controller]")]
 [Authorize]
 public class SurveysController : ControllerBase

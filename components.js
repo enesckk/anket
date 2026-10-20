@@ -2,6 +2,12 @@
 
 import { store, isSurveyQuestionVisible } from './store.js';
 
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, char => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+  }[char]));
+}
+
 function getSurveyTargetCount(state, survey, fallback = 100) {
   if (Number(survey?.targetCount) > 0) return Number(survey.targetCount);
 
@@ -362,6 +368,32 @@ export function renderSurveyDetailedCharts(surveyOrReport, state) {
 }
 
 export function renderCustomModals(state) {
+  if (state.activeModal?.type === 'share_survey_link') {
+    const survey = state.activeModal.survey || {};
+    const shareUrl = typeof location !== 'undefined'
+      ? `${location.origin}${location.pathname}?survey=${encodeURIComponent(survey.id || '')}`
+      : `https://anket-psi.vercel.app/?survey=${encodeURIComponent(survey.id || '')}`;
+    return `
+      <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-[20px] p-6 max-w-lg w-full shadow-2xl space-y-5">
+          <div class="flex items-start justify-between gap-3 border-b border-slate-100 pb-4">
+            <div><h3 class="text-lg font-bold text-[#01214A]">Anketi Link Olarak Paylaş</h3><p class="text-xs text-slate-500 mt-1">Bağlantıyı alan kişi giriş yapmadan ankete katılabilir.</p></div>
+            <button id="btn-close-custom-modal" class="p-2 text-slate-400 hover:text-slate-700 rounded-lg">${iconSvg('close', 'w-5 h-5')}</button>
+          </div>
+          <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+            <span class="text-[10px] font-bold text-emerald-800 uppercase">Paylaşılacak Anket</span>
+            <div class="text-sm font-bold text-[#01214A] mt-1">${escapeHtml(survey.title || 'Anket')}</div>
+          </div>
+          <div class="space-y-2">
+            <label class="text-xs font-semibold text-[#01214A]">Katılım bağlantısı</label>
+            <div class="flex gap-2"><input id="input-share-survey-link" readonly value="${escapeHtml(shareUrl)}" class="flex-1 min-w-0 h-11 px-3 bg-slate-50 border border-slate-200 rounded-[10px] text-xs text-slate-700"/><button id="btn-copy-survey-link" class="h-11 px-4 bg-[#2A9D38] text-white font-semibold text-xs rounded-[10px] flex items-center gap-1.5">${iconSvg('copy', 'w-4 h-4')} Kopyala</button></div>
+          </div>
+          <div class="p-3 bg-blue-50 border border-blue-100 rounded-xl text-[11px] text-blue-900 leading-relaxed">Katılımcı önce adını ve soyadını girer, ardından anket sorularını cevaplar. Yanıt, yönetici raporlarında bu adla görünür.</div>
+          <button id="btn-close-custom-modal" class="w-full h-11 border border-slate-200 text-slate-700 font-semibold text-xs rounded-[10px]">Kapat</button>
+        </div>
+      </div>`;
+  }
+
   // 1. FULL ANALYTICAL REPORT DETAIL MODAL (SECTION 14-18)
   if (state.selectedReportDetailId || (state.activeModal && state.activeModal.type === 'view_report_detail')) {
     const reportId = state.selectedReportDetailId || state.activeModal?.reportId;
@@ -1274,6 +1306,44 @@ export function renderToastNotification(state) {
 // System Top Bar (Disabled because Admin and PWA views manage their own dedicated headers)
 export function renderSystemBar() {
   return '';
+}
+
+export function renderPublicSurvey() {
+  const session = store.getState().publicSession || {};
+  const survey = session.survey;
+  if (session.stage === 'loading') return `<div class="min-h-screen bg-[#F8FAFC] flex items-center justify-center"><div class="text-center space-y-3"><div class="w-10 h-10 border-4 border-emerald-100 border-t-[#2A9D38] rounded-full animate-spin mx-auto"></div><p class="text-sm font-semibold text-[#01214A]">Anket hazırlanıyor...</p></div></div>`;
+  if (session.stage === 'error') return `<div class="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-4"><div class="bg-white max-w-md w-full p-8 rounded-2xl border border-slate-200 text-center space-y-3"><div class="text-3xl">⚠️</div><h1 class="text-lg font-bold text-[#01214A]">Anket Açılamadı</h1><p class="text-sm text-slate-500">${escapeHtml(session.error || 'Bu bağlantı artık kullanılamıyor.')}</p></div></div>`;
+  if (session.stage === 'success') return `<div class="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-4"><div class="bg-white max-w-md w-full p-8 rounded-2xl border border-slate-200 text-center space-y-5"><div class="w-16 h-16 rounded-full bg-emerald-100 text-[#2A9D38] flex items-center justify-center mx-auto">${iconSvg('checkCircle','w-8 h-8')}</div><div><h1 class="text-xl font-bold text-[#01214A]">Cevabınız Alındı</h1><p class="text-sm text-slate-500 mt-2">Teşekkürler ${escapeHtml(session.respondentName)}. Anket cevabınız güvenli şekilde kaydedildi.</p></div><button id="btn-public-new-response" class="w-full h-11 bg-[#01214A] text-white font-semibold text-sm rounded-xl">Başka Bir Yanıt Gönder</button></div></div>`;
+  if (!survey) return '';
+
+  if (session.stage === 'name') return `
+    <div class="min-h-screen bg-gradient-to-b from-[#041F3D] to-[#062C57] flex items-center justify-center p-4">
+      <div class="bg-white max-w-md w-full rounded-[24px] p-7 sm:p-9 shadow-2xl space-y-6">
+        <div class="text-center space-y-2"><img src="./logo_saha_anket.png" alt="Saha Anket" class="h-16 max-w-[260px] object-contain mx-auto"/><h1 class="text-xl font-bold text-[#01214A]">${escapeHtml(survey.title)}</h1><p class="text-xs text-slate-500 leading-relaxed">${escapeHtml(survey.description || 'Ankete katılmak için bilgilerinizi girin.')}</p></div>
+        ${session.error ? `<div class="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700">${escapeHtml(session.error)}</div>` : ''}
+        <form id="form-public-respondent" class="space-y-4"><div><label for="public-respondent-name" class="block text-xs font-semibold text-[#01214A] mb-1.5">Adınız Soyadınız *</label><input id="public-respondent-name" required minlength="2" maxlength="120" autocomplete="name" placeholder="Ad Soyad" class="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-[#2A9D38]"/></div><button type="submit" class="w-full h-12 bg-[#2A9D38] hover:bg-[#22822e] text-white font-bold rounded-xl">Ankete Başla</button></form>
+        <p class="text-[10px] text-center text-slate-400">Şehitkamil Strateji Geliştirme Merkezi</p>
+      </div>
+    </div>`;
+
+  const questions = [...(survey.questions || []), ...(survey.sections || []).flatMap(section => section.questions || [])]
+    .filter((question, index, list) => list.findIndex(item => item.id === question.id) === index)
+    .sort((a, b) => (a.order || 0) - (b.order || 0))
+    .filter(question => isSurveyQuestionVisible(question, session.answers || {}));
+  const answer = id => session.answers?.[id] ?? '';
+  const renderQuestion = (question, index) => {
+    const type = String(question.type || 'TEXT').toUpperCase();
+    const value = answer(question.id);
+    const label = `<label class="block text-sm font-semibold text-[#01214A]">${index + 1}. ${escapeHtml(question.title)} ${question.isRequired ? '<span class="text-red-500">*</span>' : ''}</label>`;
+    if (type === 'YES_NO') return `<div class="space-y-2">${label}<div class="grid grid-cols-2 gap-3">${['Evet','Hayır'].map(option => `<button type="button" data-q-id="${question.id}" data-val="${option}" class="btn-public-choice h-12 border ${value === option ? 'border-[#2A9D38] bg-emerald-50 text-[#2A9D38]' : 'border-slate-200 bg-white text-slate-700'} rounded-xl font-semibold text-sm">${option}</button>`).join('')}</div></div>`;
+    if (type === 'SINGLE_CHOICE') return `<div class="space-y-2">${label}<div class="space-y-2">${(question.options || []).map(option => { const optionValue = option.value || option.label; return `<button type="button" data-q-id="${question.id}" data-val="${escapeHtml(optionValue)}" class="btn-public-choice w-full min-h-12 px-4 text-left border ${value === optionValue ? 'border-[#2A9D38] bg-emerald-50' : 'border-slate-200 bg-white'} rounded-xl text-sm">${escapeHtml(option.label)}</button>`; }).join('')}</div></div>`;
+    if (type === 'MULTIPLE_CHOICE') { const selected = Array.isArray(value) ? value : []; return `<div class="space-y-2">${label}<div class="space-y-2">${(question.options || []).map(option => { const optionValue = option.value || option.label; return `<label class="flex items-center gap-3 p-3 border border-slate-200 rounded-xl text-sm"><input type="checkbox" class="public-multi" data-q-id="${question.id}" value="${escapeHtml(optionValue)}" ${selected.includes(optionValue) ? 'checked' : ''}/> ${escapeHtml(option.label)}</label>`; }).join('')}</div></div>`; }
+    if (type === 'PHOTO') return `<div class="space-y-2">${label}<input type="file" id="public-photo-file" accept="image/*" capture="environment" class="hidden"/><button type="button" id="btn-public-photo" class="w-full h-12 border border-slate-200 rounded-xl text-sm font-semibold">${session.photoData ? 'Fotoğraf Hazır ✓' : 'Fotoğraf Çek / Seç'}</button></div>`;
+    if (type === 'LOCATION') return `<div class="space-y-2">${label}<button type="button" id="btn-public-location" class="w-full h-12 border border-slate-200 rounded-xl text-sm font-semibold">${session.location ? 'Konum Alındı ✓' : 'Konumumu Al'}</button></div>`;
+    const htmlType = type === 'NUMBER' ? 'number' : type === 'DATE' ? 'date' : 'text';
+    return `<div class="space-y-2">${label}<input type="${htmlType}" data-q-id="${question.id}" value="${escapeHtml(value)}" class="public-input w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-[#2A9D38]"/></div>`;
+  };
+  return `<div class="min-h-screen bg-[#F8FAFC] pb-8"><header class="bg-white border-b border-slate-200 px-4 py-4 sticky top-0 z-20"><div class="max-w-2xl mx-auto"><div class="text-[10px] font-bold text-[#2A9D38] uppercase">Şehitkamil Strateji Geliştirme Merkezi</div><h1 class="text-lg font-bold text-[#01214A] mt-1">${escapeHtml(survey.title)}</h1><p class="text-xs text-slate-500 mt-1">Katılımcı: ${escapeHtml(session.respondentName)}</p></div></header><main class="max-w-2xl mx-auto px-4 py-5 space-y-4">${session.error ? `<div class="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700">${escapeHtml(session.error)}</div>` : ''}<div class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-7 space-y-6">${questions.map(renderQuestion).join('')}</div><button id="btn-public-submit" ${session.stage === 'submitting' ? 'disabled' : ''} class="w-full h-12 bg-[#2A9D38] disabled:opacity-60 text-white font-bold rounded-xl">${session.stage === 'submitting' ? 'Gönderiliyor...' : 'Anketi Gönder'}</button></main></div>`;
 }
 
 // 1. STANDALONE EXECUTIVE LOGIN EKRANI (MASTERWORK DESIGN)
@@ -3236,6 +3306,11 @@ function render4StepSurveyBuilder(state) {
                 <span>Hemen Personellere Gönder / Ata</span>
               </button>
 
+              <button data-survey-id="${survey.id}" class="btn-share-survey-link flex-1 h-12 bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-800 font-extrabold rounded-xl text-xs transition-all flex items-center justify-center gap-2">
+                ${iconSvg('copy', 'w-4 h-4')}
+                <span>Link Olarak Paylaş</span>
+              </button>
+
               <button id="btn-builder-goto-surveys" class="flex-1 h-12 bg-white border border-slate-200 text-[#01214A] font-extrabold rounded-xl text-xs hover:bg-slate-100 transition-all shadow-2xs">
                 Anketler Listesine Git
               </button>
@@ -3539,6 +3614,10 @@ function renderAdminTabContent(tab, state) {
                               ${iconSvg('send', 'w-3.5 h-3.5 text-slate-600')}
                               <span>Atama Yap</span>
                             </button>
+                            <button type="button" data-survey-id="${s.id}" class="btn-share-survey-link h-8 px-2.5 bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-800 font-semibold text-xs rounded-[8px] transition-colors flex items-center gap-1 cursor-pointer">
+                              ${iconSvg('copy', 'w-3.5 h-3.5')}
+                              <span>Link Olarak Paylaş</span>
+                            </button>
                           ` : `
                             <button type="button" data-survey-id="${s.id}" class="btn-open-review-survey-modal h-8 px-2.5 bg-[#01214A] hover:bg-[#082d5e] text-white font-semibold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1 cursor-pointer">
                               <span>İncele</span>
@@ -3620,6 +3699,10 @@ function renderAdminTabContent(tab, state) {
                       <button type="button" data-survey-id="${s.id}" class="btn-open-assign-survey-modal h-9 px-3 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[10px] flex items-center gap-1 cursor-pointer">
                         ${iconSvg('send', 'w-3.5 h-3.5 text-white')}
                         <span>Atama Yap</span>
+                      </button>
+                      <button type="button" data-survey-id="${s.id}" class="btn-share-survey-link h-9 px-3 bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-800 font-semibold text-xs rounded-[10px] flex items-center gap-1 cursor-pointer">
+                        ${iconSvg('copy', 'w-3.5 h-3.5')}
+                        <span>Link Olarak Paylaş</span>
                       </button>
                     ` : s.status === 'COMPLETED' ? `
                       <button type="button" data-survey-id="${s.id}" class="btn-view-survey-report h-9 px-3 bg-[#01214A] hover:bg-[#082d5e] text-white font-semibold text-xs rounded-[10px] transition-colors cursor-pointer flex items-center gap-1">

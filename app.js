@@ -3,6 +3,7 @@ import {
   iconSvg,
   renderSystemBar,
   renderLoginScreen,
+  renderPublicSurvey,
   renderPwaHome,
   renderTaskDetail,
   renderSurveyRunner,
@@ -86,6 +87,13 @@ function renderApp() {
     const focusInfo = captureActiveFocus();
     const state = store.getState();
 
+    if (state.publicSession?.active) {
+      root.innerHTML = renderPublicSurvey();
+      attachPublicSurveyListeners();
+      restoreActiveFocus(focusInfo);
+      return;
+    }
+
     // If not logged in, render Standalone Login Screen (No top system bar)
     if (!state.auth.isLoggedIn) {
       root.innerHTML = renderLoginScreen();
@@ -163,6 +171,39 @@ function renderApp() {
       console.error('Fallback Login Render Error:', e);
     }
   }
+}
+
+function attachPublicSurveyListeners() {
+  const session = store.getState().publicSession || {};
+  document.getElementById('form-public-respondent')?.addEventListener('submit', event => {
+    event.preventDefault();
+    store.startPublicSurvey(document.getElementById('public-respondent-name')?.value);
+  });
+  document.querySelectorAll('.public-input').forEach(input => {
+    input.addEventListener('input', event => store.setPublicAnswer(event.target.getAttribute('data-q-id'), event.target.value, true));
+    input.addEventListener('change', event => store.setPublicAnswer(event.target.getAttribute('data-q-id'), event.target.value));
+  });
+  document.querySelectorAll('.btn-public-choice').forEach(button => button.addEventListener('click', event => {
+    store.setPublicAnswer(event.currentTarget.getAttribute('data-q-id'), event.currentTarget.getAttribute('data-val'));
+  }));
+  document.querySelectorAll('.public-multi').forEach(input => input.addEventListener('change', event => {
+    store.togglePublicMultiAnswer(event.target.getAttribute('data-q-id'), event.target.value, event.target.checked);
+  }));
+  document.getElementById('btn-public-photo')?.addEventListener('click', () => document.getElementById('public-photo-file')?.click());
+  document.getElementById('public-photo-file')?.addEventListener('change', async event => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      const compressed = await compressImageFile(file);
+      store.savePublicPhoto(compressed.base64);
+    } catch (error) {
+      session.error = error.message || 'Fotoğraf işlenemedi.';
+      store.saveState();
+    }
+  });
+  document.getElementById('btn-public-location')?.addEventListener('click', () => store.acquirePublicLocation());
+  document.getElementById('btn-public-submit')?.addEventListener('click', () => store.submitPublicSurvey());
+  document.getElementById('btn-public-new-response')?.addEventListener('click', () => store.resetPublicSurvey());
 }
 
 function attachGlobalSystemListeners() {
@@ -259,6 +300,30 @@ if (typeof document !== 'undefined') {
       const survey = store.getState().allSurveys.find(s => s.id === surveyId) || store.getState().builderSurvey;
       if (survey) {
         store.openModal('assign_survey', { survey });
+      }
+      return;
+    }
+
+    const shareSurveyBtn = e.target.closest('.btn-share-survey-link');
+    if (shareSurveyBtn) {
+      const surveyId = shareSurveyBtn.getAttribute('data-survey-id');
+      const survey = store.getState().allSurveys.find(item => item.id === surveyId) || store.getState().builderSurvey;
+      if (survey?.status === 'ACTIVE') store.openModal('share_survey_link', { survey });
+      else store.setToast('Yalnızca aktif anketler bağlantı olarak paylaşılabilir.', 'error');
+      return;
+    }
+
+    const copySurveyLinkBtn = e.target.closest('#btn-copy-survey-link');
+    if (copySurveyLinkBtn) {
+      const input = document.getElementById('input-share-survey-link');
+      const link = input?.value || '';
+      try {
+        await navigator.clipboard.writeText(link);
+        store.setToast('Anket bağlantısı kopyalandı.', 'success');
+      } catch (_) {
+        input?.select();
+        document.execCommand('copy');
+        store.setToast('Anket bağlantısı kopyalandı.', 'success');
       }
       return;
     }

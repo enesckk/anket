@@ -7,6 +7,7 @@ public class SecurityAndRateLimitMiddleware
 {
     private readonly RequestDelegate _next;
     private static readonly ConcurrentDictionary<string, List<DateTime>> LoginRequests = new();
+    private static readonly ConcurrentDictionary<string, List<DateTime>> PublicSubmissionRequests = new();
     private const int MaxLoginRequestsPerMinute = 10;
 
     public SecurityAndRateLimitMiddleware(RequestDelegate next)
@@ -46,6 +47,32 @@ public class SecurityAndRateLimitMiddleware
                 }
 
                 timestamps.Add(now);
+            }
+        }
+
+        if (context.Request.Path.StartsWithSegments("/api/public-surveys") &&
+            context.Request.Path.Value?.EndsWith("/submissions", StringComparison.OrdinalIgnoreCase) == true &&
+            context.Request.Method.Equals("POST", StringComparison.OrdinalIgnoreCase))
+        {
+            var clientIp = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var now = DateTime.UtcNow;
+            var timestamps = PublicSubmissionRequests.GetOrAdd(clientIp, _ => new List<DateTime>());
+            var isLimited = false;
+            lock (timestamps)
+            {
+                timestamps.RemoveAll(t => (now - t).TotalMinutes > 1);
+                if (timestamps.Count >= 12)
+                {
+                    isLimited = true;
+                }
+                else timestamps.Add(now);
+            }
+            if (isLimited)
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.TooManyRequests;
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync("{\"message\":\"Çok fazla anket gönderimi yapıldı. Lütfen bir dakika bekleyiniz.\"}");
+                return;
             }
         }
 

@@ -135,6 +135,20 @@ const defaultState = {
     user: null
   },
 
+  publicSession: {
+    active: false,
+    surveyId: null,
+    survey: null,
+    stage: 'loading',
+    respondentName: '',
+    answers: {},
+    clientSubmissionId: null,
+    startedAt: null,
+    photoData: null,
+    location: null,
+    error: null
+  },
+
   // Active Selected Item IDs for detail views
   selectedTaskId: null,
   selectedMessageId: null,
@@ -242,7 +256,157 @@ class Store {
   constructor() {
     this.listeners = [];
     this.state = this.loadState();
+    this.initializePublicSurveyFromUrl();
     this.fetchInitialData();
+  }
+
+  initializePublicSurveyFromUrl() {
+    if (typeof location === 'undefined') return;
+    const surveyId = new URLSearchParams(location.search).get('survey');
+    if (!surveyId) return;
+    this.state.publicSession = {
+      active: true, surveyId, survey: null, stage: 'loading', respondentName: '', answers: {},
+      startedAt: null, clientSubmissionId: null, photoData: null, location: null, error: null
+    };
+    this.apiFetch(`/public-surveys/${encodeURIComponent(surveyId)}`)
+      .then(survey => {
+        this.state.publicSession.survey = survey;
+        this.state.publicSession.stage = 'name';
+        this.saveState();
+      })
+      .catch(error => {
+        let message = 'Anket bağlantısı açılamadı.';
+        try { message = JSON.parse(error.message || '{}').message || message; } catch (_) {}
+        this.state.publicSession.stage = 'error';
+        this.state.publicSession.error = message;
+        this.saveState();
+      });
+  }
+
+  startPublicSurvey(respondentName) {
+    const name = String(respondentName || '').trim();
+    if (name.length < 2 || name.length > 120 || /[<>]/.test(name)) {
+      this.state.publicSession.error = 'Lütfen geçerli bir ad soyad giriniz.';
+      this.saveState();
+      return false;
+    }
+    this.state.publicSession.respondentName = name;
+    this.state.publicSession.answers = {};
+    this.state.publicSession.startedAt = new Date().toISOString();
+    this.state.publicSession.clientSubmissionId = `public-${typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now()}`;
+    this.state.publicSession.stage = 'form';
+    this.state.publicSession.error = null;
+    this.saveState();
+    return true;
+  }
+
+  setPublicAnswer(questionId, value, silent = false) {
+    this.state.publicSession.answers[questionId] = value;
+    this.saveState(silent);
+  }
+
+  togglePublicMultiAnswer(questionId, value, checked) {
+    const current = Array.isArray(this.state.publicSession.answers[questionId])
+      ? [...this.state.publicSession.answers[questionId]] : [];
+    const next = checked ? [...new Set([...current, value])] : current.filter(item => item !== value);
+    this.setPublicAnswer(questionId, next);
+  }
+
+  savePublicPhoto(base64) {
+    this.state.publicSession.photoData = base64;
+    this.saveState();
+  }
+
+  acquirePublicLocation() {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      this.state.publicSession.error = 'Bu cihaz konum hizmetini desteklemiyor.';
+      this.saveState();
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(position => {
+      this.state.publicSession.location = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy
+      };
+      this.state.publicSession.error = null;
+      this.saveState();
+    }, () => {
+      this.state.publicSession.error = 'Konum alınamadı. Cihaz iznini kontrol edin.';
+      this.saveState();
+    }, { enableHighAccuracy: true, timeout: 15000 });
+  }
+
+  async submitPublicSurvey() {
+    const session = this.state.publicSession;
+    const survey = session.survey;
+    if (!survey) return false;
+    const questions = [...(survey.questions || []), ...(survey.sections || []).flatMap(section => section.questions || [])]
+      .filter((question, index, list) => list.findIndex(item => item.id === question.id) === index)
+      .filter(question => isSurveyQuestionVisible(question, session.answers || {}));
+    const missing = questions.find(question => {
+      if (!question.isRequired) return false;
+      const type = String(question.type || '').toUpperCase();
+      if (type === 'PHOTO') return !session.photoData;
+      if (type === 'LOCATION') return !session.location;
+      const value = session.answers?.[question.id];
+      return Array.isArray(value) ? value.length === 0 : String(value ?? '').trim().length === 0;
+    });
+    if (missing) {
+      session.error = `Lütfen zorunlu soruyu cevaplayın: ${missing.title}`;
+      this.saveState();
+      return false;
+    }
+
+    session.stage = 'submitting';
+    session.error = null;
+    this.saveState();
+    try {
+      const locationData = session.location || {};
+      await this.apiFetch(`/public-surveys/${encodeURIComponent(survey.id)}/submissions`, {
+        method: 'POST',
+        body: JSON.stringify({
+          clientSubmissionId: session.clientSubmissionId,
+          respondentName: session.respondentName,
+          startedAt: session.startedAt || new Date().toISOString(),
+          completedAt: new Date().toISOString(),
+          latitude: locationData.latitude ?? null,
+          longitude: locationData.longitude ?? null,
+          accuracy: locationData.accuracy ?? null,
+          answers: questions.map(question => {
+            const type = String(question.type || '').toUpperCase();
+            const raw = session.answers?.[question.id];
+            return {
+              questionId: question.id,
+              answerValue: type === 'LOCATION' && session.location
+                ? `${locationData.latitude},${locationData.longitude}`
+                : Array.isArray(raw) ? raw.join('|') : String(raw ?? ''),
+              fileBase64: type === 'PHOTO' && session.photoData ? String(session.photoData).replace(/^data:[^;]+;base64,/, '') : null,
+              fileName: type === 'PHOTO' ? 'anket-fotografi.jpg' : null
+            };
+          })
+        })
+      });
+      session.stage = 'success';
+      this.saveState();
+      return true;
+    } catch (error) {
+      let message = 'Cevaplar gönderilemedi. İnternet bağlantınızı kontrol edip tekrar deneyin.';
+      try { message = JSON.parse(error.message || '{}').message || message; } catch (_) {}
+      session.stage = 'form';
+      session.error = message;
+      this.saveState();
+      return false;
+    }
+  }
+
+  resetPublicSurvey() {
+    const session = this.state.publicSession;
+    this.state.publicSession = {
+      ...session, stage: 'name', respondentName: '', answers: {}, startedAt: null, clientSubmissionId: null,
+      photoData: null, location: null, error: null
+    };
+    this.saveState();
   }
 
   loadState() {

@@ -106,6 +106,17 @@ public record CreateSubmissionRequest(
     List<CreateAnswerRequest> Answers
 );
 
+public record CreatePublicSubmissionRequest(
+    string ClientSubmissionId,
+    string RespondentName,
+    DateTime StartedAt,
+    DateTime CompletedAt,
+    double? Latitude,
+    double? Longitude,
+    double? Accuracy,
+    List<CreateAnswerRequest> Answers
+);
+
 public record CreateAnswerRequest(
     Guid QuestionId,
     string AnswerValue,
