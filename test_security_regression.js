@@ -320,5 +320,16 @@ assert.equal(publicRequest.endpoint, '/public-surveys/public-survey-1/submission
 assert.equal(publicRequest.payload.respondentName, 'Test Katılımcısı');
 assert.equal(publicRequest.payload.answers[0].answerValue, 'Memnun');
 assert.equal(store.state.publicSession.stage, 'success');
+html = renderPublicSurvey();
+assert(html.includes('Hemen Yeni Ankete Başla'));
+store.state.publicSession.photoData = 'data:image/jpeg;base64,test';
+store.state.publicSession.location = { latitude: 1, longitude: 2 };
+store.resetPublicSurvey();
+assert.equal(store.state.publicSession.stage, 'name');
+assert.equal(store.state.publicSession.respondentName, '');
+assert.deepEqual(store.state.publicSession.answers, {});
+assert.equal(store.state.publicSession.clientSubmissionId, null);
+assert.equal(store.state.publicSession.photoData, null);
+assert.equal(store.state.publicSession.location, null);
 
 console.log('Security/regression tests passed: assignment isolation, dynamic questions, answer IDs, no ghost personnel, queue cleanup.');
