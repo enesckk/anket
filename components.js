@@ -2360,10 +2360,12 @@ export function renderProfile() {
 
         <!-- ACTION BUTTONS -->
         <div class="pt-2 space-y-2">
-          <button id="btn-switch-to-admin" type="button" class="w-full h-10 bg-[#01214A] hover:bg-[#072446] text-white font-semibold text-xs rounded-[10px] transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs">
-            ${iconSvg('dashboard', 'w-4 h-4 text-white')}
-            <span>Yönetici Paneline Geç</span>
-          </button>
+          ${user?.role === 'ADMIN' ? `
+            <button id="btn-switch-to-admin" type="button" class="w-full h-10 bg-[#01214A] hover:bg-[#072446] text-white font-semibold text-xs rounded-[10px] transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs">
+              ${iconSvg('dashboard', 'w-4 h-4 text-white')}
+              <span>Yönetici Paneline Geç</span>
+            </button>
+          ` : ''}
           <button id="btn-open-logout-modal" type="button" class="w-full h-10 border border-red-200 hover:bg-red-50 text-red-600 font-semibold text-xs rounded-[10px] transition-colors flex items-center justify-center gap-2 cursor-pointer">
             ${iconSvg('logOut', 'w-4 h-4 text-red-600')}
             <span>Çıkış Yap</span>
@@ -2396,6 +2398,19 @@ export function renderAdminView() {
   const state = store.getState();
   const activeTab = state.adminTab || 'dashboard';
   const user = state.auth?.user || {};
+
+  // Defense in depth: never expose cached admin content when this renderer is
+  // called directly or application state is manipulated in the browser.
+  if (user.role !== 'ADMIN') {
+    return `
+      <main class="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-6 font-sans">
+        <section class="w-full max-w-md bg-white border border-red-100 rounded-2xl p-6 text-center shadow-sm">
+          <h1 class="text-lg font-bold text-[#01214A]">Erişim Yetkiniz Yok</h1>
+          <p class="mt-2 text-sm text-slate-500">Yönetici paneli yalnızca yönetici rolüne sahip hesaplar tarafından kullanılabilir.</p>
+        </section>
+      </main>
+    `;
+  }
 
   const navItems = [
     { id: 'dashboard', label: 'Ana Sayfa', icon: 'dashboard', subtitle: 'Saha operasyonlarının güncel durumu' },
@@ -4415,4 +4430,3 @@ function renderAdminTabContent(tab, state) {
       return '';
   }
 }
-

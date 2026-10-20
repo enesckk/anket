@@ -221,6 +221,13 @@ class Store {
             merged.auth = { ...defaultState.auth };
           }
 
+          // The visible application mode must always follow the authenticated
+          // user's server-issued role. This also repairs stale/tampered local
+          // state that may have persisted an admin view for a field user.
+          if (merged.auth?.user?.role !== 'ADMIN') {
+            merged.currentRole = 'pwa';
+          }
+
           merged.adminKpis = { ...defaultState.adminKpis, ...(parsed.adminKpis || {}) };
 
           if (Array.isArray(parsed.allSurveys) && parsed.allSurveys.length > 0) {
@@ -265,6 +272,10 @@ class Store {
 
   getState() {
     return this.state;
+  }
+
+  isAdminUser() {
+    return this.state.auth?.isLoggedIn === true && this.state.auth?.user?.role === 'ADMIN';
   }
 
   subscribe(listener) {
@@ -532,10 +543,19 @@ class Store {
   }
 
   setRole(role) {
-    this.state.currentRole = role;
+    const nextRole = role === 'admin' ? 'admin' : 'pwa';
+    if (nextRole === 'admin' && !this.isAdminUser()) {
+      this.state.currentRole = 'pwa';
+      this.setToast('Bu alana yalnızca yönetici yetkisine sahip kullanıcılar erişebilir.', 'error');
+      this.saveState();
+      return false;
+    }
+
+    this.state.currentRole = nextRole;
     this.saveState();
     this.requestNotificationPermission();
     this.fetchInitialData();
+    return true;
   }
 
   toggleMobileSidebar() {
@@ -549,6 +569,13 @@ class Store {
   }
 
   setAdminTab(tab) {
+    if (!this.isAdminUser()) {
+      this.state.currentRole = 'pwa';
+      this.setToast('Bu alana yalnızca yönetici yetkisine sahip kullanıcılar erişebilir.', 'error');
+      this.saveState();
+      return false;
+    }
+
     this.state.currentRole = 'admin';
     this.state.adminTab = tab;
     this.state.activeModal = null;
@@ -568,6 +595,7 @@ class Store {
       });
     }
     this.saveState();
+    return true;
   }
 
   // LIVE SEARCH & FILTERING METHODS

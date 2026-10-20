@@ -83,7 +83,9 @@ public class AuthService : IAuthService
 
     private string GenerateJwtAccessToken(User user)
     {
-        var secretKey = _config["JwtSettings:Secret"] ?? "SuperSecretKeySurveyAdmin2026!ProEnterpriseMasterSecret";
+        var secretKey = _config["JwtSettings:Secret"];
+        if (string.IsNullOrWhiteSpace(secretKey) || secretKey.Length < 32)
+            throw new InvalidOperationException("JWT signing secret is not configured securely.");
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

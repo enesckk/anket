@@ -95,7 +95,7 @@ function renderApp() {
     }
 
     // Admin vs PWA view
-    if (state.currentRole === 'admin') {
+    if (state.currentRole === 'admin' && state.auth.user?.role === 'ADMIN') {
       root.innerHTML = `
         ${renderToastNotification(state)}
         ${renderAdminView()}
@@ -2261,4 +2261,3 @@ if (typeof document !== 'undefined') {
     boot();
   }
 }
-

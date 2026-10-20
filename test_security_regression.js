@@ -9,7 +9,7 @@ globalThis.localStorage = {
 };
 
 const { store } = await import('./store.js');
-const { renderPwaHome, renderSurveyRunner } = await import('./components.js');
+const { renderPwaHome, renderSurveyRunner, renderProfile, renderAdminView } = await import('./components.js');
 
 // Atama yoksa aktif anket hiçbir şekilde saha ekranına sızmamalı.
 store.state.auth = { isLoggedIn: true, token: 'real-token', user: { id: 'u1', fullName: 'Test', role: 'FIELD_USER' } };
@@ -19,6 +19,37 @@ store.state.allSurveys = [{ id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', title: '
 let html = renderPwaHome();
 assert(!html.includes('Atanmamış Gizli Anket'));
 assert(html.includes('Görevlerim'));
+
+// Saha kullanıcısı yönetici geçişini görmemeli ve state manipülasyonu ile
+// yönetici paneline geçememeli.
+store.state.pwaScreen = 'profile';
+html = renderProfile();
+assert(!html.includes('btn-switch-to-admin'));
+assert(!html.includes('Yönetici Paneline Geç'));
+assert.equal(store.setRole('admin'), false);
+assert.equal(store.state.currentRole, 'pwa');
+assert.equal(store.setAdminTab('personnel'), false);
+assert.equal(store.state.currentRole, 'pwa');
+store.state.currentRole = 'admin';
+html = renderAdminView();
+assert(html.includes('Erişim Yetkiniz Yok'));
+assert(!html.includes('Saha operasyonlarının güncel durumu'));
+
+// Gerçek yönetici iki görünüm arasında geçiş yapabilmeli.
+store.fetchInitialData = async () => {};
+store.requestNotificationPermission = () => {};
+store.state.auth = { isLoggedIn: true, token: 'admin-token', user: { id: 'a1', fullName: 'Admin', role: 'ADMIN' } };
+store.state.currentRole = 'pwa';
+html = renderProfile();
+assert(html.includes('btn-switch-to-admin'));
+assert.equal(store.setRole('admin'), true);
+assert.equal(store.state.currentRole, 'admin');
+assert.equal(store.setAdminTab('personnel'), true);
+assert.equal(store.state.adminTab, 'personnel');
+
+// Takip eden saha testleri saha rolüyle çalışmalı.
+store.state.auth = { isLoggedIn: true, token: 'real-token', user: { id: 'u1', fullName: 'Test', role: 'FIELD_USER' } };
+store.state.currentRole = 'pwa';
 
 // Form, sabit demo soruları yerine atanan anketin gerçek sorularını kullanmalı.
 const surveyId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
