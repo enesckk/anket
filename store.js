@@ -1383,8 +1383,9 @@ class Store {
   async submitForApproval() {
     const isFieldUser = this.state.currentRole === 'pwa' || (this.state.auth.user && this.state.auth.user.role === 'FIELD_USER');
     const targetStatus = isFieldUser ? 'PENDING_APPROVAL' : 'ACTIVE';
+    const builderQuestions = JSON.parse(JSON.stringify(this.state.builderSurvey.questions || []));
 
-    const newSurvey = {
+    let newSurvey = {
       id: this.state.builderSurvey.id || ('srv-' + Date.now()),
       title: this.state.builderSurvey.title || 'Yeni Saha Anketi',
       description: this.state.builderSurvey.description || '',
@@ -1392,8 +1393,80 @@ class Store {
       source: isFieldUser ? 'FIELD_USER' : 'ADMIN',
       createdBy: isFieldUser ? (this.state.auth.user?.fullName || 'Saha Personeli') : 'Yönetici',
       createdAt: 'Bugün',
-      questions: JSON.parse(JSON.stringify(this.state.builderSurvey.questions || []))
+      questions: builderQuestions
     };
+
+    try {
+      if (this.state.isOnline && this.state.auth?.token && !this.state.auth.token.startsWith('auth-token-')) {
+        const createdSurvey = await this.apiFetch('/surveys', {
+          method: 'POST',
+          body: JSON.stringify({
+            title: newSurvey.title,
+            description: newSurvey.description,
+            source: newSurvey.source
+          })
+        });
+
+        const apiTypeByBuilderType = {
+          text: 'TEXT',
+          number: 'NUMBER',
+          yesno: 'YES_NO',
+          single: 'SINGLE_CHOICE',
+          multi: 'MULTIPLE_CHOICE',
+          date: 'DATE',
+          photo: 'PHOTO',
+          gps: 'LOCATION'
+        };
+        const persistedQuestionIds = new Map();
+        const persistedQuestions = [];
+
+        for (const [index, question] of builderQuestions.entries()) {
+          const conditionSourceQuestionId = question.condition?.sourceQuestionId
+            ? (persistedQuestionIds.get(question.condition.sourceQuestionId) || null)
+            : null;
+          const savedQuestion = await this.apiFetch(`/surveys/${createdSurvey.id}/questions`, {
+            method: 'POST',
+            body: JSON.stringify({
+              sectionId: null,
+              title: question.title || `Soru ${index + 1}`,
+              description: question.description || '',
+              type: apiTypeByBuilderType[question.type] || String(question.type || 'TEXT').toUpperCase(),
+              isRequired: question.isRequired !== false,
+              order: index + 1,
+              conditionSourceQuestionId,
+              conditionOperator: conditionSourceQuestionId ? (question.condition?.operator || 'EQUALS') : null,
+              conditionValue: conditionSourceQuestionId ? (question.condition?.value || null) : null,
+              options: (question.options || []).map((option, optionIndex) => ({
+                label: option.label || `Seçenek ${optionIndex + 1}`,
+                value: option.value || option.label || `Seçenek ${optionIndex + 1}`,
+                order: optionIndex + 1
+              }))
+            })
+          });
+          persistedQuestionIds.set(question.id, savedQuestion.id);
+          persistedQuestions.push(savedQuestion);
+        }
+
+        if (!isFieldUser) {
+          await this.apiFetch(`/surveys/${createdSurvey.id}/status`, {
+            method: 'PUT',
+            body: JSON.stringify({ status: 'ACTIVE' })
+          });
+        }
+
+        newSurvey = {
+          ...newSurvey,
+          ...createdSurvey,
+          status: targetStatus,
+          source: newSurvey.source,
+          questions: persistedQuestions
+        };
+        this.state.builderSurvey.id = createdSurvey.id;
+      }
+    } catch (error) {
+      this.setToast('Anket ve sorular veritabanına kaydedilemedi. Lütfen tekrar deneyiniz.', 'error');
+      throw error;
+    }
 
     if (!Array.isArray(this.state.allSurveys)) {
       this.state.allSurveys = [];
@@ -1418,17 +1491,6 @@ class Store {
     }
 
     this.saveState();
-
-    // Non-blocking background API call
-    this.apiFetch('/surveys', {
-      method: 'POST',
-      body: JSON.stringify({
-        title: newSurvey.title,
-        description: newSurvey.description,
-        status: targetStatus,
-        source: newSurvey.source
-      })
-    }).catch(e => console.warn('Background survey approval submission note:', e.message));
   }
 
   async sendPwaMessageToAdmin(title, content) {

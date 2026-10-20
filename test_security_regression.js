@@ -1,4 +1,5 @@
 import { strict as assert } from 'assert';
+import { readFileSync } from 'node:fs';
 
 const storage = new Map();
 globalThis.localStorage = {
@@ -30,6 +31,32 @@ assert.equal(store.state.builderSurvey.questions[0].options.length, 2);
 store.addQuestionToBuilder('text');
 assert.equal(store.state.builderSurvey.questions.length, 2);
 assert.equal(store.state.builderSurvey.questions[1].isRequired, true);
+
+// Soru türü kartları yalnızca merkezi delegated listener tarafından
+// işlenmeli; doğrudan ikinci listener aynı tıklamada çift soru eklerdi.
+const appSource = readFileSync(new URL('./app.js', import.meta.url), 'utf8');
+assert(!appSource.includes("document.querySelectorAll('.btn-add-question-type')"));
+assert(!appSource.includes("document.getElementById('btn-builder-step3-next')?.addEventListener"));
+
+// Yayınlama sırasında sorular yalnızca tarayıcı state'inde kalmamalı;
+// anket, sorular ve yönetici durumu sırasıyla API'ye kaydedilmeli.
+store.state.auth = { isLoggedIn: true, token: 'admin-token', user: { id: 'a1', fullName: 'Admin', role: 'ADMIN' } };
+store.state.currentRole = 'admin';
+store.state.isOnline = true;
+store.state.allSurveys = [];
+const persistenceCalls = [];
+store.apiFetch = async (endpoint, options = {}) => {
+  persistenceCalls.push({ endpoint, body: options.body ? JSON.parse(options.body) : null });
+  if (endpoint === '/surveys') return { id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', title: 'Soru Ekleme Testi', description: '', status: 'DRAFT', source: 'ADMIN' };
+  if (endpoint.endsWith('/questions')) return { id: `question-${persistenceCalls.length}`, ...JSON.parse(options.body), options: JSON.parse(options.body).options || [] };
+  if (endpoint.endsWith('/status')) return { status: 'ACTIVE' };
+  throw new Error(`Unexpected endpoint: ${endpoint}`);
+};
+await store.submitForApproval();
+assert.equal(persistenceCalls.filter(call => call.endpoint.endsWith('/questions')).length, 2);
+assert.equal(persistenceCalls[1].body.type, 'MULTIPLE_CHOICE');
+assert.equal(persistenceCalls[1].body.isRequired, false);
+assert.equal(persistenceCalls.at(-1).endpoint, '/surveys/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/status');
 
 // Atama yoksa aktif anket hiçbir şekilde saha ekranına sızmamalı.
 store.state.auth = { isLoggedIn: true, token: 'real-token', user: { id: 'u1', fullName: 'Test', role: 'FIELD_USER' } };

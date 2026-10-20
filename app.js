@@ -1201,14 +1201,6 @@ function validatePersonnelInput(email, phone, password, isPasswordOptional = fal
     });
   }
 
-  // Step 2 Question Type Add Cards
-  document.querySelectorAll('.btn-add-question-type').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const type = e.currentTarget.getAttribute('data-type');
-      store.addQuestionToBuilder(type);
-    });
-  });
-
   // Question Card Toggle Expand
   document.querySelectorAll('.btn-toggle-question').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -1299,13 +1291,6 @@ function validatePersonnelInput(email, phone, password, isPasswordOptional = fal
   });
 
 
-
-  // Step 2 & Step 3 Next Buttons
-  document.getElementById('btn-builder-step2-next')?.addEventListener('click', () => store.setBuilderStep(3));
-  document.getElementById('btn-builder-goto-step3')?.addEventListener('click', () => store.setBuilderStep(3));
-  document.getElementById('btn-builder-step3-next')?.addEventListener('click', async () => {
-    await store.submitForApproval();
-  });
 
   // Approve & Reject Survey Listeners for Admin
   document.querySelectorAll('.btn-approve-admin-survey').forEach(btn => {
@@ -1980,13 +1965,6 @@ function attachPwaListeners() {
     });
   }
 
-  document.querySelectorAll('.btn-add-question-type').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const type = e.currentTarget.getAttribute('data-type');
-      store.addQuestionToBuilder(type);
-    });
-  });
-
   document.querySelectorAll('.btn-toggle-question').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const id = e.currentTarget.getAttribute('data-q-id');
@@ -2056,12 +2034,6 @@ function attachPwaListeners() {
       const id = e.currentTarget.getAttribute('data-q-id');
       store.moveQuestion(id, 'down');
     });
-  });
-
-  document.getElementById('btn-builder-step2-next')?.addEventListener('click', () => store.setBuilderStep(3));
-  document.getElementById('btn-builder-goto-step3')?.addEventListener('click', () => store.setBuilderStep(3));
-  document.getElementById('btn-builder-step3-next')?.addEventListener('click', async () => {
-    await store.submitForApproval();
   });
 
   // PROFILE LOGOUT — confirmation modal trigger (Section 37)
