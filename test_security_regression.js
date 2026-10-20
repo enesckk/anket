@@ -284,6 +284,9 @@ store.state.surveyStatusFilter = 'ACTIVE_ONLY';
 store.state.adminTab = 'dashboard';
 html = renderAdminView();
 assert(html.includes('btn-admin-create-survey-dashboard'));
+assert(html.includes('min-w-[680px] table-fixed'));
+assert(html.includes('whitespace-nowrap tabular-nums'));
+assert(!html.includes('Aktif / Yayında'));
 
 // Takip eden saha testleri saha rolüyle çalışmalı.
 store.state.auth = { isLoggedIn: true, token: 'real-token', user: { id: 'u1', fullName: 'Test', role: 'FIELD_USER' } };
@@ -353,7 +356,8 @@ assert.equal(publicRequest.payload.respondentName, 'Test Anketörü');
 assert.equal(publicRequest.payload.answers[0].answerValue, 'Memnun');
 assert.equal(store.state.publicSession.stage, 'success');
 html = renderPublicSurvey();
-assert(html.includes('Hemen Yeni Ankete Başla'));
+assert(html.includes('Yeni Ankete Başla'));
+assert(!html.includes('Hemen Yeni Ankete Başla'));
 store.state.publicSession.photoData = 'data:image/jpeg;base64,test';
 store.state.publicSession.location = { latitude: 1, longitude: 2 };
 store.resetPublicSurvey();

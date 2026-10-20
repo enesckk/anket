@@ -1334,7 +1334,7 @@ export function renderPublicSurvey() {
   const survey = session.survey;
   if (session.stage === 'loading') return `<div class="min-h-screen bg-[#F8FAFC] flex items-center justify-center"><div class="text-center space-y-3"><div class="w-10 h-10 border-4 border-emerald-100 border-t-[#2A9D38] rounded-full animate-spin mx-auto"></div><p class="text-sm font-semibold text-[#01214A]">Anket hazırlanıyor...</p></div></div>`;
   if (session.stage === 'error') return `<div class="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-4"><div class="bg-white max-w-md w-full p-8 rounded-2xl border border-slate-200 text-center space-y-3"><div class="text-3xl">⚠️</div><h1 class="text-lg font-bold text-[#01214A]">Anket Açılamadı</h1><p class="text-sm text-slate-500">${escapeHtml(session.error || 'Bu bağlantı artık kullanılamıyor.')}</p></div></div>`;
-  if (session.stage === 'success') return `<div class="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-4"><div class="bg-white max-w-md w-full p-8 rounded-2xl border border-slate-200 text-center space-y-5"><div class="w-16 h-16 rounded-full bg-emerald-100 text-[#2A9D38] flex items-center justify-center mx-auto">${iconSvg('checkCircle','w-8 h-8')}</div><div><h1 class="text-xl font-bold text-[#01214A]">Anket Kaydedildi</h1><p class="text-sm text-slate-500 mt-2">Anketör <strong>${escapeHtml(session.interviewerName)}</strong> tarafından doldurulan anket güvenli şekilde kaydedildi.</p><p class="text-xs text-slate-400 mt-3">Yeni kayıt açıldığında anketör bilgisi korunur, cevaplar temizlenir.</p></div><div class="space-y-2"><button id="btn-public-new-response" class="w-full h-12 bg-[#2A9D38] hover:bg-[#22822e] text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2">${iconSvg('plus', 'w-4 h-4 text-white')}<span>Hemen Yeni Ankete Başla</span></button><button id="btn-public-change-interviewer" class="w-full h-11 border border-slate-200 bg-white text-slate-600 font-semibold text-sm rounded-xl">Anketörü Değiştir</button></div></div></div>`;
+  if (session.stage === 'success') return `<div class="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-4"><div class="bg-white max-w-md w-full p-8 rounded-2xl border border-slate-200 text-center space-y-5"><div class="w-16 h-16 rounded-full bg-emerald-100 text-[#2A9D38] flex items-center justify-center mx-auto">${iconSvg('checkCircle','w-8 h-8')}</div><div><h1 class="text-xl font-bold text-[#01214A]">Anket Kaydedildi</h1><p class="text-sm text-slate-500 mt-2">Anketör <strong>${escapeHtml(session.interviewerName)}</strong> tarafından doldurulan anket güvenli şekilde kaydedildi.</p><p class="text-xs text-slate-400 mt-3">Yeni kayıt açıldığında anketör bilgisi korunur, cevaplar temizlenir.</p></div><div class="space-y-2"><button id="btn-public-new-response" class="w-full h-12 bg-[#2A9D38] hover:bg-[#22822e] text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2">${iconSvg('plus', 'w-4 h-4 text-white')}<span>Yeni Ankete Başla</span></button><button id="btn-public-change-interviewer" class="w-full h-11 border border-slate-200 bg-white text-slate-600 font-semibold text-sm rounded-xl">Anketörü Değiştir</button></div></div></div>`;
   if (!survey) return '';
 
   if (session.stage === 'name') return `
@@ -3419,13 +3419,19 @@ function renderAdminTabContent(tab, state) {
                 <h2 class="text-[18px] font-semibold text-[#01214A]">Kayıtlı Anketler ve Durumları</h2>
                 <p class="text-[13px] text-slate-400 font-normal mt-0.5">Sistemdeki anketlerin güncel durumu ve tamamlama oranları</p>
               </div>
-              <button type="button" class="btn-admin-tab text-xs font-semibold text-[#2A9D38] hover:underline cursor-pointer" data-admin-tab="surveys">
+              <button type="button" class="btn-admin-tab shrink-0 whitespace-nowrap text-xs font-semibold text-[#2A9D38] hover:underline cursor-pointer" data-admin-tab="surveys">
                 Tümünü Gör →
               </button>
             </div>
 
             <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse text-xs">
+              <table class="w-full min-w-[680px] table-fixed text-left border-collapse text-xs">
+                <colgroup>
+                  <col class="w-[54%]" />
+                  <col class="w-[18%]" />
+                  <col class="w-[16%]" />
+                  <col class="w-[12%]" />
+                </colgroup>
                 <thead>
                   <tr class="bg-[#F8FAFC] border-b border-[#E9EDF2] text-slate-500 font-semibold text-[11px]">
                     <th class="py-3 px-5">Anket Adı</th>
@@ -3441,17 +3447,17 @@ function renderAdminTabContent(tab, state) {
                     </tr>
                   ` : (state.allSurveys || []).slice(0, 5).map(s => {
                     const statusBg = s.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : (s.status === 'PENDING_APPROVAL' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-slate-100 text-slate-600 border-slate-200');
-                    const statusLabel = s.status === 'ACTIVE' ? 'Aktif / Yayında' : (s.status === 'PENDING_APPROVAL' ? 'Onay Bekliyor' : 'Taslak');
+                    const statusLabel = s.status === 'ACTIVE' ? 'Yayında' : (s.status === 'PENDING_APPROVAL' ? 'Onay Bekliyor' : 'Taslak');
                     return `
                       <tr class="hover:bg-slate-50/60 transition-colors duration-150">
                         <td class="py-4 px-5 font-semibold text-[#01214A]">
                           <span>${s.title}</span>
                         </td>
                         <td class="py-4 px-5 text-slate-600 font-normal">${getSurveyCategoryLabel(s)}</td>
-                        <td class="py-4 px-5">
-                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${statusBg}">${statusLabel}</span>
+                        <td class="py-4 px-5 whitespace-nowrap">
+                          <span class="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 rounded-full text-[10px] leading-none font-bold border ${statusBg}">${statusLabel}</span>
                         </td>
-                        <td class="py-4 px-5 text-right text-slate-700 font-bold">${s.completedCount || 0} / ${getSurveyTargetCount(state, s)}</td>
+                        <td class="py-4 px-5 text-right text-slate-700 font-bold whitespace-nowrap tabular-nums">${s.completedCount || 0} / ${getSurveyTargetCount(state, s)}</td>
                       </tr>
                     `;
                   }).join('')}
