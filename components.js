@@ -64,6 +64,28 @@ function getSurveyInputConfig(question, fallbackType = 'text') {
       hint: '05xx xxx xx xx veya 5xx xxx xx xx formatını kullanın.'
     };
   }
+  if (validationKind === 'email') {
+    return { type: 'email', attributes: 'inputmode="email" maxlength="254" autocomplete="email"', placeholder: 'ornek@kurum.com', hint: 'Geçerli bir e-posta adresi girin.' };
+  }
+  if (validationKind === 'full_name') {
+    return { type: 'text', attributes: 'maxlength="120" autocomplete="name"', placeholder: 'Ad ve soyad', hint: '' };
+  }
+  if (validationKind === 'age') {
+    const min = question.minValue ?? 0;
+    const max = question.maxValue ?? 120;
+    return { type: 'number', attributes: `inputmode="numeric" step="1" min="${min}" max="${max}"`, placeholder: '0-120', hint: `${min} ile ${max} arasında tam sayı girin.` };
+  }
+  if (validationKind === 'count') {
+    const min = question.minValue ?? 0;
+    const max = question.maxValue != null ? ` max="${question.maxValue}"` : '';
+    return { type: 'number', attributes: `inputmode="numeric" step="1" min="${min}"${max}`, placeholder: '', hint: 'Sıfır veya daha büyük bir tam sayı girin.' };
+  }
+  if (fallbackType === 'number') {
+    const min = question.minValue != null ? ` min="${question.minValue}"` : '';
+    const max = question.maxValue != null ? ` max="${question.maxValue}"` : '';
+    return { type: 'number', attributes: `inputmode="decimal" step="any"${min}${max}`, placeholder: '', hint: '' };
+  }
+  if (fallbackType === 'text') return { type: 'text', attributes: 'maxlength="2000"', placeholder: '', hint: '' };
   return { type: fallbackType, attributes: '', placeholder: '', hint: '' };
 }
 

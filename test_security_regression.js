@@ -30,6 +30,19 @@ assert.equal(isValidTurkishPhone('1234567890'), false);
 assert.equal(isValidTurkishPhone('telefon 05321234567'), false);
 assert.match(validateSurveyAnswer({ title: 'T.C. kimlik no', type: 'TEXT' }, '11111111111'), /geçerli bir T\.C\./);
 assert.match(validateSurveyAnswer({ title: 'Telefon', type: 'TEXT' }, '123'), /Geçerli bir cep telefonu/);
+assert.match(validateSurveyAnswer({ title: 'Yaş', type: 'NUMBER' }, '121'), /0 ile 120/);
+assert.match(validateSurveyAnswer({ title: 'Yaş', type: 'NUMBER' }, '22.5'), /tam sayı/);
+assert.equal(validateSurveyAnswer({ title: 'Yaş', type: 'NUMBER' }, '42'), null);
+assert.match(validateSurveyAnswer({ title: 'Çocuk sayısı', type: 'NUMBER' }, '-1'), /Sıfır veya daha büyük/);
+assert.match(validateSurveyAnswer({ title: 'Çocuk sayısı', type: 'NUMBER' }, '1.5'), /tam sayı/);
+assert.match(validateSurveyAnswer({ title: 'Gelir', type: 'NUMBER', minValue: 0, maxValue: 100000 }, '-1'), /en az 0/);
+assert.match(validateSurveyAnswer({ title: 'Tarih', type: 'DATE' }, '2026-02-30'), /Geçerli bir tarih/);
+assert.equal(validateSurveyAnswer({ title: 'Tarih', type: 'DATE' }, '2026-02-28'), null);
+assert.match(validateSurveyAnswer({ title: 'Onay', type: 'YES_NO' }, 'Belki'), /Evet veya Hayır/);
+assert.match(validateSurveyAnswer({ title: 'Mahalle', type: 'SINGLE_CHOICE', options: [{ label: 'Belkıs', value: 'Belkıs' }] }, 'Uydurma'), /listede bulunan/i);
+assert.match(validateSurveyAnswer({ title: 'İhtiyaçlar', type: 'MULTIPLE_CHOICE', options: [{ label: 'Gıda', value: 'Gıda' }] }, ['Gıda', 'Sahte']), /listede bulunan/i);
+assert.match(validateSurveyAnswer({ title: 'Konum', type: 'LOCATION' }, '95,181'), /Geçerli bir konum/);
+assert.match(validateSurveyAnswer({ title: 'E-posta', type: 'TEXT' }, 'yanlis@'), /Geçerli bir e-posta/);
 const normalizedMessage = normalizeMessage({ id: 'message-1', title: 'Saha Mesajı', content: 'Kontrol edildi.', senderName: 'Aykut Bilici', senderRole: 'FIELD_USER', createdAt: '2026-10-20T10:00:00Z', seenAt: null }, { id: 'admin-1', role: 'ADMIN' });
 assert.equal(normalizedMessage.sender, 'Aykut Bilici');
 assert.equal(normalizedMessage.direction, 'TO_ADMIN');
@@ -347,7 +360,8 @@ const publicSurvey = {
   sections: [], questions: [
     { id: 'public-q1', title: 'Memnuniyet', type: 'SINGLE_CHOICE', isRequired: true, order: 1, options: [{ label: 'Memnun', value: 'Memnun' }] },
     { id: 'public-tc', title: 'T.C. kimlik no', type: 'TEXT', isRequired: true, order: 2, options: [] },
-    { id: 'public-phone', title: 'Telefon', type: 'TEXT', isRequired: true, order: 3, options: [] }
+    { id: 'public-phone', title: 'Telefon', type: 'TEXT', isRequired: true, order: 3, options: [] },
+    { id: 'public-age', title: 'Yaş', type: 'NUMBER', isRequired: true, order: 4, options: [] }
   ]
 };
 store.state.activeModal = { type: 'share_survey_link', survey: publicSurvey };
@@ -362,9 +376,11 @@ html = renderPublicSurvey();
 assert(html.includes('maxlength="11"'));
 assert(html.includes('11 haneli T.C. kimlik numarası'));
 assert(html.includes('placeholder="05xx xxx xx xx"'));
+assert(html.includes('min="0" max="120"'));
 store.setPublicAnswer('public-q1', 'Memnun', true);
 store.setPublicAnswer('public-tc', '11111111111', true);
 store.setPublicAnswer('public-phone', '123', true);
+store.setPublicAnswer('public-age', '150', true);
 let publicRequest = null;
 store.apiFetch = async (endpoint, options) => { publicRequest = { endpoint, payload: JSON.parse(options.body) }; return { id: 'public-submission-1' }; };
 assert.equal(await store.submitPublicSurvey(), false);
@@ -372,12 +388,16 @@ assert.equal(publicRequest, null);
 assert.match(store.state.publicSession.error, /T\.C\. kimlik no/);
 store.setPublicAnswer('public-tc', '10000000146', true);
 store.setPublicAnswer('public-phone', '0532 123 45 67', true);
+assert.equal(await store.submitPublicSurvey(), false);
+assert.match(store.state.publicSession.error, /Yaş/);
+store.setPublicAnswer('public-age', '35', true);
 assert.equal(await store.submitPublicSurvey(), true);
 assert.equal(publicRequest.endpoint, '/public-surveys/public-survey-1/submissions');
 assert.equal(publicRequest.payload.respondentName, 'Test Anketörü');
 assert.equal(publicRequest.payload.answers[0].answerValue, 'Memnun');
 assert.equal(publicRequest.payload.answers[1].answerValue, '10000000146');
 assert.equal(publicRequest.payload.answers[2].answerValue, '0532 123 45 67');
+assert.equal(publicRequest.payload.answers[3].answerValue, '35');
 assert.equal(store.state.publicSession.stage, 'success');
 html = renderPublicSurvey();
 assert(html.includes('Yeni Ankete Başla'));

@@ -61,23 +61,45 @@ public class SubmissionService : ISubmissionService
         if (request.VillageId.HasValue && assignment.VillageId != request.VillageId.Value)
             throw new ArgumentException("Görev ile bölge bilgisi eşleşmiyor.");
 
+        if (request.Answers == null || request.Answers.Count > 250)
+            throw new ArgumentException("Anket cevapları geçersiz.");
+
         var surveyQuestions = await _db.SurveyQuestions
             .Where(q => q.SurveyId == request.SurveyId && q.IsActive)
-            .Select(q => new { q.Id, q.Title, q.Type, q.IsRequired })
+            .Select(q => new
+            {
+                q.Id, q.Title, q.Type, q.IsRequired, q.ConditionSourceQuestionId, q.ConditionOperator, q.ConditionValue,
+                q.MinValue, q.MaxValue,
+                Options = q.Options.Where(o => o.IsActive).Select(o => new { o.Label, o.Value }).ToList()
+            })
             .ToListAsync();
         var validQuestionIds = surveyQuestions.Select(q => q.Id).ToHashSet();
-        if (request.Answers.Any(a => !validQuestionIds.Contains(a.QuestionId)))
-            throw new ArgumentException("Yanıtlardan biri bu ankete ait olmayan bir soru içeriyor.");
+        if (request.Answers.GroupBy(a => a.QuestionId).Any(g => g.Count() > 1) ||
+            request.Answers.Any(a => !validQuestionIds.Contains(a.QuestionId)))
+            throw new ArgumentException("Yanıtlardan biri bu ankete ait olmayan veya tekrarlanan bir soru içeriyor.");
+        var answerValues = request.Answers.ToDictionary(a => a.QuestionId, a => a.AnswerValue ?? string.Empty);
+        var visibleRequiredQuestionIds = surveyQuestions.Where(q =>
+        {
+            if (!q.IsRequired) return false;
+            if (!q.ConditionSourceQuestionId.HasValue) return true;
+            if (!answerValues.TryGetValue(q.ConditionSourceQuestionId.Value, out var sourceValue) || string.IsNullOrWhiteSpace(sourceValue)) return false;
+            var values = sourceValue.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            var matches = values.Contains(q.ConditionValue ?? string.Empty, StringComparer.Ordinal);
+            return q.ConditionOperator == ConditionOperator.NOT_EQUALS ? !matches : matches;
+        }).Select(q => q.Id).ToHashSet();
         var answeredQuestionIds = request.Answers
             .Where(a => !string.IsNullOrWhiteSpace(a.AnswerValue) || !string.IsNullOrWhiteSpace(a.FileBase64))
             .Select(a => a.QuestionId)
             .ToHashSet();
-        if (surveyQuestions.Where(q => q.IsRequired).Any(q => !answeredQuestionIds.Contains(q.Id)))
+        if (visibleRequiredQuestionIds.Any(id => !answeredQuestionIds.Contains(id)))
             throw new ArgumentException("Zorunlu soruların tamamı cevaplanmalıdır.");
         foreach (var answer in request.Answers)
         {
             var question = surveyQuestions.First(q => q.Id == answer.QuestionId);
-            var validationError = SurveyAnswerValidator.Validate(question.Title, question.Type, answer.AnswerValue);
+            var allowedOptions = question.Options.SelectMany(o => new[] { o.Value, o.Label })
+                .Where(value => !string.IsNullOrWhiteSpace(value)).Distinct(StringComparer.Ordinal).ToArray();
+            var validationError = SurveyAnswerValidator.Validate(
+                question.Title, question.Type, answer.AnswerValue, question.MinValue, question.MaxValue, allowedOptions, answer.FileBase64);
             if (validationError != null) throw new ArgumentException(validationError);
         }
 
@@ -169,7 +191,12 @@ public class SubmissionService : ISubmissionService
 
         var surveyQuestions = await _db.SurveyQuestions
             .Where(q => q.SurveyId == surveyId && q.IsActive)
-            .Select(q => new { q.Id, q.Title, q.Type, q.IsRequired, q.ConditionSourceQuestionId, q.ConditionOperator, q.ConditionValue })
+            .Select(q => new
+            {
+                q.Id, q.Title, q.Type, q.IsRequired, q.ConditionSourceQuestionId, q.ConditionOperator, q.ConditionValue,
+                q.MinValue, q.MaxValue,
+                Options = q.Options.Where(o => o.IsActive).Select(o => new { o.Label, o.Value }).ToList()
+            })
             .ToListAsync();
         var validQuestionIds = surveyQuestions.Select(q => q.Id).ToHashSet();
         if (request.Answers.GroupBy(a => a.QuestionId).Any(g => g.Count() > 1) ||
@@ -195,7 +222,10 @@ public class SubmissionService : ISubmissionService
         foreach (var answer in request.Answers)
         {
             var question = surveyQuestions.First(q => q.Id == answer.QuestionId);
-            var validationError = SurveyAnswerValidator.Validate(question.Title, question.Type, answer.AnswerValue);
+            var allowedOptions = question.Options.SelectMany(o => new[] { o.Value, o.Label })
+                .Where(value => !string.IsNullOrWhiteSpace(value)).Distinct(StringComparer.Ordinal).ToArray();
+            var validationError = SurveyAnswerValidator.Validate(
+                question.Title, question.Type, answer.AnswerValue, question.MinValue, question.MaxValue, allowedOptions, answer.FileBase64);
             if (validationError != null) throw new ArgumentException(validationError);
         }
 

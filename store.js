@@ -51,6 +51,7 @@ function normalizeQuestionTitle(title) {
     .toLocaleLowerCase('tr-TR')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
+    .replace(/ı/g, 'i')
     .replace(/[^a-z0-9]/g, '');
 }
 
@@ -60,6 +61,10 @@ export function getSurveyQuestionValidationKind(question) {
   const title = normalizeQuestionTitle(question?.title);
   if (title.includes('tckimlik') || title.includes('kimlikno') || title.includes('kimliknumara')) return 'turkish_id';
   if (title.includes('telefon') || title.includes('ceptelefon') || title.includes('gsm')) return 'turkish_phone';
+  if (title.includes('eposta') || title.includes('email')) return 'email';
+  if (type === 'NUMBER' && (title === 'yas' || title.endsWith('yasi') || title.includes('yasiniz') || title.includes('yasinda') || title.includes('kacyas'))) return 'age';
+  if (type === 'NUMBER' && (title.includes('kackisi') || title.includes('kaccocuk') || title.includes('sayisi') || title.includes('adedi') || title.includes('adet'))) return 'count';
+  if (type === 'TEXT' && (title === 'adsoyad' || title === 'adisoyadi' || title === 'adivesoyadi')) return 'full_name';
   return null;
 }
 
@@ -84,13 +89,74 @@ export function isValidTurkishPhone(value) {
 }
 
 export function validateSurveyAnswer(question, value) {
+  const type = String(question?.type || 'TEXT').toUpperCase();
   const kind = getSurveyQuestionValidationKind(question);
-  if (!kind || String(value ?? '').trim() === '') return null;
+  const raw = Array.isArray(value) ? value : String(value ?? '').trim();
+  const isEmpty = Array.isArray(raw) ? raw.length === 0 : raw === '';
+  if (isEmpty) return null;
+
   if (kind === 'turkish_id' && !isValidTurkishId(value)) {
     return `${question.title}: 11 haneli, rakamlardan oluşan geçerli bir T.C. kimlik numarası giriniz.`;
   }
   if (kind === 'turkish_phone' && !isValidTurkishPhone(value)) {
     return `${question.title}: Geçerli bir cep telefonu giriniz (05xx xxx xx xx veya 5xx xxx xx xx).`;
+  }
+  if (kind === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(raw)) {
+    return `${question.title}: Geçerli bir e-posta adresi giriniz.`;
+  }
+  if (kind === 'full_name' && !/^[\p{L}\p{M}][\p{L}\p{M}\s'.-]{1,119}$/u.test(raw)) {
+    return `${question.title}: Geçerli bir ad ve soyad giriniz.`;
+  }
+
+  if (type === 'TEXT' && raw.length > 2000) {
+    return `${question.title}: Cevap 2000 karakterden uzun olamaz.`;
+  }
+  if (type === 'NUMBER') {
+    if (!/^-?(?:\d+\.?\d*|\.\d+)$/.test(raw) || !Number.isFinite(Number(raw))) {
+      return `${question.title}: Geçerli bir sayı giriniz.`;
+    }
+    const number = Number(raw);
+    if (kind === 'age' && (!Number.isInteger(number) || number < 0 || number > 120)) {
+      return `${question.title}: Yaşı 0 ile 120 arasında tam sayı olarak giriniz.`;
+    }
+    if (kind === 'count' && (!Number.isInteger(number) || number < 0)) {
+      return `${question.title}: Sıfır veya daha büyük bir tam sayı giriniz.`;
+    }
+    if (question.minValue != null && number < Number(question.minValue)) {
+      return `${question.title}: Değer en az ${question.minValue} olmalıdır.`;
+    }
+    if (question.maxValue != null && number > Number(question.maxValue)) {
+      return `${question.title}: Değer en fazla ${question.maxValue} olmalıdır.`;
+    }
+  }
+  if (type === 'DATE') {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
+    const date = match ? new Date(`${raw}T00:00:00Z`) : null;
+    if (!match || Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== raw) {
+      return `${question.title}: Geçerli bir tarih seçiniz.`;
+    }
+  }
+
+  const allowedValues = (question.options || [])
+    .flatMap(option => [String(option.value ?? ''), String(option.label ?? '')])
+    .filter(Boolean);
+  if (type === 'YES_NO' && !['Evet', 'Hayır'].includes(raw)) {
+    return `${question.title}: Yalnızca Evet veya Hayır seçilebilir.`;
+  }
+  if (type === 'SINGLE_CHOICE' && (!allowedValues.length || !allowedValues.includes(raw))) {
+    return `${question.title}: Listede bulunan seçeneklerden birini seçiniz.`;
+  }
+  if (type === 'MULTIPLE_CHOICE') {
+    const selected = Array.isArray(raw) ? raw.map(String) : raw.split('|').filter(Boolean);
+    if (!allowedValues.length || new Set(selected).size !== selected.length || selected.some(item => !allowedValues.includes(item))) {
+      return `${question.title}: Yalnızca listede bulunan seçenekleri seçiniz.`;
+    }
+  }
+  if (type === 'LOCATION') {
+    const parts = raw.split(',').map(Number);
+    if (parts.length !== 2 || !parts.every(Number.isFinite) || parts[0] < -90 || parts[0] > 90 || parts[1] < -180 || parts[1] > 180) {
+      return `${question.title}: Geçerli bir konum alınmalıdır.`;
+    }
   }
   return null;
 }
@@ -477,7 +543,13 @@ class Store {
       this.saveState();
       return false;
     }
-    const invalidAnswer = findInvalidSurveyAnswer(questions, session.answers || {});
+    const answersForValidation = { ...(session.answers || {}) };
+    for (const question of questions) {
+      if (String(question.type || '').toUpperCase() === 'LOCATION' && session.location) {
+        answersForValidation[question.id] = `${session.location.latitude},${session.location.longitude}`;
+      }
+    }
+    const invalidAnswer = findInvalidSurveyAnswer(questions, answersForValidation);
     if (invalidAnswer) {
       session.error = invalidAnswer.message;
       this.saveState();
@@ -2179,7 +2251,25 @@ class Store {
     const questions = survey ? [...(survey.questions || []), ...(survey.sections || []).flatMap(s => s.questions || [])]
       .filter((q, i, a) => a.findIndex(x => x.id === q.id) === i)
       .filter(q => isSurveyQuestionVisible(q, this.state.activeFormAnswers || {})) : [];
-    const invalidAnswer = findInvalidSurveyAnswer(questions, this.state.activeFormAnswers || {});
+    const missing = questions.find(question => {
+      if (!question.isRequired) return false;
+      const type = String(question.type || '').toUpperCase();
+      if (type === 'PHOTO') return !this.state.activePhotoData;
+      if (type === 'LOCATION') return !this.state.activeLocationAcquired;
+      const value = this.state.activeFormAnswers?.[question.id];
+      return Array.isArray(value) ? value.length === 0 : String(value ?? '').trim().length === 0;
+    });
+    if (missing) {
+      this.setToast(`Lütfen zorunlu soruyu cevaplayın: ${missing.title}`, 'error');
+      return false;
+    }
+    const answersForValidation = { ...(this.state.activeFormAnswers || {}) };
+    for (const question of questions) {
+      if (String(question.type || '').toUpperCase() === 'LOCATION' && this.state.activeLocationAcquired) {
+        answersForValidation[question.id] = `${this.state.activeLocation.latitude},${this.state.activeLocation.longitude}`;
+      }
+    }
+    const invalidAnswer = findInvalidSurveyAnswer(questions, answersForValidation);
     if (invalidAnswer) {
       this.setToast(invalidAnswer.message, 'error');
       return false;
