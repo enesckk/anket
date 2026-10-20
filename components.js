@@ -40,6 +40,12 @@ function getSurveyRegionLabel(state, survey) {
   return regions.length > 0 ? regions.join(', ') : 'Henüz bölge atanmadı';
 }
 
+function getMessageSenderLabel(message) {
+  const sender = String(message?.sender || message?.senderName || '').trim();
+  if (sender) return sender;
+  return message?.senderRole === 'ADMIN' || message?.direction === 'FROM_ADMIN' ? 'Yönetici' : 'Saha Personeli';
+}
+
 // SVG Icon Helpers (Lucide Icons & Material Symbols Style)
 export function iconSvg(name, extraClass = 'w-5 h-5') {
   const icons = {
@@ -1328,15 +1334,15 @@ export function renderPublicSurvey() {
   const survey = session.survey;
   if (session.stage === 'loading') return `<div class="min-h-screen bg-[#F8FAFC] flex items-center justify-center"><div class="text-center space-y-3"><div class="w-10 h-10 border-4 border-emerald-100 border-t-[#2A9D38] rounded-full animate-spin mx-auto"></div><p class="text-sm font-semibold text-[#01214A]">Anket hazırlanıyor...</p></div></div>`;
   if (session.stage === 'error') return `<div class="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-4"><div class="bg-white max-w-md w-full p-8 rounded-2xl border border-slate-200 text-center space-y-3"><div class="text-3xl">⚠️</div><h1 class="text-lg font-bold text-[#01214A]">Anket Açılamadı</h1><p class="text-sm text-slate-500">${escapeHtml(session.error || 'Bu bağlantı artık kullanılamıyor.')}</p></div></div>`;
-  if (session.stage === 'success') return `<div class="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-4"><div class="bg-white max-w-md w-full p-8 rounded-2xl border border-slate-200 text-center space-y-5"><div class="w-16 h-16 rounded-full bg-emerald-100 text-[#2A9D38] flex items-center justify-center mx-auto">${iconSvg('checkCircle','w-8 h-8')}</div><div><h1 class="text-xl font-bold text-[#01214A]">Cevabınız Alındı</h1><p class="text-sm text-slate-500 mt-2">Teşekkürler ${escapeHtml(session.respondentName)}. Anket cevabınız güvenli şekilde kaydedildi.</p><p class="text-xs text-slate-400 mt-3">Yeni ankete başlamadan önce yeni katılımcının adı ve soyadı tekrar alınacaktır.</p></div><button id="btn-public-new-response" class="w-full h-12 bg-[#2A9D38] hover:bg-[#22822e] text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2">${iconSvg('plus', 'w-4 h-4 text-white')}<span>Hemen Yeni Ankete Başla</span></button></div></div>`;
+  if (session.stage === 'success') return `<div class="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-4"><div class="bg-white max-w-md w-full p-8 rounded-2xl border border-slate-200 text-center space-y-5"><div class="w-16 h-16 rounded-full bg-emerald-100 text-[#2A9D38] flex items-center justify-center mx-auto">${iconSvg('checkCircle','w-8 h-8')}</div><div><h1 class="text-xl font-bold text-[#01214A]">Anket Kaydedildi</h1><p class="text-sm text-slate-500 mt-2">Anketör <strong>${escapeHtml(session.interviewerName)}</strong> tarafından doldurulan anket güvenli şekilde kaydedildi.</p><p class="text-xs text-slate-400 mt-3">Yeni kayıt açıldığında anketör bilgisi korunur, cevaplar temizlenir.</p></div><div class="space-y-2"><button id="btn-public-new-response" class="w-full h-12 bg-[#2A9D38] hover:bg-[#22822e] text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2">${iconSvg('plus', 'w-4 h-4 text-white')}<span>Hemen Yeni Ankete Başla</span></button><button id="btn-public-change-interviewer" class="w-full h-11 border border-slate-200 bg-white text-slate-600 font-semibold text-sm rounded-xl">Anketörü Değiştir</button></div></div></div>`;
   if (!survey) return '';
 
   if (session.stage === 'name') return `
     <div class="min-h-screen bg-gradient-to-b from-[#041F3D] to-[#062C57] flex items-center justify-center p-4">
       <div class="bg-white max-w-md w-full rounded-[24px] p-7 sm:p-9 shadow-2xl space-y-6">
-        <div class="text-center space-y-2"><img src="./logo_saha_anket.png" alt="Saha Anket" class="h-16 max-w-[260px] object-contain mx-auto"/><h1 class="text-xl font-bold text-[#01214A]">${escapeHtml(survey.title)}</h1><p class="text-xs text-slate-500 leading-relaxed">${escapeHtml(survey.description || 'Ankete katılmak için bilgilerinizi girin.')}</p></div>
+        <div class="text-center space-y-2"><img src="./logo_saha_anket.png" alt="Saha Anket" class="h-16 max-w-[260px] object-contain mx-auto"/><h1 class="text-xl font-bold text-[#01214A]">${escapeHtml(survey.title)}</h1><p class="text-xs text-slate-500 leading-relaxed">Bu bağlantı anketör kullanımı içindir. Sorulara başlamadan önce anketör bilgisini girin.</p></div>
         ${session.error ? `<div class="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700">${escapeHtml(session.error)}</div>` : ''}
-        <form id="form-public-respondent" class="space-y-4"><div><label for="public-respondent-name" class="block text-xs font-semibold text-[#01214A] mb-1.5">Adınız Soyadınız *</label><input id="public-respondent-name" required minlength="2" maxlength="120" autocomplete="name" placeholder="Ad Soyad" class="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-[#2A9D38]"/></div><button type="submit" class="w-full h-12 bg-[#2A9D38] hover:bg-[#22822e] text-white font-bold rounded-xl">Ankete Başla</button></form>
+        <form id="form-public-interviewer" class="space-y-4"><div><label for="public-interviewer-name" class="block text-xs font-semibold text-[#01214A] mb-1.5">Anketör Adı Soyadı *</label><input id="public-interviewer-name" required minlength="2" maxlength="120" autocomplete="name" placeholder="Anketörün adı ve soyadı" class="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-[#2A9D38]"/></div><button type="submit" class="w-full h-12 bg-[#2A9D38] hover:bg-[#22822e] text-white font-bold rounded-xl">Sorulara Başla</button></form>
         <p class="text-[10px] text-center text-slate-400">Şehitkamil Strateji Geliştirme Merkezi</p>
       </div>
     </div>`;
@@ -1358,7 +1364,7 @@ export function renderPublicSurvey() {
     const htmlType = type === 'NUMBER' ? 'number' : type === 'DATE' ? 'date' : 'text';
     return `<div class="space-y-2">${label}<input type="${htmlType}" data-q-id="${question.id}" value="${escapeHtml(value)}" class="public-input w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-[#2A9D38]"/></div>`;
   };
-  return `<div class="min-h-screen bg-[#F8FAFC] pb-8"><header class="bg-white border-b border-slate-200 px-4 py-4 sticky top-0 z-20"><div class="max-w-2xl mx-auto"><div class="text-[10px] font-bold text-[#2A9D38] uppercase">Şehitkamil Strateji Geliştirme Merkezi</div><h1 class="text-lg font-bold text-[#01214A] mt-1">${escapeHtml(survey.title)}</h1><p class="text-xs text-slate-500 mt-1">Katılımcı: ${escapeHtml(session.respondentName)}</p></div></header><main class="max-w-2xl mx-auto px-4 py-5 space-y-4">${session.error ? `<div class="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700">${escapeHtml(session.error)}</div>` : ''}<div class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-7 space-y-6">${questions.map(renderQuestion).join('')}</div><button id="btn-public-submit" ${session.stage === 'submitting' ? 'disabled' : ''} class="w-full h-12 bg-[#2A9D38] disabled:opacity-60 text-white font-bold rounded-xl">${session.stage === 'submitting' ? 'Gönderiliyor...' : 'Anketi Gönder'}</button></main></div>`;
+  return `<div class="min-h-screen bg-[#F8FAFC] pb-8"><header class="bg-white border-b border-slate-200 px-4 py-4 sticky top-0 z-20"><div class="max-w-2xl mx-auto"><div class="text-[10px] font-bold text-[#2A9D38] uppercase">Şehitkamil Strateji Geliştirme Merkezi</div><h1 class="text-lg font-bold text-[#01214A] mt-1">${escapeHtml(survey.title)}</h1><p class="text-xs text-slate-500 mt-1">Anketör: ${escapeHtml(session.interviewerName)}</p></div></header><main class="max-w-2xl mx-auto px-4 py-5 space-y-4">${session.error ? `<div class="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700">${escapeHtml(session.error)}</div>` : ''}<div class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-7 space-y-6">${questions.map(renderQuestion).join('')}</div><button id="btn-public-submit" ${session.stage === 'submitting' ? 'disabled' : ''} class="w-full h-12 bg-[#2A9D38] disabled:opacity-60 text-white font-bold rounded-xl">${session.stage === 'submitting' ? 'Gönderiliyor...' : 'Anketi Gönder'}</button></main></div>`;
 }
 
 // 1. STANDALONE EXECUTIVE LOGIN EKRANI (MASTERWORK DESIGN)
@@ -2357,7 +2363,7 @@ export function renderMessages() {
                 <span class="text-[10px] font-semibold px-2 py-0.5 rounded-[4px] ${msg.senderRole === 'FIELD_USER' ? 'bg-slate-100 text-slate-700' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}">
                   ${msg.senderRole === 'FIELD_USER' ? 'YÖNETİCİYE GÖNDERİLDİ' : 'YÖNETİCİ BİLDİRİMİ'}
                 </span>
-                <span class="text-[11px] text-slate-500 font-normal truncate">${msg.sender}</span>
+                <span class="text-[11px] text-slate-500 font-normal truncate">${escapeHtml(getMessageSenderLabel(msg))}</span>
               </div>
               <p class="text-xs text-slate-500 line-clamp-2 mt-1 font-normal">${msg.content}</p>
             </div>
@@ -2391,7 +2397,7 @@ export function renderMessageDetail() {
           <div class="border-b border-[#F1F5F9] pb-3 space-y-1">
             <h1 class="text-base font-bold text-[#01214A]">${msg?.title}</h1>
             <div class="flex justify-between items-center text-xs text-slate-400 font-normal">
-              <span>Gönderen: <strong class="text-slate-700 font-medium">${msg?.sender}</strong></span>
+              <span>Gönderen: <strong class="text-slate-700 font-medium">${escapeHtml(getMessageSenderLabel(msg))}</strong></span>
               <span>${msg?.date}</span>
             </div>
           </div>
@@ -4511,7 +4517,7 @@ function renderAdminTabContent(tab, state) {
                     <p class="text-xs text-slate-600 font-normal leading-relaxed line-clamp-3">${m.content}</p>
                     <div class="pt-1 flex items-center gap-1.5 text-[11px] text-slate-500 font-normal border-t border-[#F1F5F9]">
                       ${iconSvg('user', 'w-3 h-3 text-slate-400')}
-                      <span><strong class="text-slate-700 font-medium">${m.sender || 'Saha Personeli'}</strong> · Saha Personeli</span>
+                      <span><strong class="text-slate-700 font-medium">${escapeHtml(getMessageSenderLabel(m))}</strong> · Saha Personeli</span>
                     </div>
                   </div>
                 `).join('')}

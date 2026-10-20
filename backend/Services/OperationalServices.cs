@@ -134,6 +134,7 @@ public class MessageService : IMessageService
             m.Content,
             m.SenderId,
             m.Sender?.FullName ?? "Admin",
+            m.Sender?.Role.ToString() ?? UserRole.ADMIN.ToString(),
             m.CreatedAt,
             seenAt,
             totalRecipients,

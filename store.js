@@ -45,6 +45,32 @@ export function normalizeSubmission(submission) {
   return { ...submission, answerItems, answers };
 }
 
+export function normalizeMessage(message, currentUser = null) {
+  const currentRole = String(currentUser?.role || '').toUpperCase();
+  const isOwnMessage = Boolean(message?.senderId && message.senderId === currentUser?.id);
+  const counterpartRole = currentRole === 'ADMIN' ? 'FIELD_USER' : currentRole === 'FIELD_USER' ? 'ADMIN' : '';
+  const senderRole = String(message?.senderRole || '').toUpperCase() || (isOwnMessage ? currentRole : counterpartRole);
+  const sender = String(message?.sender || message?.senderName || '').trim()
+    || (senderRole === 'ADMIN' ? 'Yönetici' : 'Saha Personeli');
+  const direction = message?.direction
+    || (senderRole === 'ADMIN' ? 'FROM_ADMIN' : senderRole === 'FIELD_USER' ? 'TO_ADMIN' : '');
+  const createdAt = message?.createdAt || null;
+  let date = message?.date || '';
+  if (!date && createdAt) {
+    const parsed = new Date(createdAt);
+    if (!Number.isNaN(parsed.getTime())) date = parsed.toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' });
+  }
+  return {
+    ...message,
+    sender,
+    senderName: sender,
+    senderRole,
+    direction,
+    date,
+    isUnread: typeof message?.isUnread === 'boolean' ? message.isUnread : (!isOwnMessage && !message?.seenAt)
+  };
+}
+
 export function inferSurveyCategory(survey) {
   const explicit = String(survey?.category || '').trim();
   if (explicit && explicit !== 'Genel') return explicit;
@@ -154,7 +180,7 @@ const defaultState = {
     surveyId: null,
     survey: null,
     stage: 'loading',
-    respondentName: '',
+    interviewerName: '',
     answers: {},
     clientSubmissionId: null,
     startedAt: null,
@@ -282,7 +308,7 @@ class Store {
       return;
     }
     this.state.publicSession = {
-      active: true, surveyId, survey: null, stage: 'loading', respondentName: '', answers: {},
+      active: true, surveyId, survey: null, stage: 'loading', interviewerName: '', answers: {},
       startedAt: null, clientSubmissionId: null, photoData: null, location: null, error: null
     };
     this.apiFetch(`/public-surveys/${encodeURIComponent(surveyId)}`)
@@ -300,14 +326,14 @@ class Store {
       });
   }
 
-  startPublicSurvey(respondentName) {
-    const name = String(respondentName || '').trim();
+  startPublicSurvey(interviewerName) {
+    const name = String(interviewerName || '').trim();
     if (name.length < 2 || name.length > 120 || /[<>]/.test(name)) {
-      this.state.publicSession.error = 'Lütfen geçerli bir ad soyad giriniz.';
+      this.state.publicSession.error = 'Lütfen anketörün geçerli adını ve soyadını giriniz.';
       this.saveState();
       return false;
     }
-    this.state.publicSession.respondentName = name;
+    this.state.publicSession.interviewerName = name;
     this.state.publicSession.answers = {};
     this.state.publicSession.startedAt = new Date().toISOString();
     this.state.publicSession.clientSubmissionId = `public-${typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now()}`;
@@ -384,7 +410,9 @@ class Store {
         method: 'POST',
         body: JSON.stringify({
           clientSubmissionId: session.clientSubmissionId,
-          respondentName: session.respondentName,
+          // Backend alan adı eski bağlantılarla uyumluluk için respondentName
+          // olarak kalır; bu değer paylaşım akışında anketör kimliğidir.
+          respondentName: session.interviewerName,
           startedAt: session.startedAt || new Date().toISOString(),
           completedAt: new Date().toISOString(),
           latitude: locationData.latitude ?? null,
@@ -417,10 +445,15 @@ class Store {
     }
   }
 
-  resetPublicSurvey() {
+  resetPublicSurvey({ changeInterviewer = false } = {}) {
     const session = this.state.publicSession;
     this.state.publicSession = {
-      ...session, stage: 'name', respondentName: '', answers: {}, startedAt: null, clientSubmissionId: null,
+      ...session,
+      stage: changeInterviewer || !session.interviewerName ? 'name' : 'form',
+      interviewerName: changeInterviewer ? '' : session.interviewerName,
+      answers: {},
+      startedAt: changeInterviewer ? null : new Date().toISOString(),
+      clientSubmissionId: changeInterviewer ? null : `public-${typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now()}`,
       photoData: null, location: null, error: null
     };
     this.saveState();
@@ -471,7 +504,9 @@ class Store {
           if (Array.isArray(parsed.allAssignments)) merged.allAssignments = parsed.allAssignments.filter(Boolean);
           if (Array.isArray(parsed.assignedSurveys)) merged.assignedSurveys = uniqueAssignedSurveys(parsed.assignedSurveys);
           if (Array.isArray(parsed.myQuickSurveys)) merged.myQuickSurveys = parsed.myQuickSurveys.filter(Boolean);
-          if (Array.isArray(parsed.messages)) merged.messages = parsed.messages.filter(Boolean);
+          if (Array.isArray(parsed.messages)) {
+            merged.messages = parsed.messages.filter(Boolean).map(message => normalizeMessage(message, merged.auth?.user));
+          }
           if (Array.isArray(parsed.submissions)) merged.submissions = parsed.submissions.filter(Boolean);
           if (Array.isArray(parsed.reports)) merged.reports = parsed.reports.filter(Boolean);
           if (Array.isArray(parsed.notifications)) merged.notifications = parsed.notifications.filter(Boolean);
@@ -762,7 +797,7 @@ class Store {
       // Fetch Messages
       const messages = await this.apiFetch(isFieldUser ? '/messages/my-messages' : '/messages').catch(() => null);
       if (Array.isArray(messages)) {
-        this.state.messages = messages;
+        this.state.messages = messages.map(message => normalizeMessage(message, this.state.auth?.user));
       }
 
       this.saveState();

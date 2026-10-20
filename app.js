@@ -175,9 +175,9 @@ function renderApp() {
 
 function attachPublicSurveyListeners() {
   const session = store.getState().publicSession || {};
-  document.getElementById('form-public-respondent')?.addEventListener('submit', event => {
+  document.getElementById('form-public-interviewer')?.addEventListener('submit', event => {
     event.preventDefault();
-    store.startPublicSurvey(document.getElementById('public-respondent-name')?.value);
+    store.startPublicSurvey(document.getElementById('public-interviewer-name')?.value);
   });
   document.querySelectorAll('.public-input').forEach(input => {
     input.addEventListener('input', event => store.setPublicAnswer(event.target.getAttribute('data-q-id'), event.target.value, true));
@@ -204,6 +204,7 @@ function attachPublicSurveyListeners() {
   document.getElementById('btn-public-location')?.addEventListener('click', () => store.acquirePublicLocation());
   document.getElementById('btn-public-submit')?.addEventListener('click', () => store.submitPublicSurvey());
   document.getElementById('btn-public-new-response')?.addEventListener('click', () => store.resetPublicSurvey());
+  document.getElementById('btn-public-change-interviewer')?.addEventListener('click', () => store.resetPublicSurvey({ changeInterviewer: true }));
 }
 
 function attachGlobalSystemListeners() {
@@ -2247,11 +2248,30 @@ function showPwaInstallBanner() {
         transition: color 0.2s;
       }
       #pwa-install-dismiss:hover { color: rgba(255,255,255,0.9); }
+      @media (max-width: 767px) {
+        #pwa-install-banner {
+          bottom: calc(82px + env(safe-area-inset-bottom)) !important;
+          left: 12px !important;
+          right: 12px !important;
+          width: auto !important;
+          max-width: none !important;
+          transform: none !important;
+          padding: 12px !important;
+          gap: 9px !important;
+        }
+        #pwa-install-banner .pwa-install-copy { flex: 1; min-width: 0; }
+        #pwa-install-banner .pwa-install-subtitle { white-space: normal; }
+        @keyframes pwa-banner-in-mobile {
+          from { opacity: 0; transform: translateY(20px) scale(0.97); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        #pwa-install-banner { animation-name: pwa-banner-in-mobile !important; }
+      }
     </style>
     <img src="/icons/icon-72.png" width="36" height="36" style="border-radius:8px; flex-shrink:0;" onerror="this.style.display='none'"/>
-    <div>
+    <div class="pwa-install-copy">
       <div style="font-weight:600; color:white;">Saha Anket'i Yükle</div>
-      <div style="color:rgba(255,255,255,0.65); font-size:12px; margin-top:2px;">Masaüstüne ekle, çevrimdışı çalış</div>
+      <div class="pwa-install-subtitle" style="color:rgba(255,255,255,0.65); font-size:12px; margin-top:2px;">Cihaza yükle, çevrimdışı çalış</div>
     </div>
     <button id="pwa-install-btn">Yükle</button>
     <button id="pwa-install-dismiss" title="Kapat">Kapat</button>

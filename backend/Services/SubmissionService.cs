@@ -139,16 +139,16 @@ public class SubmissionService : ISubmissionService
 
     public async Task<SubmissionDto> CreatePublicSubmissionAsync(Guid surveyId, CreatePublicSubmissionRequest request)
     {
-        var respondentName = (request.RespondentName ?? string.Empty).Trim();
-        if (!Regex.IsMatch(respondentName, @"^[\p{L}\p{M}][\p{L}\p{M}\s'.-]{1,119}$"))
-            throw new ArgumentException("Lütfen geçerli bir ad soyad giriniz.");
+        var interviewerName = (request.RespondentName ?? string.Empty).Trim();
+        if (!Regex.IsMatch(interviewerName, @"^[\p{L}\p{M}][\p{L}\p{M}\s'.-]{1,119}$"))
+            throw new ArgumentException("Lütfen anketörün geçerli adını ve soyadını giriniz.");
         if (string.IsNullOrWhiteSpace(request.ClientSubmissionId) || request.ClientSubmissionId.Length > 80 ||
             !Regex.IsMatch(request.ClientSubmissionId, @"^[A-Za-z0-9-]+$"))
             throw new ArgumentException("Geçersiz istemci kayıt kimliği.");
         if (request.Answers == null || request.Answers.Count > 250)
             throw new ArgumentException("Anket cevapları geçersiz.");
 
-        var encodedName = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(respondentName));
+        var encodedName = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(interviewerName));
         var storedClientId = $"{PublicSubmissionPrefix}{encodedName}:{request.ClientSubmissionId}";
         var existing = await _db.SurveySubmissions
             .Include(s => s.Survey).Include(s => s.FieldUser).Include(s => s.Village)
@@ -299,8 +299,8 @@ public class SubmissionService : ISubmissionService
             a.FilePath
         )).ToList();
 
-        var publicRespondentName = GetPublicRespondentName(s.ClientSubmissionId);
-        var fieldUserName = publicRespondentName ?? s.FieldUser?.FullName ?? "Saha Personeli";
+        var publicInterviewerName = GetPublicInterviewerName(s.ClientSubmissionId);
+        var fieldUserName = publicInterviewerName ?? s.FieldUser?.FullName ?? "Saha Personeli";
         return new SubmissionDto(
             s.Id,
             s.ClientSubmissionId,
@@ -310,7 +310,7 @@ public class SubmissionService : ISubmissionService
             s.FieldUserId,
             fieldUserName,
             s.VillageId,
-            publicRespondentName != null ? "Link Katılımı" : s.Village?.Name ?? "Köy",
+            publicInterviewerName != null ? "Anketör Linki" : s.Village?.Name ?? "Köy",
             s.StartedAt,
             s.CompletedAt,
             s.SubmittedAt,
@@ -323,7 +323,7 @@ public class SubmissionService : ISubmissionService
         );
     }
 
-    private static string? GetPublicRespondentName(string clientSubmissionId)
+    private static string? GetPublicInterviewerName(string clientSubmissionId)
     {
         if (!clientSubmissionId.StartsWith(PublicSubmissionPrefix, StringComparison.Ordinal)) return null;
         var parts = clientSubmissionId.Split(':', 3);

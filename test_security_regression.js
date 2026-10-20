@@ -9,7 +9,7 @@ globalThis.localStorage = {
   clear: () => storage.clear()
 };
 
-const { store, isSurveyQuestionVisible, normalizeSubmission, inferSurveyCategory } = await import('./store.js');
+const { store, isSurveyQuestionVisible, normalizeSubmission, normalizeMessage, inferSurveyCategory } = await import('./store.js');
 const { renderLoginScreen, renderPwaHome, renderSurveyRunner, renderProfile, renderAdminView, renderCustomModals, renderPublicSurvey } = await import('./components.js');
 
 // Giriş ekranı gerçek yönetici hesabını veya adresini örnek olarak ifşa etmemeli.
@@ -19,6 +19,10 @@ assert(!html.includes('placeholder="admin veya'));
 assert.equal(inferSurveyCategory({ title: 'Sağlık Taraması Mahalle/Aile Anketi' }), 'Sağlık');
 assert.equal(inferSurveyCategory({ title: 'Çocuk Dostu Alanlar Hane Anketi' }), 'Sosyal Destek');
 assert.equal(inferSurveyCategory({ title: 'Tarımsal Üretici İhtiyaç Anketi' }), 'Tarım');
+const normalizedMessage = normalizeMessage({ senderName: 'Aykut Bilici', senderRole: 'FIELD_USER', createdAt: '2026-10-20T10:00:00Z', seenAt: null }, { id: 'admin-1', role: 'ADMIN' });
+assert.equal(normalizedMessage.sender, 'Aykut Bilici');
+assert.equal(normalizedMessage.direction, 'TO_ADMIN');
+assert.equal(normalizedMessage.isUnread, true);
 
 // Soru ekleme metodu, hızlı tür kartlarından ve alt panelden gelen zorunluluk
 // seçimini ReferenceError üretmeden builder durumuna yansıtmalı.
@@ -317,7 +321,7 @@ assert.equal(store.state.offlineQueueCount, 0);
 assert.equal(store.state.submissions.length, 0);
 
 // Aktif anket yönetici tarafından bağlantı olarak paylaşılabilmeli; bağlantı
-// ekranı önce katılımcı adını almalı ve cevabı anonim public API'ye göndermeli.
+// ekranı ilk girişte anketör adını almalı ve sonraki kayıtta aynı anketörü korumalı.
 const publicSurvey = {
   id: 'public-survey-1', title: 'Paylaşımlı Anket', description: 'Bağlantı testi', status: 'ACTIVE',
   sections: [], questions: [
@@ -328,16 +332,16 @@ store.state.activeModal = { type: 'share_survey_link', survey: publicSurvey };
 html = renderCustomModals(store.state);
 assert(html.includes('Link Olarak Paylaş'));
 assert(html.includes('?survey=public-survey-1'));
-store.state.publicSession = { active: true, surveyId: publicSurvey.id, survey: publicSurvey, stage: 'name', respondentName: '', answers: {}, error: null };
+store.state.publicSession = { active: true, surveyId: publicSurvey.id, survey: publicSurvey, stage: 'name', interviewerName: '', answers: {}, error: null };
 html = renderPublicSurvey();
-assert(html.includes('Adınız Soyadınız'));
-assert(store.startPublicSurvey('Test Katılımcısı'));
+assert(html.includes('Anketör Adı Soyadı'));
+assert(store.startPublicSurvey('Test Anketörü'));
 store.setPublicAnswer('public-q1', 'Memnun', true);
 let publicRequest = null;
 store.apiFetch = async (endpoint, options) => { publicRequest = { endpoint, payload: JSON.parse(options.body) }; return { id: 'public-submission-1' }; };
 assert.equal(await store.submitPublicSurvey(), true);
 assert.equal(publicRequest.endpoint, '/public-surveys/public-survey-1/submissions');
-assert.equal(publicRequest.payload.respondentName, 'Test Katılımcısı');
+assert.equal(publicRequest.payload.respondentName, 'Test Anketörü');
 assert.equal(publicRequest.payload.answers[0].answerValue, 'Memnun');
 assert.equal(store.state.publicSession.stage, 'success');
 html = renderPublicSurvey();
@@ -345,11 +349,14 @@ assert(html.includes('Hemen Yeni Ankete Başla'));
 store.state.publicSession.photoData = 'data:image/jpeg;base64,test';
 store.state.publicSession.location = { latitude: 1, longitude: 2 };
 store.resetPublicSurvey();
-assert.equal(store.state.publicSession.stage, 'name');
-assert.equal(store.state.publicSession.respondentName, '');
+assert.equal(store.state.publicSession.stage, 'form');
+assert.equal(store.state.publicSession.interviewerName, 'Test Anketörü');
 assert.deepEqual(store.state.publicSession.answers, {});
-assert.equal(store.state.publicSession.clientSubmissionId, null);
+assert.match(store.state.publicSession.clientSubmissionId, /^public-/);
 assert.equal(store.state.publicSession.photoData, null);
 assert.equal(store.state.publicSession.location, null);
+store.resetPublicSurvey({ changeInterviewer: true });
+assert.equal(store.state.publicSession.stage, 'name');
+assert.equal(store.state.publicSession.interviewerName, '');
 
 console.log('Security/regression tests passed: assignment isolation, dynamic questions, answer IDs, no ghost personnel, queue cleanup.');

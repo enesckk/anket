@@ -185,6 +185,7 @@ public record MessageDto(
     string Content,
     Guid SenderId,
     string SenderName,
+    string SenderRole,
     DateTime CreatedAt,
     DateTime? SeenAt,
     int TotalRecipients,
