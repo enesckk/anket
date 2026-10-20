@@ -9,7 +9,7 @@ globalThis.localStorage = {
   clear: () => storage.clear()
 };
 
-const { store, isSurveyQuestionVisible } = await import('./store.js');
+const { store, isSurveyQuestionVisible, normalizeSubmission } = await import('./store.js');
 const { renderLoginScreen, renderPwaHome, renderSurveyRunner, renderProfile, renderAdminView, renderCustomModals } = await import('./components.js');
 
 // Giriş ekranı gerçek yönetici hesabını veya adresini örnek olarak ifşa etmemeli.
@@ -149,6 +149,51 @@ assert.equal(isSurveyQuestionVisible({ ...conditionalQuestion, conditionOperator
 store.state.activeModal = { type: 'logout_confirm' };
 store.logout();
 assert.equal(store.state.activeModal, null);
+
+// Backend cevapları AnswerDto dizisi olarak döndürür. Yönetici raporları için
+// soru kimliğine göre düz bir cevap haritasına dönüştürülmelidir.
+const normalizedSubmission = normalizeSubmission({
+  id: 'submission-1',
+  answers: [
+    { id: 'answer-1', questionId: 'question-1', answerValue: 'TEST-KATILIMCI-001' },
+    { id: 'answer-2', questionId: 'question-2', answerValue: 'Memnun' }
+  ]
+});
+assert.equal(normalizedSubmission.answers['question-1'], 'TEST-KATILIMCI-001');
+assert.equal(normalizedSubmission.answers['question-2'], 'Memnun');
+assert.equal(normalizedSubmission.answerItems.length, 2);
+
+store.state.allAssignments = [{
+  id: 'assignment-report-1',
+  surveyId: 'survey-report-1',
+  villageId: 'village-1',
+  targetCount: 1,
+  assignedUsers: [{ id: 'field-1' }]
+}];
+store.state.submissions = [{
+  ...normalizedSubmission,
+  surveyId: 'survey-report-1',
+  fieldUserName: 'Test Personeli',
+  submittedAt: new Date().toISOString(),
+  isInvalid: false
+}];
+store.state.activeModal = {
+  type: 'view_live_survey_results',
+  survey: {
+    id: 'survey-report-1',
+    title: 'Raporlama Testi',
+    status: 'ACTIVE',
+    questions: [
+      { id: 'question-1', title: 'Katılımcı kodu', type: 'TEXT', isRequired: true, options: [] },
+      { id: 'question-2', title: 'Memnuniyet', type: 'SINGLE_CHOICE', isRequired: true, options: [{ label: 'Memnun', value: 'Memnun' }] }
+    ]
+  }
+};
+html = renderCustomModals(store.state);
+assert(html.includes('1 / 1'));
+assert(html.includes('TEST-KATILIMCI-001'));
+assert.match(html, /Memnun[\s\S]*1 Kişi[\s\S]*%100/);
+assert(!html.includes('[object Object]'));
 
 // Saha kullanıcısı yönetici geçişini görmemeli ve state manipülasyonu ile
 // yönetici paneline geçememeli.

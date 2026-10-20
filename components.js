@@ -2,6 +2,23 @@
 
 import { store, isSurveyQuestionVisible } from './store.js';
 
+function getSurveyTargetCount(state, survey, fallback = 100) {
+  if (Number(survey?.targetCount) > 0) return Number(survey.targetCount);
+
+  const uniqueAssignments = new Map();
+  (state?.allAssignments || [])
+    .filter(assignment => assignment?.surveyId === survey?.id)
+    .forEach(assignment => {
+      const userIds = (assignment.assignedUsers || []).map(user => user.id).filter(Boolean).sort().join(',');
+      const key = `${assignment.villageId || assignment.villageName || ''}|${userIds}`;
+      if (!uniqueAssignments.has(key)) uniqueAssignments.set(key, assignment);
+    });
+
+  const assignedTarget = [...uniqueAssignments.values()]
+    .reduce((sum, assignment) => sum + (Number(assignment.targetCount) || 0), 0);
+  return assignedTarget > 0 ? assignedTarget : fallback;
+}
+
 // SVG Icon Helpers (Lucide Icons & Material Symbols Style)
 export function iconSvg(name, extraClass = 'w-5 h-5') {
   const icons = {
@@ -72,7 +89,7 @@ export function renderSurveyDetailedCharts(surveyOrReport, state) {
 
   const surveyTitle = survey?.title || report?.surveyTitle || 'Saha Anketi';
   const villageName = survey?.villageName || survey?.village || report?.villageName || 'Sinan Köyü';
-  const targetCount = survey?.targetCount || report?.targetCount || 100;
+  const targetCount = getSurveyTargetCount(state, survey, report?.targetCount || 100);
 
   // Real matching submissions from state
   const allSubmissions = (state?.submissions || []).filter(sub => 
@@ -845,7 +862,7 @@ export function renderCustomModals(state) {
 
     const allSubmissions = (state.submissions || []).filter(sub => (sub.surveyId === survey.id || sub.surveyTitle === survey.title));
     const validSubmissions = allSubmissions.filter(sub => !sub.isInvalid);
-    const target = survey.targetCount || 100;
+    const target = getSurveyTargetCount(state, survey);
     const completed = validSubmissions.length > 0
       ? validSubmissions.length
       : (typeof survey.completedCount === 'number' ? survey.completedCount : (survey.status === 'COMPLETED' ? target : 0));
@@ -1038,7 +1055,7 @@ export function renderCustomModals(state) {
     const report = state.activeModal.report || (state.reports || [])[0];
     const survey = state.activeModal.survey || (state.allSurveys || []).find(s => s.id === report?.surveyId) || (state.allSurveys || [])[0];
     const allSubs = (state.submissions || []).filter(sub => (survey && (sub.surveyId === survey.id || sub.surveyTitle === survey.title)) || (report && (sub.surveyId === report.surveyId || sub.surveyTitle === report.surveyTitle))).filter(s => !s.isInvalid);
-    const target = survey?.targetCount || report?.targetCount || 100;
+    const target = getSurveyTargetCount(state, survey, report?.targetCount || 100);
     const completed = allSubs.length;
     const percent = target > 0 ? Math.min(100, Math.round((completed / target) * 100)) : 0;
     const isCompleted = survey?.status === 'COMPLETED' || percent >= 100;
@@ -3338,7 +3355,7 @@ function renderAdminTabContent(tab, state) {
                         <td class="py-4 px-5">
                           <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${statusBg}">${statusLabel}</span>
                         </td>
-                        <td class="py-4 px-5 text-right text-slate-700 font-bold">${s.completedCount || 0} / ${s.targetCount || 100}</td>
+                        <td class="py-4 px-5 text-right text-slate-700 font-bold">${s.completedCount || 0} / ${getSurveyTargetCount(state, s)}</td>
                       </tr>
                     `;
                   }).join('')}
@@ -3470,7 +3487,7 @@ function renderAdminTabContent(tab, state) {
                     </tr>
                   ` : filteredSurveys.map(s => {
                     const surveySubmissions = (state.submissions || []).filter(sub => (sub.surveyId === s.id || sub.surveyTitle === s.title) && !sub.isInvalid);
-                    const target = s.targetCount || 100;
+                    const target = getSurveyTargetCount(state, s);
                     const completed = surveySubmissions.length > 0
                       ? surveySubmissions.length
                       : (typeof s.completedCount === 'number' ? s.completedCount : (s.status === 'COMPLETED' ? target : 0));
@@ -3554,7 +3571,7 @@ function renderAdminTabContent(tab, state) {
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             ${filteredSurveys.map(s => {
               const surveySubmissions = (state.submissions || []).filter(sub => (sub.surveyId === s.id || sub.surveyTitle === s.title) && !sub.isInvalid);
-              const target = s.targetCount || 100;
+              const target = getSurveyTargetCount(state, s);
               const completed = surveySubmissions.length > 0
                 ? surveySubmissions.length
                 : (typeof s.completedCount === 'number' ? s.completedCount : (s.status === 'COMPLETED' ? target : 0));
@@ -4132,7 +4149,7 @@ function renderAdminTabContent(tab, state) {
               </div>
             ` : filteredReportSurveys.map(s => {
               const sSubs = (state.submissions || []).filter(sub => (sub.surveyId === s.id || sub.surveyTitle === s.title) && !sub.isInvalid);
-              const target = s.targetCount || 100;
+              const target = getSurveyTargetCount(state, s);
               const completed = sSubs.length > 0 ? sSubs.length : (typeof s.completedCount === 'number' ? s.completedCount : (s.status === 'COMPLETED' ? target : 0));
               const percent = target > 0 ? Math.min(100, Math.round((completed / target) * 100)) : 0;
               const qCount = s.questions?.length || 0;

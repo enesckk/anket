@@ -33,6 +33,18 @@ export function isSurveyQuestionVisible(question, answers = {}) {
     : matches;
 }
 
+export function normalizeSubmission(submission) {
+  if (!submission || !Array.isArray(submission.answers)) return submission;
+
+  const answerItems = submission.answers;
+  const answers = answerItems.reduce((result, answer) => {
+    if (answer?.questionId) result[answer.questionId] = answer.answerValue ?? '';
+    return result;
+  }, {});
+
+  return { ...submission, answerItems, answers };
+}
+
 // Smart High-Speed Client-Side Image Compression Engine (HTML5 Canvas)
 export async function compressImageFile(file, maxWidth = 1280, maxHeight = 1280, quality = 0.75) {
   return new Promise((resolve, reject) => {
@@ -528,7 +540,7 @@ class Store {
       // Fetch All Submissions
       const submissions = isFieldUser ? null : await this.apiFetch('/submissions').catch(() => null);
       if (Array.isArray(submissions)) {
-        this.state.submissions = submissions;
+        this.state.submissions = submissions.map(normalizeSubmission);
       }
 
       // Fetch All Assignments
