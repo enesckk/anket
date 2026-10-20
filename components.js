@@ -2804,42 +2804,42 @@ function render4StepSurveyBuilder(state) {
             </div>
             
             <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2.5">
-              <button data-type="text" class="btn-add-question-type p-3 bg-slate-50 hover:bg-[#2A9D38]/10 hover:border-[#2A9D38] border border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all active:scale-95">
+              <button type="button" data-type="text" class="btn-add-question-type p-3 bg-slate-50 hover:bg-[#2A9D38]/10 hover:border-[#2A9D38] border border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all active:scale-95">
                 <span class="font-bold text-sm text-[#01214A]">Aa</span>
                 <span class="text-[11px] font-bold text-slate-700">Metin</span>
               </button>
 
-              <button data-type="number" class="btn-add-question-type p-3 bg-slate-50 hover:bg-[#2A9D38]/10 hover:border-[#2A9D38] border border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all active:scale-95">
+              <button type="button" data-type="number" class="btn-add-question-type p-3 bg-slate-50 hover:bg-[#2A9D38]/10 hover:border-[#2A9D38] border border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all active:scale-95">
                 <span class="font-bold text-sm text-[#01214A]">123</span>
                 <span class="text-[11px] font-bold text-slate-700">Sayı</span>
               </button>
 
-              <button data-type="yesno" class="btn-add-question-type p-3 bg-slate-50 hover:bg-[#2A9D38]/10 hover:border-[#2A9D38] border border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all active:scale-95">
+              <button type="button" data-type="yesno" class="btn-add-question-type p-3 bg-slate-50 hover:bg-[#2A9D38]/10 hover:border-[#2A9D38] border border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all active:scale-95">
                 <span class="font-bold text-xs text-[#01214A] flex items-center gap-0.5">${iconSvg('check', 'w-3.5 h-3.5 text-emerald-600')}/${iconSvg('block', 'w-3.5 h-3.5 text-red-600')}</span>
                 <span class="text-[11px] font-bold text-slate-700">Evet/Hayır</span>
               </button>
 
-              <button data-type="single" class="btn-add-question-type p-3 bg-slate-50 hover:bg-[#2A9D38]/10 hover:border-[#2A9D38] border border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all active:scale-95">
+              <button type="button" data-type="single" class="btn-add-question-type p-3 bg-slate-50 hover:bg-[#2A9D38]/10 hover:border-[#2A9D38] border border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all active:scale-95">
                 <span class="font-bold text-sm text-[#00A0DF]">○</span>
                 <span class="text-[11px] font-bold text-slate-700">Tek Seçim</span>
               </button>
 
-              <button data-type="multi" class="btn-add-question-type p-3 bg-slate-50 hover:bg-[#2A9D38]/10 hover:border-[#2A9D38] border border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all active:scale-95">
+              <button type="button" data-type="multi" class="btn-add-question-type p-3 bg-slate-50 hover:bg-[#2A9D38]/10 hover:border-[#2A9D38] border border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all active:scale-95">
                 <span class="font-bold text-sm text-[#2A9D38]">${iconSvg('checkCircle', 'w-4 h-4')}</span>
                 <span class="text-[11px] font-bold text-slate-700">Çoklu Seçim</span>
               </button>
 
-              <button data-type="date" class="btn-add-question-type p-3 bg-slate-50 hover:bg-[#2A9D38]/10 hover:border-[#2A9D38] border border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all active:scale-95">
+              <button type="button" data-type="date" class="btn-add-question-type p-3 bg-slate-50 hover:bg-[#2A9D38]/10 hover:border-[#2A9D38] border border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all active:scale-95">
                 ${iconSvg('calendar', 'w-5 h-5 text-[#00A0DF]')}
                 <span class="text-[11px] font-bold text-slate-700">Tarih</span>
               </button>
 
-              <button data-type="photo" class="btn-add-question-type p-3 bg-slate-50 hover:bg-[#2A9D38]/10 hover:border-[#2A9D38] border border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all active:scale-95">
+              <button type="button" data-type="photo" class="btn-add-question-type p-3 bg-slate-50 hover:bg-[#2A9D38]/10 hover:border-[#2A9D38] border border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all active:scale-95">
                 ${iconSvg('camera', 'w-5 h-5 text-indigo-600')}
                 <span class="text-[11px] font-bold text-slate-700">Fotoğraf</span>
               </button>
 
-              <button data-type="gps" class="btn-add-question-type p-3 bg-slate-50 hover:bg-[#2A9D38]/10 hover:border-[#2A9D38] border border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all active:scale-95">
+              <button type="button" data-type="gps" class="btn-add-question-type p-3 bg-slate-50 hover:bg-[#2A9D38]/10 hover:border-[#2A9D38] border border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all active:scale-95">
                 ${iconSvg('mapPin', 'w-5 h-5 text-[#2A9D38]')}
                 <span class="text-[11px] font-bold text-slate-700">GPS Konum</span>
               </button>

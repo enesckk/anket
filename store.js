@@ -908,7 +908,7 @@ class Store {
     this.saveState(silent);
   }
 
-  addQuestionToBuilder(type) {
+  addQuestionToBuilder(type, isRequired = true) {
     const newId = 'q-' + Date.now();
     const secId = this.state.builderSurvey.sections[0]?.id || 'sec-1';
 

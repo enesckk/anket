@@ -11,6 +11,26 @@ globalThis.localStorage = {
 const { store } = await import('./store.js');
 const { renderPwaHome, renderSurveyRunner, renderProfile, renderAdminView } = await import('./components.js');
 
+// Soru ekleme metodu, hızlı tür kartlarından ve alt panelden gelen zorunluluk
+// seçimini ReferenceError üretmeden builder durumuna yansıtmalı.
+store.state.builderSurvey = {
+  id: null,
+  title: 'Soru Ekleme Testi',
+  description: '',
+  status: 'DRAFT',
+  sections: [{ id: 'sec-1', title: 'Genel Bilgiler', order: 1 }],
+  questions: [],
+  activeQuestionId: null
+};
+store.addQuestionToBuilder('multi', false);
+assert.equal(store.state.builderSurvey.questions.length, 1);
+assert.equal(store.state.builderSurvey.questions[0].type, 'multi');
+assert.equal(store.state.builderSurvey.questions[0].isRequired, false);
+assert.equal(store.state.builderSurvey.questions[0].options.length, 2);
+store.addQuestionToBuilder('text');
+assert.equal(store.state.builderSurvey.questions.length, 2);
+assert.equal(store.state.builderSurvey.questions[1].isRequired, true);
+
 // Atama yoksa aktif anket hiçbir şekilde saha ekranına sızmamalı.
 store.state.auth = { isLoggedIn: true, token: 'real-token', user: { id: 'u1', fullName: 'Test', role: 'FIELD_USER' } };
 store.state.currentRole = 'pwa';
