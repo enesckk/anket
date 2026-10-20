@@ -9,13 +9,16 @@ globalThis.localStorage = {
   clear: () => storage.clear()
 };
 
-const { store, isSurveyQuestionVisible, normalizeSubmission } = await import('./store.js');
+const { store, isSurveyQuestionVisible, normalizeSubmission, inferSurveyCategory } = await import('./store.js');
 const { renderLoginScreen, renderPwaHome, renderSurveyRunner, renderProfile, renderAdminView, renderCustomModals, renderPublicSurvey } = await import('./components.js');
 
 // Giriş ekranı gerçek yönetici hesabını veya adresini örnek olarak ifşa etmemeli.
 let html = renderLoginScreen();
 assert(html.includes('placeholder="Kullanıcı adı, e-posta veya telefon"'));
 assert(!html.includes('placeholder="admin veya'));
+assert.equal(inferSurveyCategory({ title: 'Sağlık Taraması Mahalle/Aile Anketi' }), 'Sağlık');
+assert.equal(inferSurveyCategory({ title: 'Çocuk Dostu Alanlar Hane Anketi' }), 'Sosyal Destek');
+assert.equal(inferSurveyCategory({ title: 'Tarımsal Üretici İhtiyaç Anketi' }), 'Tarım');
 
 // Soru ekleme metodu, hızlı tür kartlarından ve alt panelden gelen zorunluluk
 // seçimini ReferenceError üretmeden builder durumuna yansıtmalı.
@@ -232,6 +235,23 @@ assert(!html.includes('btn-admin-create-survey-dashboard'));
 assert(html.includes('btn-admin-create-survey-modal'));
 assert(html.includes('Linki Paylaş'));
 assert(html.includes('whitespace-nowrap'));
+
+// API kategori/bölge alanlarını göndermediğinde ekranda aynı sahte değerler
+// tekrarlanmamalı; kategori içerikten, bölge ise gerçek atamalardan gelmeli.
+store.state.allSurveys = [
+  { id: 'survey-health', title: 'Sağlık Taraması Mahalle/Aile Veri Anketi', status: 'ACTIVE' },
+  { id: 'survey-child', title: 'Çocuk Dostu Alanlar Hane Anketi', status: 'ACTIVE' }
+];
+store.state.allAssignments = [
+  { id: 'assignment-child', surveyId: 'survey-child', villageName: 'Gazikent Mahallesi' }
+];
+store.state.surveyStatusFilter = 'ACTIVE_ONLY';
+html = renderAdminView();
+assert(html.includes('Sağlık'));
+assert(html.includes('Sosyal Destek'));
+assert(html.includes('Gazikent Mahallesi'));
+assert(html.includes('Henüz bölge atanmadı'));
+assert(!html.includes('Sinan Köyü'));
 
 // Cevap içerdiği için backend tarafından CLOSED yapılan anketler aktif listede
 // görünmemeli; denetim kaydı olarak yalnızca arşiv görünümünde kalmalıdır.

@@ -45,6 +45,20 @@ export function normalizeSubmission(submission) {
   return { ...submission, answerItems, answers };
 }
 
+export function inferSurveyCategory(survey) {
+  const explicit = String(survey?.category || '').trim();
+  if (explicit && explicit !== 'Genel') return explicit;
+  const text = `${survey?.title || ''} ${survey?.description || ''}`.toLocaleLowerCase('tr-TR');
+  if (/sağlık|hasta|tedavi|ilaç|engelli/.test(text)) return 'Sağlık';
+  if (/tarım|tarımsal|üretici|arazi|hayvan|çiftçi/.test(text)) return 'Tarım';
+  if (/çocuk|sosyal|yardım|hane|aile/.test(text)) return 'Sosyal Destek';
+  if (/eğitim|öğrenci|okul/.test(text)) return 'Eğitim';
+  if (/altyapı|yol|su|kanalizasyon/.test(text)) return 'Altyapı';
+  if (/memnuniyet|vatandaş/.test(text)) return 'Vatandaş Memnuniyeti';
+  if (/tespit|saha/.test(text)) return 'Saha Tespiti';
+  return 'Belirtilmedi';
+}
+
 // Smart High-Speed Client-Side Image Compression Engine (HTML5 Canvas)
 export async function compressImageFile(file, maxWidth = 1280, maxHeight = 1280, quality = 0.75) {
   return new Promise((resolve, reject) => {
@@ -704,7 +718,7 @@ class Store {
       });
 
       if (Array.isArray(surveys)) {
-        this.state.allSurveys = surveys;
+        this.state.allSurveys = surveys.map(survey => ({ ...survey, category: inferSurveyCategory(survey) }));
       }
 
       // Fetch All Submissions
@@ -895,19 +909,20 @@ class Store {
 
     return (this.state.allSurveys || []).filter(s => {
       const isArchived = Boolean(s.isArchived) || s.status === 'CLOSED';
+      const surveyCategory = inferSurveyCategory(s);
 
       // Archive Filter
       if (statusFilter === 'ACTIVE_ONLY' && isArchived) return false;
       if (statusFilter === 'ARCHIVED_ONLY' && !isArchived) return false;
 
       // Category Filter
-      if (category !== 'ALL' && s.category !== category) return false;
+      if (category !== 'ALL' && surveyCategory !== category) return false;
 
       // Search Query
       if (q) {
         const matchTitle = (s.title || '').toLowerCase().includes(q);
         const matchDesc = (s.description || '').toLowerCase().includes(q);
-        const matchCategory = (s.category || '').toLowerCase().includes(q);
+        const matchCategory = surveyCategory.toLowerCase().includes(q);
         const matchVillage = (s.villageName || '').toLowerCase().includes(q);
         if (!matchTitle && !matchDesc && !matchCategory && !matchVillage) return false;
       }
@@ -2095,7 +2110,7 @@ class Store {
     // Client-side instant fallback generator for Excel (.csv / .xlsx)
     const report = (this.state.reports || []).find(r => r.surveyId === surveyId || r.id === surveyId) || (this.state.reports || [])[0];
     const surveyTitle = report ? report.surveyTitle : 'Şehitkamil Tarımsal İhtiyaç ve Arazi Değerlendirme Anketi';
-    const village = report ? (report.villageName || 'Sinan Köyü') : 'Sinan Köyü';
+    const village = report ? (report.villageName || 'Bölge belirtilmedi') : 'Bölge belirtilmedi';
 
     const csvLines = [
       "KURUM,ANKET ADI,BÖLGE,TOPLAM YANIT,TAMAMLAMA ORANI,DURUM",
@@ -2151,7 +2166,7 @@ class Store {
     // Client-side valid %PDF-1.4 binary stream generator
     const report = (this.state.reports || []).find(r => r.surveyId === surveyId || r.id === surveyId) || (this.state.reports || [])[0];
     const surveyTitle = report ? report.surveyTitle : 'Şehitkamil Tarımsal İhtiyaç ve Arazi Değerlendirme Anketi';
-    const village = report ? (report.villageName || 'Sinan Köyü') : 'Sinan Köyü';
+    const village = report ? (report.villageName || 'Bölge belirtilmedi') : 'Bölge belirtilmedi';
 
     const textLines = [
       'BT',
@@ -2366,7 +2381,7 @@ class Store {
       id: 'rpt-' + (surveyId || Date.now()),
       surveyId: survey.id,
       surveyTitle: survey.title,
-      villageName: survey.villageName || 'Sinan Köyü',
+      villageName: survey.villageName || '',
       targetCount: survey.targetCount || 100,
       completedCount: survey.targetCount || 100,
       completionRate: 100,

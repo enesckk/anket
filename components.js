@@ -1,6 +1,6 @@
 // SurveyAdmin Intelligence - Production Quality Modular UI Components
 
-import { store, isSurveyQuestionVisible } from './store.js';
+import { store, isSurveyQuestionVisible, inferSurveyCategory } from './store.js';
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, char => ({
@@ -23,6 +23,21 @@ function getSurveyTargetCount(state, survey, fallback = 100) {
   const assignedTarget = [...uniqueAssignments.values()]
     .reduce((sum, assignment) => sum + (Number(assignment.targetCount) || 0), 0);
   return assignedTarget > 0 ? assignedTarget : fallback;
+}
+
+function getSurveyCategoryLabel(survey) {
+  return inferSurveyCategory(survey);
+}
+
+function getSurveyRegionLabel(state, survey) {
+  const explicitRegion = String(survey?.villageName || survey?.village || '').trim();
+  if (explicitRegion) return explicitRegion;
+
+  const regions = [...new Set((state?.allAssignments || [])
+    .filter(assignment => assignment?.surveyId === survey?.id)
+    .map(assignment => String(assignment.villageName || '').trim())
+    .filter(Boolean))];
+  return regions.length > 0 ? regions.join(', ') : 'Henüz bölge atanmadı';
 }
 
 // SVG Icon Helpers (Lucide Icons & Material Symbols Style)
@@ -94,7 +109,7 @@ export function renderSurveyDetailedCharts(surveyOrReport, state) {
   }
 
   const surveyTitle = survey?.title || report?.surveyTitle || 'Saha Anketi';
-  const villageName = survey?.villageName || survey?.village || report?.villageName || 'Sinan Köyü';
+  const villageName = getSurveyRegionLabel(state, survey || report);
   const targetCount = getSurveyTargetCount(state, survey, report?.targetCount || 100);
 
   // Real matching submissions from state
@@ -162,7 +177,7 @@ export function renderSurveyDetailedCharts(surveyOrReport, state) {
         <div class="p-4 bg-white border border-[#E9EDF2] rounded-[14px] space-y-1 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
           <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">HEDEF BÖLGE</span>
           <div class="text-base font-bold text-[#01214A] truncate">${villageName}</div>
-          <span class="text-[10px] text-slate-500 font-normal block">Kategori: ${survey?.category || report?.category || 'Tarım'}</span>
+          <span class="text-[10px] text-slate-500 font-normal block">Kategori: ${getSurveyCategoryLabel(survey || report)}</span>
         </div>
 
         <div class="p-4 bg-white border border-[#E9EDF2] rounded-[14px] space-y-1 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
@@ -401,7 +416,7 @@ export function renderCustomModals(state) {
     const rpt = allReports.find(r => r.id === reportId || r.surveyId === reportId) || allReports[0] || {
       id: 'rpt-100',
       surveyTitle: 'Şehitkamil Tarımsal İhtiyaç ve Arazi Değerlendirme Anketi',
-      villageName: 'Sinan Köyü',
+      villageName: 'Bölge belirtilmedi',
       completedCount: 100,
       targetCount: 100,
       createdAt: '12 Ağustos 2026'
@@ -416,7 +431,7 @@ export function renderCustomModals(state) {
             <div>
               <div class="text-[11px] text-slate-400 font-normal">Rapor Kütüphanesi / Analitik Rapor Detayı</div>
               <h2 class="text-lg sm:text-xl font-bold text-[#01214A] leading-snug mt-0.5">${rpt.surveyTitle}</h2>
-              <div class="text-xs text-slate-500 font-normal mt-0.5">Bölge: <strong class="text-slate-700 font-medium">${rpt.villageName || 'Sinan Köyü'}</strong> · Tarih: <strong class="text-slate-700 font-medium">${rpt.createdAt || '12 Ağustos 2026'}</strong></div>
+              <div class="text-xs text-slate-500 font-normal mt-0.5">Bölge: <strong class="text-slate-700 font-medium">${rpt.villageName || 'Bölge belirtilmedi'}</strong> · Tarih: <strong class="text-slate-700 font-medium">${rpt.createdAt || '12 Ağustos 2026'}</strong></div>
             </div>
 
             <div class="flex items-center gap-2 shrink-0">
@@ -447,7 +462,7 @@ export function renderCustomModals(state) {
               </div>
               <div class="p-4 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px]">
                 <span class="text-[10px] text-slate-400 font-semibold uppercase block tracking-wider">BÖLGE</span>
-                <span class="text-lg font-bold text-[#01214A] leading-tight truncate block mt-1">${rpt.villageName || 'Sinan Köyü'}</span>
+                <span class="text-lg font-bold text-[#01214A] leading-tight truncate block mt-1">${rpt.villageName || 'Bölge belirtilmedi'}</span>
               </div>
               <div class="p-4 bg-[#F8FAFC] border border-[#E9EDF2] rounded-[10px]">
                 <span class="text-[10px] text-slate-400 font-semibold uppercase block tracking-wider">DURUM</span>
@@ -918,7 +933,7 @@ export function renderCustomModals(state) {
                 <span class="px-2.5 py-0.5 rounded-[6px] text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
                   ${survey.status === 'COMPLETED' ? 'Tamamlandı' : 'Aktif - Sahada Toplanıyor'}
                 </span>
-                <span class="text-xs text-slate-400 font-normal">Kategori: <strong class="text-slate-700">${survey.category || 'Tarım'}</strong></span>
+                <span class="text-xs text-slate-400 font-normal">Kategori: <strong class="text-slate-700">${getSurveyCategoryLabel(survey)}</strong></span>
               </div>
               <h2 class="text-lg sm:text-xl font-bold text-[#01214A] leading-snug truncate">${survey.title}</h2>
               <p class="text-xs text-slate-500 font-normal truncate">${survey.description || 'Saha araştırması canlı bulguları ve gelen anket cevapları.'}</p>
@@ -1780,7 +1795,7 @@ export function renderTaskDetail() {
   const task = (state.assignedSurveys || []).find(t => t.id === state.selectedTaskId) || (state.assignedSurveys || [])[0] || {
     id: '77777777-7777-7777-7777-777777777771',
     title: 'Üretici İhtiyaç Anketi',
-    village: 'Sinan Köyü',
+    village: 'Bölge belirtilmedi',
     completed: 180,
     target: 500,
     priority: 'Yüksek Öncelik',
@@ -1817,7 +1832,7 @@ export function renderTaskDetail() {
               <span>Yönetici Talimatı</span>
             </div>
             <p class="text-xs text-amber-800 leading-relaxed font-normal">
-              ${task?.note || 'Sinan Köyü üreticileriyle görüşürken gübre ve ekipman ihtiyaçlarını detaylı olarak not alınız.'}
+              ${task?.note || 'Bu görev için özel bir saha notu belirtilmedi.'}
             </p>
           </div>
 
@@ -2176,7 +2191,7 @@ export function renderMySurveys() {
                     <div>
                       <h3 class="text-sm font-bold text-[#01214A] leading-snug">${task.title}</h3>
                       <span class="text-xs text-slate-500 flex items-center gap-1 mt-1 font-normal">
-                        ${iconSvg('mapPin', 'w-3.5 h-3.5 text-[#2A9D38]')} ${task.village || 'Sinan Köyü'}
+                        ${iconSvg('mapPin', 'w-3.5 h-3.5 text-[#2A9D38]')} ${task.village || 'Bölge belirtilmedi'}
                       </span>
                     </div>
                     <span class="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-semibold px-2 py-0.5 rounded-[4px]">
@@ -3426,7 +3441,7 @@ function renderAdminTabContent(tab, state) {
                         <td class="py-4 px-5 font-semibold text-[#01214A]">
                           <span>${s.title}</span>
                         </td>
-                        <td class="py-4 px-5 text-slate-600 font-normal">${s.category || 'Genel'}</td>
+                        <td class="py-4 px-5 text-slate-600 font-normal">${getSurveyCategoryLabel(s)}</td>
                         <td class="py-4 px-5">
                           <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${statusBg}">${statusLabel}</span>
                         </td>
@@ -3479,7 +3494,7 @@ function renderAdminTabContent(tab, state) {
       const currentStatusFilter = state.surveyStatusFilter || 'ACTIVE_ONLY';
       const viewMode = state.surveyViewMode || 'list';
 
-      const categories = ['Tümü', 'Tarım', 'Hayvancılık', 'Altyapı', 'Eğitim', 'Sosyal Destek', 'Vatandaş Memnuniyeti', 'Saha Tespiti', 'Diğer'];
+      const categories = ['Tümü', 'Sağlık', 'Tarım', 'Hayvancılık', 'Altyapı', 'Eğitim', 'Sosyal Destek', 'Vatandaş Memnuniyeti', 'Saha Tespiti', 'Diğer'];
 
       return `
         <!-- SCALABLE TOOLBAR: CATEGORY FILTER, SEARCH & ARCHIVE TOGGLE (SECTIONS 4-10) -->
@@ -3577,8 +3592,8 @@ function renderAdminTabContent(tab, state) {
                       </td>
                       <td class="py-4 px-5 text-slate-600 font-normal">
                         <span class="inline-flex items-center gap-1">
-                          <span class="px-2 py-0.5 rounded-[4px] bg-slate-100 text-slate-700 font-medium text-[10px]">${s.category || 'Tarım'}</span>
-                          <span>${s.villageName || 'Sinan Köyü'}</span>
+                          <span class="px-2 py-0.5 rounded-[4px] bg-slate-100 text-slate-700 font-medium text-[10px]">${getSurveyCategoryLabel(s)}</span>
+                          <span>${getSurveyRegionLabel(state, s)}</span>
                         </span>
                       </td>
                       <td class="py-4 px-5 text-slate-500 font-normal">${s.createdBy || 'Yönetici'}</td>
@@ -3665,7 +3680,7 @@ function renderAdminTabContent(tab, state) {
                 <div class="space-y-2">
                   <div class="flex justify-between items-start gap-3">
                     <div>
-                      <span class="px-2 py-0.5 rounded-[4px] bg-slate-100 text-slate-700 font-medium text-[10px] mb-1.5 inline-block">${s.category || 'Tarım'}</span>
+                      <span class="px-2 py-0.5 rounded-[4px] bg-slate-100 text-slate-700 font-medium text-[10px] mb-1.5 inline-block">${getSurveyCategoryLabel(s)}</span>
                       <h3 class="font-semibold text-[#01214A] text-base leading-snug">${s.title}</h3>
                     </div>
                     <div class="shrink-0">
@@ -3963,17 +3978,17 @@ function renderAdminTabContent(tab, state) {
       const savedReports = store.getFilteredReports();
       const currentReportView = state.reportActiveView || 'questions';
       const currentReportCategory = state.reportCategoryFilter || 'ALL';
-      const reportCategories = ['Tümü', 'Tarım', 'Hayvancılık', 'Altyapı', 'Eğitim', 'Sosyal Destek', 'Vatandaş Memnuniyeti'];
+      const reportCategories = ['Tümü', 'Sağlık', 'Tarım', 'Hayvancılık', 'Altyapı', 'Eğitim', 'Sosyal Destek', 'Vatandaş Memnuniyeti'];
 
       // If a specific survey is selected, show its full detailed analytics & question breakdowns
       if (state.selectedReportSurveyId) {
         const currentSurvey = allSurveys.find(s => s.id === state.selectedReportSurveyId) || allSurveys[0] || {
           id: 'srv-default',
-          title: 'Şehitkamil Tarımsal İhtiyaç ve Arazi Değerlendirme Anketi',
-          category: 'Tarım',
-          villageName: 'Sinan Köyü',
-          targetCount: 100,
-          completedCount: 100,
+          title: 'Anket seçilmedi',
+          category: 'Belirtilmedi',
+          villageName: 'Bölge belirtilmedi',
+          targetCount: 0,
+          completedCount: 0,
           status: 'ACTIVE'
         };
 
@@ -4157,8 +4172,8 @@ function renderAdminTabContent(tab, state) {
                         <tr class="hover:bg-slate-50/60 transition-colors duration-150">
                           <td class="py-4 px-5 font-semibold text-[#01214A]">${rpt.surveyTitle}</td>
                           <td class="py-4 px-5 text-slate-600">
-                            <span class="px-2 py-0.5 rounded-[4px] bg-slate-100 text-slate-700 font-medium text-[10px] mr-1">${rpt.category || 'Tarım'}</span>
-                            <span>${rpt.villageName || 'Sinan Köyü'}</span>
+                            <span class="px-2 py-0.5 rounded-[4px] bg-slate-100 text-slate-700 font-medium text-[10px] mr-1">${getSurveyCategoryLabel(rpt)}</span>
+                            <span>${rpt.villageName || 'Bölge belirtilmedi'}</span>
                           </td>
                           <td class="py-4 px-5 text-slate-500">${rpt.createdAt || '12 Ağustos 2026'}</td>
                           <td class="py-4 px-5 font-semibold text-[#2A9D38]">${rpt.completedCount || 100} / ${rpt.targetCount || 100} Yanıt</td>
@@ -4248,7 +4263,7 @@ function renderAdminTabContent(tab, state) {
                 <div class="bg-white p-5 rounded-[14px] border border-[#E9EDF2] hover:border-[#2A9D38] shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-md transition-all flex flex-col justify-between space-y-4 group">
                   <div class="space-y-2.5">
                     <div class="flex items-center justify-between gap-2">
-                      <span class="px-2 py-0.5 rounded-[4px] bg-slate-100 text-slate-700 font-medium text-[10px]">${s.category || 'Genel'}</span>
+                      <span class="px-2 py-0.5 rounded-[4px] bg-slate-100 text-slate-700 font-medium text-[10px]">${getSurveyCategoryLabel(s)}</span>
                       <span class="px-2.5 py-0.5 rounded-[6px] text-[10px] font-semibold ${s.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-blue-50 text-blue-800 border border-blue-200'}">
                         ${s.status === 'COMPLETED' ? 'Tamamlandı' : 'Aktif'}
                       </span>
@@ -4259,7 +4274,7 @@ function renderAdminTabContent(tab, state) {
 
                   <div class="space-y-2 pt-2 border-t border-slate-100">
                     <div class="flex items-center justify-between text-xs text-slate-500">
-                      <span>${s.villageName || 'Sinan Köyü'} · ${qCount} Soru</span>
+                      <span>${getSurveyRegionLabel(state, s)} · ${qCount} Soru</span>
                       <span class="font-semibold text-[#01214A]">${completed} / ${target} Yanıt (%${percent})</span>
                     </div>
                     <div class="w-full bg-[#F1F5F9] h-1.5 rounded-full overflow-hidden">

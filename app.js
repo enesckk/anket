@@ -504,10 +504,17 @@ if (typeof document !== 'undefined') {
       const selectedSurveyId = state.selectedReportSurveyId || (allSurveys.find(s => s.status === 'ACTIVE') || allSurveys[0])?.id;
       const curSurvey = allSurveys.find(s => s.id === selectedSurveyId) || allSurveys[0];
       const submissions = (state.submissions || []).filter(sub => curSurvey && (sub.surveyId === curSurvey.id || sub.surveyTitle === curSurvey.title) && !sub.isInvalid);
+      const assignedRegions = [...new Set((state.allAssignments || [])
+        .filter(assignment => assignment.surveyId === curSurvey?.id)
+        .map(assignment => assignment.villageName)
+        .filter(Boolean))];
+      const surveyRegion = curSurvey
+        ? (curSurvey.villageName || curSurvey.village || assignedRegions.join(', ') || 'Bölge belirtilmedi')
+        : 'Bölge belirtilmedi';
 
       let csvLines = [];
       csvLines.push(`Anket Adı;${curSurvey ? curSurvey.title : 'Saha Anketi'}`);
-      csvLines.push(`Bölge;${curSurvey ? (curSurvey.villageName || curSurvey.village || 'Sinan Köyü') : 'Genel'}`);
+      csvLines.push(`Bölge;${surveyRegion}`);
       csvLines.push(`Toplam Gelen Form;${submissions.length}`);
       csvLines.push(`Tarih;${new Date().toLocaleDateString('tr-TR')}`);
       csvLines.push('');
@@ -540,7 +547,7 @@ if (typeof document !== 'undefined') {
 
     const downloadPdfBtn = e.target.closest('#btn-reports-tab-pdf');
     if (downloadPdfBtn) {
-      const pdfText = "T.C. ŞEHİTKAMİL BELEDİYESİ - STRATEJİ GELİŞTİRME MERKEZİ\nSAHA ANKETİ KURUMSAL ANALİTİK RAPORU\n=========================================\nAnket Adı: Şehitkamil Tarımsal İhtiyaç Analizi\nBölge: Sinan Köyü\nKatılımcı Sayısı: 100 / 100 (%100 Tamamlandı)\n\nSORU DAĞILIMLARI:\n1. Faaliyet Alanı: %64 Hayvancılık (64 Kişi), %36 Çiftçilik (36 Kişi)\n2. Tohum ve Gübre Desteği İhtiyacı: %88 Evet (88 Kişi), %12 Hayır\n\nRapor Tarihi: 12.08.2026";
+      const pdfText = "T.C. ŞEHİTKAMİL BELEDİYESİ - STRATEJİ GELİŞTİRME MERKEZİ\nSAHA ANKETİ KURUMSAL ANALİTİK RAPORU\n=========================================\nBölge: Bölge belirtilmedi\n\nRapor verileri canlı API üzerinden alınamadı. Yanlış veya örnek veri üretilmedi.";
       const blob = new Blob([pdfText], { type: 'application/pdf;charset=utf-8;' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
