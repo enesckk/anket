@@ -2029,66 +2029,46 @@ class Store {
     }
   }
 
-  async createAdminAssignment(surveyId, villageId, targetCount, endDate, note, userIds) {
+  async createAdminAssignment(surveyId, villageName, targetCount, endDate, note, userIds) {
     const survey = (this.state.allSurveys || []).find(s => s.id === surveyId);
     const surveyTitle = survey ? survey.title : 'Saha Anketi';
-    const villageName = villageId || 'Sinan Köyü';
-    const finalUserIds = (userIds && userIds.length > 0) ? userIds : (this.state.allPersonnel || []).map(p => p.id);
+    const finalVillageName = (villageName || '').trim() || 'Genel Saha';
+    const finalUserIds = Array.isArray(userIds) ? [...new Set(userIds)] : [];
 
-    const newAssignment = {
-      id: 'asg-' + Date.now(),
-      surveyId,
-      surveyTitle,
-      villageName,
-      targetCount: parseInt(targetCount) || 50,
-      completedCount: 0,
-      endDate: endDate || new Date(Date.now() + 7 * 86400000).toISOString(),
-      note: note || 'Yönetici Notu: Saha verilerini eksiksiz doldurunuz.',
-      assignedUserIds: finalUserIds,
-      viewedAt: null
-    };
-
-    if (!Array.isArray(this.state.allAssignments)) {
-      this.state.allAssignments = [];
+    if (finalUserIds.length === 0) {
+      this.setToast('Lütfen en az bir aktif saha personeli seçiniz.', 'error');
+      throw new Error('Atama için saha personeli seçilmedi.');
     }
-    this.state.allAssignments.unshift(newAssignment);
-
-    if (!Array.isArray(this.state.assignedSurveys)) {
-      this.state.assignedSurveys = [];
-    }
-    this.state.assignedSurveys.unshift({
-      id: newAssignment.id,
-      surveyId: newAssignment.surveyId,
-      title: newAssignment.surveyTitle,
-      village: newAssignment.villageName,
-      completed: 0,
-      target: newAssignment.targetCount,
-      endDate: new Date(newAssignment.endDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' }),
-      priority: 'Yüksek Öncelik',
-      note: newAssignment.note,
-      viewedAt: null
-    });
-
-    this.setToast(`'${surveyTitle}' anketi ${finalUserIds.length} personele başarıyla atandı!`, 'success');
-    this.addNotification('NEW_ASSIGNMENT', 'Yeni Saha Görevi Atandı', `'${surveyTitle}' anketi '${villageName}' bölgesi için ${finalUserIds.length} personele atandı.`, 'ALL', 'assignment', 'emerald');
-    this.saveState();
 
     try {
-      await this.apiFetch('/assignments', {
+      const assignment = await this.apiFetch('/assignments', {
         method: 'POST',
         body: JSON.stringify({
           surveyId,
-          villageId: villageName,
+          villageId: null,
+          villageName: finalVillageName,
           targetCount: parseInt(targetCount) || 50,
           startDate: new Date().toISOString(),
           endDate: new Date(endDate || Date.now() + 7 * 86400000).toISOString(),
           note: note || 'Yönetici Notu: Saha kontrollerini yapınız.',
-          assignedUserIds: finalUserIds
+          assignedUserIds: finalUserIds,
+          publishSurvey: true
         })
       });
       await this.fetchInitialData();
+      this.setToast(`'${surveyTitle}' anketi ${finalUserIds.length} saha personeline başarıyla atandı!`, 'success');
+      this.addNotification('NEW_ASSIGNMENT', 'Yeni Saha Görevi Atandı', `'${surveyTitle}' anketi '${finalVillageName}' bölgesi için ${finalUserIds.length} personele atandı.`, 'ALL', 'assignment', 'emerald');
+      this.saveState();
+      return assignment;
     } catch (e) {
       console.warn('Create assignment error:', e);
+      let message = 'Görev veritabanına kaydedilemedi. Lütfen bilgileri kontrol edip tekrar deneyiniz.';
+      try {
+        const parsed = JSON.parse(e.message || '{}');
+        if (parsed.message) message = parsed.message;
+      } catch (_) {}
+      this.setToast(message, 'error');
+      throw e;
     }
   }
 

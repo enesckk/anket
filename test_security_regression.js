@@ -10,7 +10,7 @@ globalThis.localStorage = {
 };
 
 const { store } = await import('./store.js');
-const { renderPwaHome, renderSurveyRunner, renderProfile, renderAdminView } = await import('./components.js');
+const { renderPwaHome, renderSurveyRunner, renderProfile, renderAdminView, renderCustomModals } = await import('./components.js');
 
 // Soru ekleme metodu, hızlı tür kartlarından ve alt panelden gelen zorunluluk
 // seçimini ReferenceError üretmeden builder durumuna yansıtmalı.
@@ -58,12 +58,47 @@ assert.equal(persistenceCalls[1].body.type, 'MULTIPLE_CHOICE');
 assert.equal(persistenceCalls[1].body.isRequired, false);
 assert.equal(persistenceCalls.at(-1).endpoint, '/surveys/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/status');
 
+// Atama modalı yalnızca aktif saha personellerini göstermeli, zorunlu bölge
+// alanı görünür/default dolu olmalı ve açılır liste diğer alanları kapatmamalı.
+store.state.allPersonnel = [
+  { id: 'field-1', fullName: 'Aykut Bilici', email: 'aykut@example.com', role: 'FIELD_USER', isActive: true },
+  { id: 'admin-1', fullName: 'Sistem Yöneticisi', email: 'admin@example.com', role: 'ADMIN', isActive: true }
+];
+store.state.activeModal = { type: 'assign_survey', survey: { id: 'survey-1', title: 'Atama Testi' } };
+let html = renderCustomModals(store.state);
+assert(html.includes('Aykut Bilici'));
+assert(!html.includes('Sistem Yöneticisi'));
+assert(html.includes('value="Genel Saha"'));
+assert(!html.includes('absolute bottom-full'));
+
+// API başarısızsa hayalet atama oluşmamalı; başarılı istekte bölge adı ve
+// yayınlama talebi backend'e açıkça gönderilmeli.
+store.state.allSurveys = [{ id: 'survey-1', title: 'Atama Testi', status: 'DRAFT' }];
+store.state.allAssignments = [];
+store.state.assignedSurveys = [];
+store.apiFetch = async () => { throw new Error(JSON.stringify({ message: 'test failure' })); };
+await assert.rejects(() => store.createAdminAssignment('survey-1', 'Gazikent Mahallesi', 25, new Date(Date.now() + 86400000).toISOString(), '', ['field-1']));
+assert.equal(store.state.allAssignments.length, 0);
+assert.equal(store.state.assignedSurveys.length, 0);
+let assignmentPayload = null;
+store.apiFetch = async (endpoint, options) => {
+  assert.equal(endpoint, '/assignments');
+  assignmentPayload = JSON.parse(options.body);
+  return { id: 'assignment-1', surveyId: 'survey-1', villageName: 'Gazikent Mahallesi' };
+};
+store.fetchInitialData = async () => {};
+await store.createAdminAssignment('survey-1', 'Gazikent Mahallesi', 25, new Date(Date.now() + 86400000).toISOString(), '', ['field-1']);
+assert.equal(assignmentPayload.villageId, null);
+assert.equal(assignmentPayload.villageName, 'Gazikent Mahallesi');
+assert.equal(assignmentPayload.publishSurvey, true);
+assert.deepEqual(assignmentPayload.assignedUserIds, ['field-1']);
+
 // Atama yoksa aktif anket hiçbir şekilde saha ekranına sızmamalı.
 store.state.auth = { isLoggedIn: true, token: 'real-token', user: { id: 'u1', fullName: 'Test', role: 'FIELD_USER' } };
 store.state.currentRole = 'pwa';
 store.state.assignedSurveys = [];
 store.state.allSurveys = [{ id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', title: 'Atanmamış Gizli Anket', status: 'ACTIVE' }];
-let html = renderPwaHome();
+html = renderPwaHome();
 assert(!html.includes('Atanmamış Gizli Anket'));
 assert(html.includes('Görevlerim'));
 

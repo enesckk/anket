@@ -81,12 +81,14 @@ public record AssignmentDto(
 
 public record CreateAssignmentRequest(
     Guid SurveyId,
-    Guid VillageId,
+    Guid? VillageId,
     int TargetCount,
     DateTime StartDate,
     DateTime EndDate,
     string Note,
-    List<Guid> AssignedUserIds
+    List<Guid> AssignedUserIds,
+    string? VillageName = null,
+    bool PublishSurvey = false
 );
 
 // SUBMISSION & SYNC DTOS

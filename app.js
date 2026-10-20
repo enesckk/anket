@@ -890,9 +890,18 @@ if (typeof document !== 'undefined') {
 
       const checkedUserIds = Array.from(document.querySelectorAll('input[name="modal-assign-personnel"]:checked')).map(cb => cb.value);
 
+      if (checkedUserIds.length === 0) {
+        store.setToast('Lütfen en az bir aktif saha personeli seçiniz.', 'error');
+        return;
+      }
+
       if (surveyId) {
-        await store.createAdminAssignment(surveyId, village, targetCount, endDate, note, checkedUserIds);
-        store.closeModal();
+        try {
+          await store.createAdminAssignment(surveyId, village, targetCount, endDate, note, checkedUserIds);
+          store.closeModal();
+        } catch (_) {
+          // Store kullanıcıya ayrıntılı hata mesajını gösterir; modal düzeltme için açık kalır.
+        }
       }
       return;
     }
@@ -926,6 +935,12 @@ if (typeof document !== 'undefined') {
       return;
     }
   });
+
+  document.addEventListener('invalid', (e) => {
+    if (!e.target?.closest?.('#form-custom-assign-survey')) return;
+    document.getElementById('dropdown-modal-assign-menu')?.classList.add('hidden');
+    setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 0);
+  }, true);
 }
 
 function attachLoginListeners() {

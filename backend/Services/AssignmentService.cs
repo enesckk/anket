@@ -55,10 +55,41 @@ public class AssignmentService : IAssignmentService
     {
         var survey = await _db.Surveys.FindAsync(request.SurveyId);
         if (survey == null) throw new ArgumentException("Atanacak anket bulunamadı.");
-        if (survey.Status != SurveyStatus.ACTIVE) throw new ArgumentException("Yalnızca aktif anketler atanabilir.");
-        if (!await _db.Villages.AnyAsync(v => v.Id == request.VillageId && v.IsActive))
-            throw new ArgumentException("Geçerli ve aktif bir bölge seçilmelidir.");
-        var requestedUserIds = request.AssignedUserIds.Distinct().ToList();
+        if (survey.Status != SurveyStatus.ACTIVE)
+        {
+            if (!request.PublishSurvey || survey.Status != SurveyStatus.DRAFT)
+                throw new ArgumentException("Yalnızca aktif anketler atanabilir.");
+
+            survey.Status = SurveyStatus.ACTIVE;
+            survey.UpdatedAt = DateTime.UtcNow;
+        }
+
+        Village? village = null;
+        if (request.VillageId.HasValue)
+        {
+            village = await _db.Villages.FirstOrDefaultAsync(v => v.Id == request.VillageId.Value && v.IsActive);
+        }
+        else if (!string.IsNullOrWhiteSpace(request.VillageName))
+        {
+            var villageName = request.VillageName.Trim();
+            village = await _db.Villages.FirstOrDefaultAsync(v => v.IsActive && v.Name.ToLower() == villageName.ToLower());
+            if (village == null)
+            {
+                village = new Village
+                {
+                    Name = villageName,
+                    Region = "Genel",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _db.Villages.Add(village);
+            }
+        }
+
+        if (village == null)
+            throw new ArgumentException("Geçerli bir hedef köy, mahalle veya bölge girilmelidir.");
+
+        var requestedUserIds = (request.AssignedUserIds ?? new List<Guid>()).Distinct().ToList();
         var validUserIds = await _db.Users
             .Where(u => requestedUserIds.Contains(u.Id) && u.Role == UserRole.FIELD_USER && u.IsActive)
             .Select(u => u.Id)
@@ -71,7 +102,7 @@ public class AssignmentService : IAssignmentService
         var assignment = new SurveyAssignment
         {
             SurveyId = request.SurveyId,
-            VillageId = request.VillageId,
+            VillageId = village.Id,
             TargetCount = request.TargetCount,
             StartDate = request.StartDate,
             EndDate = request.EndDate,
@@ -81,7 +112,6 @@ public class AssignmentService : IAssignmentService
         };
 
         _db.SurveyAssignments.Add(assignment);
-        await _db.SaveChangesAsync();
 
         foreach (var uid in validUserIds)
         {

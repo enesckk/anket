@@ -1102,9 +1102,11 @@ export function renderCustomModals(state) {
 
   if (state.activeModal.type === 'assign_survey') {
     const survey = state.activeModal.survey || (state.allSurveys || [])[0] || { id: 'srv-1', title: 'Saha Anketi' };
+    const assignablePersonnel = (Array.isArray(state.allPersonnel) ? state.allPersonnel : [])
+      .filter(person => person.role === 'FIELD_USER' && person.isActive !== false);
     return `
       <div class="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white border-none rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-5 animate-in zoom-in-95 duration-150">
+        <div class="bg-white border-none rounded-3xl p-6 max-w-lg w-full max-h-[calc(100vh-2rem)] overflow-y-auto shadow-2xl space-y-5 animate-in zoom-in-95 duration-150">
           <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <div class="flex items-center gap-2">
               ${iconSvg('assignment', 'w-5 h-5 text-[#2A9D38]')}
@@ -1124,12 +1126,12 @@ export function renderCustomModals(state) {
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label class="block text-xs font-bold text-[#01214A] mb-1">Hedef Köy / Mahalle / Bölge *</label>
-                <input type="text" id="modal-assign-village" required value="" placeholder="Örn: Mahalle / Köy Adı" class="w-full h-11 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#2A9D38]"/>
+                <input type="text" id="modal-assign-village" required value="${survey.villageName || 'Genel Saha'}" placeholder="Örn: Mahalle / Köy Adı" class="w-full h-11 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#2A9D38]"/>
               </div>
 
               <div>
                 <label class="block text-xs font-bold text-[#01214A] mb-1">Hedef Yanıt Sayısı *</label>
-                <input type="number" id="modal-assign-target-count" required value="50" placeholder="50" class="w-full h-11 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#2A9D38]"/>
+                <input type="number" id="modal-assign-target-count" required min="1" value="50" placeholder="50" class="w-full h-11 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#2A9D38]"/>
               </div>
             </div>
 
@@ -1148,7 +1150,7 @@ export function renderCustomModals(state) {
               <div class="flex items-center justify-between mb-1">
                 <label class="text-xs font-bold text-[#01214A]">Görev Atanacak Saha Personelleri *</label>
                 <span id="label-modal-assign-badge" class="text-[10px]">
-                  <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md font-extrabold">Tüm Ekip Seçili (${state.allPersonnel.length}/${state.allPersonnel.length})</span>
+                  <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md font-extrabold">Tüm Saha Ekibi Seçili (${assignablePersonnel.length}/${assignablePersonnel.length})</span>
                 </span>
               </div>
 
@@ -1157,12 +1159,12 @@ export function renderCustomModals(state) {
                   <div class="w-6 h-6 rounded-md bg-[#2A9D38]/10 text-[#2A9D38] flex items-center justify-center shrink-0">
                     ${iconSvg('users', 'w-3.5 h-3.5 text-[#2A9D38]')}
                   </div>
-                  <span class="font-extrabold text-xs text-[#01214A] truncate">Tüm Ekip Seçili (${state.allPersonnel.length} Personel)</span>
+                  <span class="font-extrabold text-xs text-[#01214A] truncate">Tüm Saha Ekibi Seçili (${assignablePersonnel.length} Personel)</span>
                 </div>
                 ${iconSvg('chevronDown', 'w-4 h-4 text-slate-400 group-hover:text-[#2A9D38] transition-transform')}
               </button>
 
-              <div id="dropdown-modal-assign-menu" class="hidden absolute bottom-full left-0 right-0 mb-2 bg-white border border-slate-200 rounded-2xl shadow-xl p-4 z-40 space-y-3">
+              <div id="dropdown-modal-assign-menu" class="hidden mt-2 bg-white border border-slate-200 rounded-2xl shadow-lg p-4 space-y-3">
                 <div class="relative">
                   <input type="text" id="input-search-modal-assign" placeholder="Personel ismi veya telefon ara (Örn: b)..." class="w-full h-9 pl-8 pr-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#2A9D38]"/>
                   <span class="absolute left-2.5 top-2.5 text-slate-400">
@@ -1180,11 +1182,11 @@ export function renderCustomModals(state) {
                       Temizle
                     </button>
                   </div>
-                  <span class="text-slate-400 text-[10px]" id="info-modal-assign-visible-count">${(Array.isArray(state.allPersonnel) ? state.allPersonnel : []).length} gösteriliyor</span>
+                  <span class="text-slate-400 text-[10px]" id="info-modal-assign-visible-count">${assignablePersonnel.length} gösteriliyor</span>
                 </div>
 
                 <div class="max-h-40 overflow-y-auto space-y-1 pr-1">
-                  ${(Array.isArray(state.allPersonnel) ? state.allPersonnel : []).map(p => `
+                  ${assignablePersonnel.map(p => `
                     <label data-search-text="${(p.fullName + ' ' + (p.phone || '')).toLowerCase()}" class="modal-assign-item flex items-center justify-between p-2 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer">
                       <div class="flex items-center gap-2.5">
                         <input type="checkbox" name="modal-assign-personnel" value="${p.id}" checked class="cb-modal-assign-personnel rounded text-[#2A9D38] focus:ring-[#2A9D38] w-4 h-4 cursor-pointer"/>
