@@ -2705,7 +2705,7 @@ export function renderAdminView() {
       <div class="flex-1 flex flex-col min-w-0 min-h-screen">
         
         <!-- SINGLE UNIFIED TOP HEADER BAR (72px HEIGHT MATCHING BRANDING BLOCK) -->
-        <header class="h-[72px] border-b border-[#E9EDF2] bg-white px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30 shrink-0">
+        <header class="admin-header h-[72px] border-b border-[#E9EDF2] bg-white px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30 shrink-0">
           
           <!-- LEFT: MOBILE HAMBURGER BUTTON & PAGE TITLE -->
           <div class="flex items-center gap-3 min-w-0">
@@ -2727,17 +2727,17 @@ export function renderAdminView() {
             
             <!-- CONTEXTUAL PRIMARY CTA -->
             ${activeTab === 'dashboard' ? `
-              <button id="btn-admin-create-survey-dashboard" class="h-[38px] px-4 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[10px] shadow-none transition-all duration-150 flex items-center gap-2 cursor-pointer active:scale-98">
+              <button id="btn-admin-create-survey-dashboard" aria-label="Yeni Anket" title="Yeni Anket" class="header-create h-[38px] px-4 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[10px] shadow-none transition-all duration-150 flex items-center gap-2 cursor-pointer active:scale-98">
                 ${iconSvg('plus', 'w-4 h-4 text-white')}
                 <span>Yeni Anket</span>
               </button>
             ` : activeTab === 'assignments' ? `
-              <button id="btn-admin-create-assignment-header" class="h-[38px] px-4 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[10px] shadow-none transition-all duration-150 flex items-center gap-2 cursor-pointer active:scale-98">
+              <button id="btn-admin-create-assignment-header" aria-label="Yeni Atama" title="Yeni Atama" class="header-create h-[38px] px-4 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[10px] shadow-none transition-all duration-150 flex items-center gap-2 cursor-pointer active:scale-98">
                 ${iconSvg('plus', 'w-4 h-4 text-white')}
                 <span>Yeni Atama</span>
               </button>
             ` : activeTab === 'personnel' ? `
-              <button id="btn-admin-create-personnel-header" class="h-[38px] px-4 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[10px] shadow-none transition-all duration-150 flex items-center gap-2 cursor-pointer active:scale-98">
+              <button id="btn-admin-create-personnel-header" aria-label="Yeni Personel" title="Yeni Personel" class="header-create h-[38px] px-4 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[10px] shadow-none transition-all duration-150 flex items-center gap-2 cursor-pointer active:scale-98">
                 ${iconSvg('plus', 'w-4 h-4 text-white')}
                 <span>Yeni Personel</span>
               </button>
@@ -2788,7 +2788,7 @@ export function renderAdminView() {
         </header>
 
         <!-- MAIN CONTENT (STARTS DIRECTLY BELOW UNIFIED HEADER) -->
-        <main class="p-6 sm:p-8 max-w-[1520px] w-full mx-auto space-y-6 flex-1">
+        <main data-admin-screen="${activeTab}" class="admin-main p-6 sm:p-8 max-w-[1520px] w-full mx-auto space-y-6 flex-1">
           ${activeTab === 'builder' ? render4StepSurveyBuilder(state) : renderAdminTabContent(activeTab, state)}
         </main>
       </div>
@@ -3400,7 +3400,7 @@ function renderAdminTabContent(tab, state) {
     case 'dashboard':
       return `
         <!-- 4 POWERFUL REFINED KPI SCORECARDS (Real-time dynamic data) -->
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <section class="dashboard-stats grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           
           <!-- Card 1: Aktif Anketler -->
           <div class="bg-white p-6 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-col justify-between h-[128px] transition-colors duration-150 hover:border-[#D0D5DD]">
@@ -3448,7 +3448,7 @@ function renderAdminTabContent(tab, state) {
         </section>
 
         <!-- SECONDARY STATUS ROW -->
-        <div class="flex flex-wrap items-center justify-between gap-4 py-2.5 px-4 bg-white rounded-[12px] border border-[#E9EDF2] text-xs text-[#667085] font-normal shadow-none">
+        <div class="dashboard-status flex flex-wrap items-center justify-between gap-4 py-2.5 px-4 bg-white rounded-[12px] border border-[#E9EDF2] text-xs text-[#667085] font-normal shadow-none">
           <div class="flex items-center gap-2">
             <span class="text-[#667085]">Toplam Kayıtlı Veri:</span>
             <span class="font-semibold text-[#01214A]">${(state.submissions || []).length} yanıt</span>
@@ -3460,7 +3460,7 @@ function renderAdminTabContent(tab, state) {
         </div>
 
         <!-- 68% / 32% GRID SPLIT (Real-time dynamic data) -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="dashboard-content grid grid-cols-1 lg:grid-cols-12 gap-6">
           
           <!-- LEFT 68% (8 COLS): MAIN HERO TABLE -->
           <section class="lg:col-span-8 bg-white rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden flex flex-col">
@@ -3475,7 +3475,7 @@ function renderAdminTabContent(tab, state) {
             </div>
 
             <div class="overflow-x-auto">
-              <table class="w-full min-w-[680px] table-fixed text-left border-collapse text-xs">
+              <table class="mobile-records survey-records w-full min-w-[680px] table-fixed text-left border-collapse text-xs">
                 <colgroup>
                   <col class="w-[54%]" />
                   <col class="w-[18%]" />
@@ -3503,11 +3503,11 @@ function renderAdminTabContent(tab, state) {
                         <td class="py-4 px-5 font-semibold text-[#01214A]">
                           <span>${s.title}</span>
                         </td>
-                        <td class="py-4 px-5 text-slate-600 font-normal">${getSurveyCategoryLabel(s)}</td>
-                        <td class="py-4 px-5 whitespace-nowrap">
+                        <td data-label="Kategori" class="py-4 px-5 text-slate-600 font-normal">${getSurveyCategoryLabel(s)}</td>
+                        <td data-label="Durum" class="py-4 px-5 whitespace-nowrap">
                           <span class="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 rounded-full text-[10px] leading-none font-bold border ${statusBg}">${statusLabel}</span>
                         </td>
-                        <td class="py-4 px-5 text-right text-slate-700 font-bold whitespace-nowrap tabular-nums">${s.completedCount || 0} / ${getSurveyTargetCount(state, s)}</td>
+                        <td data-label="Hedef" class="py-4 px-5 text-right text-slate-700 font-bold whitespace-nowrap tabular-nums">${s.completedCount || 0} / ${getSurveyTargetCount(state, s)}</td>
                       </tr>
                     `;
                   }).join('')}
@@ -3617,7 +3617,7 @@ function renderAdminTabContent(tab, state) {
           <!-- COMPACT LIST VIEW (SCALABLE FOR 100+ SURVEYS - SECTION 7) -->
           <div class="bg-white rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
             <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse text-xs">
+              <table class="mobile-records w-full text-left border-collapse text-xs">
                 <thead>
                   <tr class="bg-[#F8FAFC] border-b border-[#E9EDF2] text-slate-500 font-semibold text-[11px]">
                     <th class="py-3 px-5">Anket Adı</th>
@@ -3648,25 +3648,25 @@ function renderAdminTabContent(tab, state) {
 
                     return `
                     <tr class="hover:bg-slate-50/60 transition-colors duration-150">
-                      <td class="py-4 px-5">
+                      <td data-label="Anket Adı" class="py-4 px-5">
                         <div class="font-semibold text-[#01214A] leading-snug">${s.title}</div>
                         <div class="text-[11px] text-slate-400 font-normal line-clamp-1 mt-0.5">${s.description || 'Açıklama belirtilmedi.'}</div>
                       </td>
-                      <td class="py-4 px-5 text-slate-600 font-normal">
+                      <td data-label="Kategori & Bölge" class="py-4 px-5 text-slate-600 font-normal">
                         <span class="inline-flex items-center gap-1">
                           <span class="px-2 py-0.5 rounded-[4px] bg-slate-100 text-slate-700 font-medium text-[10px]">${getSurveyCategoryLabel(s)}</span>
                           <span>${getSurveyRegionLabel(state, s)}</span>
                         </span>
                       </td>
-                      <td class="py-4 px-5 text-slate-500 font-normal">${s.createdBy || 'Yönetici'}</td>
-                      <td class="py-4 px-5">
+                      <td data-label="Oluşturan" class="py-4 px-5 text-slate-500 font-normal">${s.createdBy || 'Yönetici'}</td>
+                      <td data-label="Durum" class="py-4 px-5">
                         ${isArchived ? `<span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">${s.status === 'CLOSED' ? 'Kapalı' : 'Arşivlendi'}</span>` : ''}
                         ${!isArchived && s.status === 'COMPLETED' ? `<span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">Tamamlandı</span>` : ''}
                         ${!isArchived && s.status === 'ACTIVE' ? `<span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">Aktif</span>` : ''}
                         ${!isArchived && s.status === 'PENDING_APPROVAL' ? `<span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold bg-amber-50 text-amber-900 border border-amber-200">Onay Bekliyor</span>` : ''}
                         ${!isArchived && s.status === 'DRAFT' ? `<span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">Taslak</span>` : ''}
                       </td>
-                      <td class="py-4 px-5">
+                      <td data-label="İlerleme" class="py-4 px-5">
                         <div data-survey-id="${s.id}" class="btn-view-live-results space-y-1 max-w-[140px] cursor-pointer group" title="Canlı sonuçları ve gelen cevapları gör">
                           <div class="text-[11px] font-semibold text-[#01214A] group-hover:text-[#2A9D38] transition-colors">${completed} / ${target} · %${percent}</div>
                           <div class="w-full bg-[#F1F5F9] h-1.5 rounded-full overflow-hidden">
@@ -3674,7 +3674,7 @@ function renderAdminTabContent(tab, state) {
                           </div>
                         </div>
                       </td>
-                      <td class="py-4 px-5 text-right whitespace-nowrap">
+                      <td data-label="İşlem" class="py-4 px-5 text-right whitespace-nowrap">
                         <div class="flex flex-nowrap items-center justify-end gap-1.5 min-w-max">
                           <button type="button" data-survey-id="${s.id}" class="btn-view-live-results h-8 px-3 shrink-0 whitespace-nowrap bg-[#2A9D38] hover:bg-[#22822e] text-white font-bold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Anlık Gelen Cevapları ve Canlı Sonuçları Gör">
                             ${iconSvg('poll', 'w-3.5 h-3.5 text-white')}
@@ -3912,7 +3912,7 @@ function renderAdminTabContent(tab, state) {
         <div class="bg-white rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden space-y-3 p-6">
           <h2 class="text-[18px] font-semibold text-[#01214A]">Aktif Görev Atamaları (${(Array.isArray(state.allAssignments) ? state.allAssignments : []).length})</h2>
           <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse text-xs">
+            <table class="mobile-records w-full text-left border-collapse text-xs">
               <thead>
                 <tr class="bg-[#F8FAFC] border-b border-[#E9EDF2] text-slate-500 font-semibold text-[11px]">
                   <th class="py-3 px-5">Anket Adı</th>
@@ -3926,16 +3926,16 @@ function renderAdminTabContent(tab, state) {
               <tbody class="divide-y divide-[#F1F5F9]">
                 ${(Array.isArray(state.allAssignments) ? state.allAssignments : []).map(a => `
                   <tr class="hover:bg-slate-50/60 transition-colors duration-150">
-                    <td class="py-4 px-5 font-semibold text-[#01214A]">${a.surveyTitle}</td>
-                    <td class="py-4 px-5 text-slate-500 font-normal">${sanitizeRegionLabel(a.villageName)}</td>
-                    <td class="py-4 px-5 text-slate-600 font-normal max-w-xs truncate">${sanitizeLegacyRegionText(a.note) || 'Özel not eklenmedi.'}</td>
-                    <td class="py-4 px-5 font-semibold text-[#2A9D38]">${a.completedCount} / ${a.targetCount}</td>
-                    <td class="py-4 px-5 text-center">
+                    <td data-label="Anket Adı" class="py-4 px-5 font-semibold text-[#01214A]">${a.surveyTitle}</td>
+                    <td data-label="Hedef Köy / Bölge" class="py-4 px-5 text-slate-500 font-normal">${sanitizeRegionLabel(a.villageName)}</td>
+                    <td data-label="Yönetici Notu" class="py-4 px-5 text-slate-600 font-normal max-w-xs truncate">${sanitizeLegacyRegionText(a.note) || 'Özel not eklenmedi.'}</td>
+                    <td data-label="Hedef / Tamamlanan" class="py-4 px-5 font-semibold text-[#2A9D38]">${a.completedCount} / ${a.targetCount}</td>
+                    <td data-label="Saha Görüldü" class="py-4 px-5 text-center">
                       <span class="px-2.5 py-1 rounded-[6px] text-[11px] font-semibold ${a.viewedAt ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-amber-50 text-amber-900 border border-amber-200'}">
                         ${a.viewedAt ? 'Görüldü' : 'Bekliyor'}
                       </span>
                     </td>
-                    <td class="py-4 px-5 text-right">
+                    <td data-label="İşlem" class="py-4 px-5 text-right">
                       <button type="button" data-assignment-id="${a.id}" class="btn-resend-assignment-notif h-8 px-2.5 bg-emerald-50 hover:bg-[#2A9D38] text-[#2A9D38] hover:text-white border border-emerald-200 font-semibold text-xs rounded-[8px] transition-colors inline-flex items-center gap-1.5 cursor-pointer ml-auto" title="Personele Tekrar Bildirim Gönder">
                         ${iconSvg('bell', 'w-3.5 h-3.5')}
                         <span>Tekrar Bildir</span>
@@ -3979,7 +3979,7 @@ function renderAdminTabContent(tab, state) {
         <!-- RESPONSES DATA TABLE -->
         <div class="bg-white rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
           <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse text-xs">
+            <table class="mobile-records w-full text-left border-collapse text-xs">
               <thead>
                 <tr class="bg-[#F8FAFC] border-b border-[#E9EDF2] text-slate-500 font-semibold text-[11px]">
                   <th class="py-3 px-5">Kayıt ID</th>
@@ -4006,22 +4006,22 @@ function renderAdminTabContent(tab, state) {
                   </tr>
                 ` : filteredSubmissions.map(sub => `
                   <tr class="hover:bg-slate-50/60 transition-colors duration-150">
-                    <td class="py-4 px-5 font-mono text-[11px] text-slate-400">${sub.clientSubmissionId || sub.id}</td>
-                    <td class="py-4 px-5 font-semibold text-[#01214A]">${sub.fieldUserName || 'Ahmet Yılmaz'}</td>
-                    <td class="py-4 px-5 text-slate-500 font-normal">${new Date(sub.submittedAt || Date.now()).toLocaleTimeString('tr-TR')}</td>
-                    <td class="py-4 px-5 text-slate-500 font-normal">
+                    <td data-label="Kayıt ID" class="py-4 px-5 font-mono text-[11px] text-slate-400">${sub.clientSubmissionId || sub.id}</td>
+                    <td data-label="Saha Kullanıcısı" class="py-4 px-5 font-semibold text-[#01214A]">${sub.fieldUserName || 'Ahmet Yılmaz'}</td>
+                    <td data-label="Tarih & Saat" class="py-4 px-5 text-slate-500 font-normal">${new Date(sub.submittedAt || Date.now()).toLocaleTimeString('tr-TR')}</td>
+                    <td data-label="GPS Konum" class="py-4 px-5 text-slate-500 font-normal">
                       ${sub.latitude ? `
                         <span class="inline-flex items-center gap-1 text-[#2A9D38] font-medium">
                           ${iconSvg('mapPin', 'w-3.5 h-3.5')} ${sub.latitude.toFixed(2)}, ${sub.longitude?.toFixed(2)}
                         </span>
                       ` : 'Çevrimdışı'}
                     </td>
-                    <td class="py-4 px-5">
+                    <td data-label="Geçerlilik Durumu" class="py-4 px-5">
                       <span class="px-2.5 py-1 rounded-[6px] text-[11px] font-semibold ${sub.isInvalid ? 'bg-red-50 text-red-800 border border-red-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}">
                         ${sub.isInvalid ? 'Geçersiz İşaretlendi' : 'Geçerli Yanıt'}
                       </span>
                     </td>
-                    <td class="py-4 px-5 text-right">
+                    <td data-label="İşlem" class="py-4 px-5 text-right">
                       <button data-sub-id="${sub.id}" class="btn-toggle-invalid-sub h-8 px-3 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 text-xs font-normal rounded-[8px] transition-colors duration-150 cursor-pointer">
                         ${sub.isInvalid ? 'Geçerli Yap' : 'Geçersiz Say'}
                       </button>
@@ -4146,7 +4146,7 @@ function renderAdminTabContent(tab, state) {
               </div>
 
               <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-xs">
+                <table class="mobile-records w-full text-left border-collapse text-xs">
                   <thead>
                     <tr class="bg-[#F8FAFC] border-b border-[#E9EDF2] text-slate-500 font-semibold text-[11px]">
                       <th class="py-3 px-4">Form ID</th>
@@ -4166,14 +4166,14 @@ function renderAdminTabContent(tab, state) {
                       const ansList = Object.entries(sub.answers || {}).slice(0, 2).map(([k, v]) => `${v}`).join(', ');
                       return `
                         <tr class="hover:bg-slate-50/60 transition-colors">
-                          <td class="py-3.5 px-4 font-mono text-[11px] text-slate-400">${sub.clientSubmissionId || sub.id}</td>
-                          <td class="py-3.5 px-4 font-semibold text-[#01214A]">${sub.fieldUserName || 'Saha Personeli'}</td>
-                          <td class="py-3.5 px-4 text-slate-500">${new Date(sub.submittedAt || Date.now()).toLocaleTimeString('tr-TR')}</td>
-                          <td class="py-3.5 px-4 text-slate-500">
+                          <td data-label="Form ID" class="py-3.5 px-4 font-mono text-[11px] text-slate-400">${sub.clientSubmissionId || sub.id}</td>
+                          <td data-label="Saha Personeli" class="py-3.5 px-4 font-semibold text-[#01214A]">${sub.fieldUserName || 'Saha Personeli'}</td>
+                          <td data-label="Tarih & Saat" class="py-3.5 px-4 text-slate-500">${new Date(sub.submittedAt || Date.now()).toLocaleTimeString('tr-TR')}</td>
+                          <td data-label="GPS Konum" class="py-3.5 px-4 text-slate-500">
                             ${sub.latitude ? `${sub.latitude.toFixed(3)}, ${sub.longitude?.toFixed(3)}` : 'Çevrimdışı'}
                           </td>
-                          <td class="py-3.5 px-4 text-slate-700 max-w-xs truncate">${ansList || 'Cevaplar kaydedildi'}</td>
-                          <td class="py-3.5 px-4 text-right">
+                          <td data-label="Yanıt Özeti" class="py-3.5 px-4 text-slate-700 max-w-xs truncate">${ansList || 'Cevaplar kaydedildi'}</td>
+                          <td data-label="Durum" class="py-3.5 px-4 text-right">
                             <span class="px-2 py-0.5 rounded text-[10px] font-bold ${sub.isInvalid ? 'bg-red-100 text-red-800' : 'bg-emerald-100 text-emerald-800'}">
                               ${sub.isInvalid ? 'Geçersiz' : 'Geçerli'}
                             </span>
@@ -4210,7 +4210,7 @@ function renderAdminTabContent(tab, state) {
 
               <div class="bg-white rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
                 <div class="overflow-x-auto">
-                  <table class="w-full text-left border-collapse text-xs">
+                  <table class="mobile-records w-full text-left border-collapse text-xs">
                     <thead>
                       <tr class="bg-[#F8FAFC] border-b border-[#E9EDF2] text-slate-500 font-semibold text-[11px]">
                         <th class="py-3 px-5">Rapor Adı</th>
@@ -4232,19 +4232,19 @@ function renderAdminTabContent(tab, state) {
                         </tr>
                       ` : savedReports.map(rpt => `
                         <tr class="hover:bg-slate-50/60 transition-colors duration-150">
-                          <td class="py-4 px-5 font-semibold text-[#01214A]">${rpt.surveyTitle}</td>
-                          <td class="py-4 px-5 text-slate-600">
+                          <td data-label="Rapor Adı" class="py-4 px-5 font-semibold text-[#01214A]">${rpt.surveyTitle}</td>
+                          <td data-label="Kategori & Bölge" class="py-4 px-5 text-slate-600">
                             <span class="px-2 py-0.5 rounded-[4px] bg-slate-100 text-slate-700 font-medium text-[10px] mr-1">${getSurveyCategoryLabel(rpt)}</span>
                             <span>${sanitizeRegionLabel(rpt.villageName)}</span>
                           </td>
-                          <td class="py-4 px-5 text-slate-500">${rpt.createdAt || '12 Ağustos 2026'}</td>
-                          <td class="py-4 px-5 font-semibold text-[#2A9D38]">${rpt.completedCount || 100} / ${rpt.targetCount || 100} Yanıt</td>
-                          <td class="py-4 px-5">
+                          <td data-label="Kayıt Tarihi" class="py-4 px-5 text-slate-500">${rpt.createdAt || '12 Ağustos 2026'}</td>
+                          <td data-label="Saha Katılımı" class="py-4 px-5 font-semibold text-[#2A9D38]">${rpt.completedCount || 100} / ${rpt.targetCount || 100} Yanıt</td>
+                          <td data-label="Durum" class="py-4 px-5">
                             <span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
                               ${rpt.statusLabel || 'Hazır'}
                             </span>
                           </td>
-                          <td class="py-4 px-5 text-right">
+                          <td data-label="İşlem" class="py-4 px-5 text-right">
                             <button data-report-id="${rpt.id}" class="btn-open-report-modal h-8 px-3.5 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[8px] transition-colors duration-150 flex items-center gap-1.5 cursor-pointer ml-auto">
                               ${iconSvg('search', 'w-3.5 h-3.5 text-white')}
                               <span>İncele</span>
@@ -4361,7 +4361,7 @@ function renderAdminTabContent(tab, state) {
 
       return `
         <!-- TOOLBAR: SEARCH, SEGMENTED FILTER & PRIMARY CTA (SECTION 15) -->
-        <div class="bg-white p-4 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-3 sm:space-y-0 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+        <div class="personnel-toolbar bg-white p-4 rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-3 sm:space-y-0 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
           <div class="flex items-center gap-3">
             <h2 class="text-base font-semibold text-[#01214A]">Saha Ekibi ve Personeller (${filteredPersonnel.length})</h2>
           </div>
@@ -4390,7 +4390,7 @@ function renderAdminTabContent(tab, state) {
         <!-- PERSONNEL TABLE -->
         <div class="bg-white rounded-[14px] border border-[#E9EDF2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
           <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse text-xs">
+            <table class="mobile-records personnel-records w-full text-left border-collapse text-xs">
               <thead>
                 <tr class="bg-[#F8FAFC] border-b border-[#E9EDF2] text-slate-500 font-semibold text-[11px]">
                   <th class="py-3 px-5">Ad Soyad</th>
@@ -4412,14 +4412,14 @@ function renderAdminTabContent(tab, state) {
                 ` : filteredPersonnel.map(p => `
                   <tr class="hover:bg-slate-50/60 transition-colors duration-150">
                     <td class="py-4 px-5 font-semibold text-[#01214A]">${p.fullName}</td>
-                    <td class="py-4 px-5 text-slate-500 font-normal">${p.email || 'personel@sahaanket.gov.tr'}</td>
-                    <td class="py-4 px-5 text-slate-500 font-normal">${p.phone}</td>
-                    <td class="py-4 px-5">
+                    <td data-label="E-posta" class="py-4 px-5 text-slate-500 font-normal">${p.email || 'personel@sahaanket.gov.tr'}</td>
+                    <td data-label="Telefon" class="py-4 px-5 text-slate-500 font-normal">${p.phone || 'Belirtilmedi'}</td>
+                    <td data-label="Rol" class="py-4 px-5">
                       <span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold ${p.role === 'ADMIN' ? 'bg-slate-100 text-[#01214A] border border-slate-200' : 'bg-slate-50 text-slate-700 border border-slate-200'}">
                         ${p.role === 'ADMIN' ? 'YÖNETİCİ' : 'SAHA PERSONELİ'}
                       </span>
                     </td>
-                    <td class="py-4 px-5">
+                    <td data-label="Hesap durumu" class="py-4 px-5">
                       <span class="px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold ${p.isActive ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-red-50 text-red-800 border border-red-200'}">
                         ${p.isActive ? 'Aktif' : 'Pasif'}
                       </span>

@@ -133,3 +133,91 @@ aside {
     overflow-y: auto !important;
   }
 }
+
+/* Admin mobile layout: compact overview and readable records without horizontal scrolling. */
+@media (max-width: 639px) {
+  body .admin-header { height: 64px; padding: 0 12px; gap: 8px; }
+  body .admin-header > div:first-child { flex: 1; gap: 4px; }
+  body .admin-header h1 { font-size: 18px; }
+  body .admin-header > div:last-child { gap: 2px; }
+  body .admin-header button { min-width: 44px; min-height: 44px; }
+  body .admin-header .header-create { padding: 0; width: 44px; justify-content: center; }
+  body .header-create > span { display: none; }
+  body #btn-toggle-profile-dropdown { padding: 4px; }
+  body #btn-toggle-profile-dropdown > svg { display: none; }
+  body #dropdown-notifications-menu { position: fixed; top: 64px; left: 12px; right: 12px; width: auto; max-height: calc(100dvh - 88px); overflow-y: auto; margin-top: 0; }
+  body .admin-main { padding: 16px; }
+  body .admin-main > * + * { margin-top: 16px !important; }
+  body .dashboard-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  body .dashboard-stats > div { padding: 14px; height: auto; min-height: 118px; gap: 14px; }
+  body .dashboard-stats > div > div:first-child span { font-size: 10px; letter-spacing: .025em; line-height: 1.4; }
+  body .dashboard-stats > div > div:last-child > div { font-size: 26px; }
+  body .dashboard-stats > div > div:last-child > span { font-size: 11px; line-height: 1.4; }
+  body .dashboard-status { gap: 8px; padding: 12px; font-size: 11px; }
+  body .dashboard-content { gap: 16px; }
+  body .dashboard-content > section { min-width: 0; }
+  body .dashboard-content > section > div:first-child { padding: 16px; gap: 12px; align-items: start; }
+  body .dashboard-content h2 { font-size: 15px; }
+  body .dashboard-content h2 + p { font-size: 12px; line-height: 1.5; margin-top: 4px; }
+  body .dashboard-content > section:last-child { padding: 16px; }
+  body .dashboard-content > section:last-child > div:first-child { padding: 0 0 12px; }
+  body .mobile-records,
+  body .mobile-records tbody { display: block; width: 100%; min-width: 0; }
+  body .mobile-records colgroup,
+  body .mobile-records thead { display: none; }
+  body .mobile-records tr { display: block; padding: 16px; }
+  body .mobile-records td { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 6px 0; text-align: right; overflow-wrap: anywhere; white-space: normal; }
+  body .mobile-records td::before { content: attr(data-label); flex-shrink: 0; color: #64748b; font-weight: 400; font-size: 12px; }
+  body .mobile-records td:first-child { display: block; text-align: left; font-size: 15px; line-height: 1.5; padding: 0 0 10px; }
+  body .mobile-records td:first-child::before,
+  body .mobile-records td:not([data-label])::before { display: none; }
+  body .mobile-records td[colspan] { text-align: center; font-size: 13px; padding: 20px 0; }
+  body .personnel-records td:last-child { border-top: 1px solid #f1f5f9; margin-top: 10px; padding-top: 12px; }
+  body .personnel-records td:last-child > div { width: 100%; justify-content: flex-start; flex-wrap: wrap; gap: 8px; }
+  body .personnel-records td:last-child button { min-height: 44px; }
+  body .personnel-toolbar { gap: 12px; padding: 16px; }
+  body .personnel-toolbar h2 { font-size: 15px; }
+  body .personnel-toolbar > div:last-child { gap: 12px; }
+  body .personnel-toolbar input { height: 44px; font-size: 14px; }
+  body .personnel-toolbar .btn-filter-role-personnel { min-height: 36px; }
+  body #btn-open-add-personnel-modal { width: 100%; min-height: 44px; justify-content: center; }
+  body .personnel-toolbar > div:last-child > div:nth-child(2) { width: 100%; justify-content: space-between; }
+}
+
+@media (max-width: 639px) {
+  body .admin-main { overflow-wrap: anywhere; }
+  body .admin-main input:not([type=checkbox]):not([type=radio]),
+  body .admin-main select,
+  body .admin-main textarea,
+  body .app-modal-overlay input:not([type=checkbox]):not([type=radio]),
+  body .app-modal-overlay select,
+  body .app-modal-overlay textarea { font-size: 16px; }
+  body .admin-main .mobile-records td > * { min-width: 0; max-width: 100%; }
+  body .admin-main .mobile-records td > div { flex-wrap: wrap; }
+  body .admin-main .mobile-records td button { min-height: 44px; white-space: normal; }
+  body .admin-main .mobile-records td:last-child:not([data-label]),
+  body .admin-main .mobile-records td[data-label="İşlem"] { display: block; text-align: left; }
+  body .admin-main .mobile-records td[data-label="İşlem"]::before { display: none; }
+  body .admin-main .mobile-records td[data-label="İşlem"] > div { justify-content: flex-start; gap: 8px; }
+  body .admin-main .mobile-records td .truncate { white-space: normal; overflow: visible; }
+  body .admin-main .mobile-records td .max-w-\[140px\] { max-width: none; }
+  body .admin-main[data-admin-screen="surveys"] > div:first-child > div:first-child > div:first-child { flex-direction: column; align-items: stretch; }
+  body .admin-main[data-admin-screen="reports"] .min-w-\[200px\],
+  body .admin-main[data-admin-screen="reports"] .min-w-\[240px\] { min-width: 0; width: 100%; flex-basis: 100%; }
+  body .admin-main[data-admin-screen="builder"] .w-\[360px\] { width: 100%; max-width: 360px; }
+  body .admin-main[data-admin-screen="builder"] .btn-builder-step-nav { flex-direction: column; gap: 4px; text-align: center; flex: 1; min-width: 0; font-size: 10px; }
+  body .admin-main[data-admin-screen="builder"] .btn-builder-step-nav + span { width: 12px; flex-shrink: 0; }
+  body .admin-main[data-admin-screen="surveys"] > div:first-child > div:last-child { flex-wrap: wrap; overflow: visible; }
+  body .admin-main[data-admin-screen="reports"] .overflow-x-auto:has(.btn-filter-report-category) { flex-wrap: wrap; overflow: visible; }
+  body .admin-main[data-admin-screen="assignments"] > div:first-child { padding: 16px; }
+  body .admin-main[data-admin-screen="assignments"] label { line-height: 1.5; }
+  body .admin-main[data-admin-screen="messages"] .flex.items-center.justify-between { flex-wrap: wrap; gap: 8px; }
+}
+
+@media (max-width: 639px) {
+  body .admin-main #select-bottom-q-type { flex-basis: 100%; min-width: 0; width: 100%; }
+  body .admin-main div:has(> #select-bottom-q-type) { flex-wrap: wrap; }
+  body .admin-main #btn-bottom-add-question { flex: 1; justify-content: center; min-height: 44px; }
+  body .admin-main .mobile-records td { min-width: 0; }
+  body .admin-main .mobile-records td[data-label] { flex-wrap: wrap; }
+}
