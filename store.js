@@ -1,3 +1,6 @@
+import { buildSurveyReport, reportSheets } from './survey-report.js';
+import { createReportXlsx } from './report-xlsx.js';
+
 const API_BASE_URL = (typeof window !== 'undefined' && window.SAHA_ANKET_API_URL) 
   ? window.SAHA_ANKET_API_URL 
   : (typeof location !== 'undefined' && location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://anket-45so.onrender.com/api');
@@ -955,7 +958,7 @@ class Store {
       }
 
       // Fetch All Submissions
-      const submissions = isFieldUser ? null : await this.apiFetch('/submissions').catch(() => null);
+      const submissions = isFieldUser ? null : await this.apiFetch('/submissions?includeInvalid=true').catch(() => null);
       if (Array.isArray(submissions)) {
         this.state.submissions = submissions.map(normalizeSubmission);
       }
@@ -2363,171 +2366,72 @@ class Store {
     return true;
   }
 
-  // EXCEL & PDF EXPORT (With Client-Side Instant Download Fallback)
+  // A single export path: freshly loaded server data, no sample/offline fallback.
   async downloadReportExcel(surveyId) {
+    if (this._reportExportPending) return false;
+    if (this.state.auth?.user?.role !== 'ADMIN' || !surveyId) {
+      this.setToast('Excel raporu için bir anket seçin ve yönetici olarak giriş yapın.', 'error');
+      return false;
+    }
+    this._reportExportPending = true;
+    this.setToast('Güncel yanıtlar alınıyor, Excel raporu hazırlanıyor…', 'info');
     try {
-      const blob = await this.apiFetch('/reports/excel', {
-        method: 'POST',
-        body: JSON.stringify({ surveyId })
-      }).catch(() => null);
-
-      if (blob && blob instanceof Blob && blob.size > 0) {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `Sehitkamil_100_Kisi_Anket_Raporu_${Date.now()}.xlsx`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        this.setToast('100/100 Yanıtlı Excel Raporu (.xlsx) başarıyla indirildi!', 'success');
-        return;
-      }
-    } catch (e) {
-      console.warn('Excel export fetch fallback:', e);
+      const [survey, submissions, assignments] = await Promise.all([
+        this.apiFetch(`/surveys/${encodeURIComponent(surveyId)}`),
+        this.apiFetch(`/submissions?surveyId=${encodeURIComponent(surveyId)}&includeInvalid=true`),
+        this.apiFetch('/assignments')
+      ]);
+      if (survey?.id !== surveyId || !Array.isArray(submissions) || !Array.isArray(assignments)) throw new Error('Sunucudan eksik rapor verisi geldi.');
+      const normalized = submissions.map(normalizeSubmission);
+      const report = buildSurveyReport(survey, normalized, assignments);
+      const bytes = createReportXlsx(reportSheets(report));
+      const blob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const safeTitle = String(survey.title || 'anket').replace(/[\\/:*?"<>|]/g, '_').slice(0, 90);
+      link.download = `${safeTitle}_Sonuc_Raporu_${new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Istanbul' })}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      this.state.allSurveys = [...(this.state.allSurveys || []).filter(s => s.id !== surveyId), survey];
+      this.state.submissions = [...(this.state.submissions || []).filter(s => s.surveyId !== surveyId), ...normalized];
+      this.state.allAssignments = assignments;
+      this.saveState();
+      this.setToast(`Excel hazır: ${report.valid.length} geçerli, ${report.invalid} geçersiz form.`, 'success');
+      return true;
+    } catch (error) {
+      console.warn('Excel report export failed:', error);
+      this.setToast(`Excel indirilemedi. ${error.message || 'Sunucu bağlantısını kontrol edip tekrar deneyin.'}`, 'error');
+      return false;
+    } finally {
+      this._reportExportPending = false;
     }
-
-    // Client-side instant fallback generator for Excel (.csv / .xlsx)
-    const report = (this.state.reports || []).find(r => r.surveyId === surveyId || r.id === surveyId) || (this.state.reports || [])[0];
-    const surveyTitle = report ? report.surveyTitle : 'Şehitkamil Tarımsal İhtiyaç ve Arazi Değerlendirme Anketi';
-    const village = sanitizeRegionLabel(report?.villageName);
-
-    const csvLines = [
-      "KURUM,ANKET ADI,BÖLGE,TOPLAM YANIT,TAMAMLAMA ORANI,DURUM",
-      `"T.C. ŞEHİTKAMİL BELEDİYESİ STRATEJİ GELİŞTİRME MERKEZİ","${surveyTitle}","${village}","100 Yanıt","100%","Tamamlandı"`,
-      "",
-      "SORU METNİ,BİRİNCİL SEÇENEK,BİRİNCİL DAĞILIM,İKİNCİL SEÇENEK,İKİNCİL DAĞILIM",
-      `"1. Faaliyet Gösterdiğiniz Temel Alan Nedir?","Besicilik / Hayvancılık","64 Kişi (%64)","Tarımsal Çiftçilik","36 Kişi (%36)"`,
-      `"2. Gübre ve Tohum Desteği Talep Ediyor musunuz?","Evet (Tohum ve Gübre İhtiyacı Var)","88 Kişi (%88)","Hayır / İhtiyaç Yok","12 Kişi (%12)"`,
-      "",
-      "KATILIMCI AD SOYAD,İLÇE / BÖLGE,CEVAP DURUMU,KAYIT TARİHİ",
-      `"Ahmet Yılmaz","${village}","Tamamlandı","12.08.2026 14:30"`,
-      `"Mehmet Demir","${village}","Tamamlandı","12.08.2026 14:15"`,
-      `"Ayşe Kaya","${village}","Tamamlandı","12.08.2026 13:45"`,
-      `"Fatma Şahin","${village}","Tamamlandı","12.08.2026 13:20"`,
-      `"... 96 Katılımcı Daha","${village}","Tamamlandı","12.08.2026 12:00"`
-    ];
-
-    const blob = new Blob(["\ufeff" + csvLines.join("\n")], { type: 'text/csv;charset=utf-8;' });
-    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-      const url = (window.URL || URL).createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Sehitkamil_100_Kisi_Anket_Raporu_${Date.now()}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    }
-    this.setToast('100/100 Yanıtlı Excel Raporu (.csv / .xlsx) bilgisayarınıza indirildi!', 'success');
   }
 
   async downloadReportPdf(surveyId) {
+    if (!surveyId || this.state.auth?.user?.role !== 'ADMIN') {
+      this.setToast('PDF raporu için bir anket seçin.', 'error');
+      return false;
+    }
     try {
-      const blob = await this.apiFetch('/reports/pdf', {
-        method: 'POST',
-        body: JSON.stringify({ surveyId })
-      }).catch(() => null);
-
-      if (blob && blob instanceof Blob && blob.size > 0) {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `Sehitkamil_100_Kisi_Anket_Raporu_${Date.now()}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        this.setToast('100/100 Yanıtlı PDF Kurumsal Analiz Raporu (.pdf) başarıyla indirildi!', 'success');
-        return;
-      }
-    } catch (e) {
-      console.warn('PDF export fetch fallback:', e);
+      const blob = await this.apiFetch('/reports/pdf', { method: 'POST', body: JSON.stringify({ surveyId }) });
+      if (!(blob instanceof Blob) || (await blob.slice(0, 5).text()) !== '%PDF-') throw new Error('Sunucu geçerli bir PDF döndürmedi.');
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Anket_Raporu_${surveyId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      this.setToast('PDF raporu indirildi.', 'success');
+      return true;
+    } catch (error) {
+      this.setToast('PDF indirilemedi. Sunucu bağlantısını kontrol edip tekrar deneyin.', 'error');
+      return false;
     }
-
-    // Client-side valid %PDF-1.4 binary stream generator
-    const report = (this.state.reports || []).find(r => r.surveyId === surveyId || r.id === surveyId) || (this.state.reports || [])[0];
-    const surveyTitle = report ? report.surveyTitle : 'Şehitkamil Tarımsal İhtiyaç ve Arazi Değerlendirme Anketi';
-    const village = sanitizeRegionLabel(report?.villageName);
-
-    const textLines = [
-      'BT',
-      '/F1 16 Tf',
-      '40 800 Td',
-      '(T.C. SEHITKAMIL BELEDYESI - STRATEJI GELISTIRME MERKEZI) Tj',
-      '0 -24 Td',
-      '/F1 12 Tf',
-      '(SAHA OPERASYONLARI 100 KISI KURUMSAL ANALITIK RAPORU) Tj',
-      '0 -24 Td',
-      '(----------------------------------------------------------------------------------------------------) Tj',
-      '0 -24 Td',
-      `(Anket Adi        : ${surveyTitle.replace(/[^\x00-\x7F]/g, " ")}) Tj`,
-      '0 -20 Td',
-      `(Hedef Bolge      : ${village.replace(/[^\x00-\x7F]/g, " ")}) Tj`,
-      '0 -20 Td',
-      '(Katilimci Sayisi : 100 / 100 - Tamamlandi %100) Tj',
-      '0 -20 Td',
-      '(Rapor Tarihi     : 12 Agustos 2026) Tj',
-      '0 -20 Td',
-      '(Rapor Durumu     : Onaylandi ve Arsivlendi) Tj',
-      '0 -30 Td',
-      '(SORU YANIT DAGILIMLARI - 100 KISI KATILIMI:) Tj',
-      '0 -20 Td',
-      '(1. Faaliyet Alani: %64 Hayvancilik / Besicilik (64 Kisi), %36 Ciftcilik (36 Kisi)) Tj',
-      '0 -20 Td',
-      '(2. Tohum ve Gubre Destegi Ihtiyaci: %88 Evet (88 Kisi), %12 Hayir (12 Kisi)) Tj',
-      '0 -30 Td',
-      '(DEGERLENDIRME OZETI:) Tj',
-      '0 -20 Td',
-      '(Genel saha genelinde 100 kisi katilimi ile tamamlanan anket sonucunda) Tj',
-      '0 -20 Td',
-      '(bolge halkinin %88 oraninda destek ihtiyaci duydugu tespit edilmistir.) Tj',
-      'ET'
-    ].join('\n');
-
-    const pdfStream = [
-      '%PDF-1.4',
-      '1 0 obj',
-      '<< /Type /Catalog /Pages 2 0 R >>',
-      'endobj',
-      '2 0 obj',
-      '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
-      'endobj',
-      '3 0 obj',
-      '<< /Type /Page /Parent 2 0 R /Resources << /Font << /F1 4 0 R >> >> /MediaBox [0 0 595 842] /Contents 5 0 R >>',
-      'endobj',
-      '4 0 obj',
-      '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>',
-      'endobj',
-      '5 0 obj',
-      `<< /Length ${textLines.length} >>`,
-      'stream',
-      textLines,
-      'endstream',
-      'endobj',
-      'xref',
-      '0 6',
-      '0000000000 65535 f ',
-      '0000000009 00000 n ',
-      '0000000058 00000 n ',
-      '0000000115 00000 n ',
-      '0000000234 00000 n ',
-      '0000000325 00000 n ',
-      'trailer',
-      '<< /Size 6 /Root 1 0 R >>',
-      'startxref',
-      `${400 + textLines.length}`,
-      '%%EOF'
-    ].join('\n');
-
-    const blob = new Blob([pdfStream], { type: 'application/pdf' });
-    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-      const url = (window.URL || URL).createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Sehitkamil_100_Kisi_Anket_Raporu_${Date.now()}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    }
-    this.setToast('100/100 Yanıtlı PDF Kurumsal Analiz Raporu (.pdf) bilgisayarınıza indirildi!', 'success');
   }
 
   async createAdminSurvey(title, description) {

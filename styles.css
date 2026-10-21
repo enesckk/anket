@@ -221,3 +221,11 @@ aside {
   body .admin-main .mobile-records td { min-width: 0; }
   body .admin-main .mobile-records td[data-label] { flex-wrap: wrap; }
 }
+
+/* Keep the report views and export controls reachable on narrow phones. */
+@media (max-width: 639px) {
+  body .admin-main[data-admin-screen="reports"] div:has(> .btn-switch-report-view) { flex-wrap: wrap; overflow: visible; }
+  body .admin-main[data-admin-screen="reports"] .btn-switch-report-view { flex: 1 1 100%; width: 100%; min-height: 44px; }
+  body .admin-main[data-admin-screen="reports"] > div:first-child > div:first-child { flex-wrap: wrap; gap: 10px; }
+  body .report-analysis { overflow-wrap: anywhere; }
+}

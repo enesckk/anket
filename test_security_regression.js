@@ -231,7 +231,7 @@ store.state.activeModal = {
 html = renderCustomModals(store.state);
 assert(html.includes('1 / 1'));
 assert(html.includes('TEST-KATILIMCI-001'));
-assert.match(html, /Memnun[\s\S]*1 Kişi[\s\S]*%100/);
+assert.match(html, /Memnun[\s\S]*1 form \/ 1 yanıtlayan[\s\S]*%100/);
 assert(!html.includes('[object Object]'));
 
 // Saha kullanıcısı yönetici geçişini görmemeli ve state manipülasyonu ile

@@ -297,7 +297,7 @@ if (typeof document !== 'undefined') {
 
     const excelSurveyBtn = e.target.closest('.btn-admin-survey-excel');
     if (excelSurveyBtn) {
-      const surveyId = excelSurveyBtn.getAttribute('data-survey-id') || '44444444-4444-4444-4444-444444444441';
+      const surveyId = excelSurveyBtn.getAttribute('data-survey-id');
       store.downloadReportExcel(surveyId);
       return;
     }
@@ -514,65 +514,14 @@ if (typeof document !== 'undefined') {
       return;
     }
 
-    const downloadExcelBtn = e.target.closest('#btn-reports-tab-excel, #btn-reports-tab-csv, .btn-download-report-csv');
-    if (downloadExcelBtn) {
+    const reportDownloadBtn = e.target.closest('#btn-reports-tab-excel, #btn-reports-tab-csv, .btn-download-report-csv, #btn-admin-download-excel, #btn-reports-tab-pdf, #btn-admin-download-pdf');
+    if (reportDownloadBtn) {
       const state = store.getState();
-      const allSurveys = Array.isArray(state.allSurveys) ? state.allSurveys : [];
-      const selectedSurveyId = state.selectedReportSurveyId || (allSurveys.find(s => s.status === 'ACTIVE') || allSurveys[0])?.id;
-      const curSurvey = allSurveys.find(s => s.id === selectedSurveyId) || allSurveys[0];
-      const submissions = (state.submissions || []).filter(sub => curSurvey && (sub.surveyId === curSurvey.id || sub.surveyTitle === curSurvey.title) && !sub.isInvalid);
-      const assignedRegions = [...new Set((state.allAssignments || [])
-        .filter(assignment => assignment.surveyId === curSurvey?.id)
-        .map(assignment => sanitizeRegionLabel(assignment.villageName, ''))
-        .filter(Boolean))];
-      const surveyRegion = curSurvey
-        ? sanitizeRegionLabel(curSurvey.villageName || curSurvey.village || assignedRegions.join(', '))
-        : 'Genel Saha';
-
-      let csvLines = [];
-      csvLines.push(`Anket Adı;${curSurvey ? curSurvey.title : 'Saha Anketi'}`);
-      csvLines.push(`Bölge;${surveyRegion}`);
-      csvLines.push(`Toplam Gelen Form;${submissions.length}`);
-      csvLines.push(`Tarih;${new Date().toLocaleDateString('tr-TR')}`);
-      csvLines.push('');
-      csvLines.push('Kayıt ID;Saha Personeli;Tarih;GPS;Soru;Cevap');
-
-      if (submissions.length > 0) {
-        submissions.forEach(sub => {
-          const ans = sub.answers || {};
-          const gps = sub.latitude ? `${sub.latitude},${sub.longitude}` : 'Yok';
-          Object.entries(ans).forEach(([qKey, val]) => {
-            csvLines.push(`${sub.clientSubmissionId || sub.id};${sub.fieldUserName || 'Personel'};${new Date(sub.submittedAt || Date.now()).toLocaleDateString('tr-TR')};${gps};${qKey};"${String(val).replace(/"/g, '""')}"`);
-          });
-        });
-      } else {
-        csvLines.push('1;Ahmet Yılmaz;12.08.2026;37.06,37.38;Faaliyet Alanı;Besicilik');
-        csvLines.push('2;Mehmet Demir;12.08.2026;37.06,37.38;Tohum Desteği;Evet');
-      }
-
-      const csvContent = csvLines.join('\n');
-      const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `saha_anket_ham_veriler_${(curSurvey?.title || 'anket').toLowerCase().replace(/[^a-z0-9]/g, '_')}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      store.setToast('Soru bazlı ham veriler ve cevaplar Excel (.csv) olarak indirildi!', 'success');
-      return;
-    }
-
-    const downloadPdfBtn = e.target.closest('#btn-reports-tab-pdf');
-    if (downloadPdfBtn) {
-      const pdfText = "T.C. ŞEHİTKAMİL BELEDİYESİ - STRATEJİ GELİŞTİRME MERKEZİ\nSAHA ANKETİ KURUMSAL ANALİTİK RAPORU\n=========================================\nBölge: Bölge belirtilmedi\n\nRapor verileri canlı API üzerinden alınamadı. Yanlış veya örnek veri üretilmedi.";
-      const blob = new Blob([pdfText], { type: 'application/pdf;charset=utf-8;' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = 'sehitkamil_kurumsal_analitik_rapor_100_kisi.pdf';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      store.setToast('100/100 Yanıtlı PDF Kurumsal Analiz Raporu (.pdf) bilgisayarınıza indirildi!', 'success');
+      const modal = state.activeModal;
+      const detailReport = (state.reports || []).find(r => r.id === state.selectedReportDetailId || r.id === modal?.reportId);
+      const surveyId = reportDownloadBtn.dataset.surveyId || modal?.survey?.id || modal?.report?.surveyId || detailReport?.surveyId || state.selectedReportSurveyId;
+      if (reportDownloadBtn.id.endsWith('pdf')) store.downloadReportPdf(surveyId);
+      else store.downloadReportExcel(surveyId);
       return;
     }
 
@@ -1098,20 +1047,6 @@ function attachAdminListeners() {
       const tab = e.currentTarget.getAttribute('data-admin-tab');
       if (tab) store.setAdminTab(tab);
     };
-  });
-
-  // Excel & PDF Report Download Actions
-  document.getElementById('btn-admin-download-excel')?.addEventListener('click', () => {
-    store.downloadReportExcel('44444444-4444-4444-4444-444444444441');
-  });
-  document.getElementById('btn-admin-download-pdf')?.addEventListener('click', () => {
-    store.downloadReportPdf('44444444-4444-4444-4444-444444444441');
-  });
-  document.getElementById('btn-reports-tab-excel')?.addEventListener('click', () => {
-    store.downloadReportExcel('44444444-4444-4444-4444-444444444441');
-  });
-  document.getElementById('btn-reports-tab-pdf')?.addEventListener('click', () => {
-    store.downloadReportPdf('44444444-4444-4444-4444-444444444441');
   });
 
   // Open Builder Buttons & Header Actions
