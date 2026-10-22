@@ -1014,6 +1014,8 @@ function attachLoginListeners() {
     togglePwdBtn.addEventListener('click', () => {
       const isPassword = pwdInput.type === 'password';
       pwdInput.type = isPassword ? 'text' : 'password';
+      togglePwdBtn.setAttribute('aria-pressed', String(isPassword));
+      togglePwdBtn.setAttribute('aria-label', isPassword ? 'Şifreyi gizle' : 'Şifreyi göster');
       if (eyeIconContainer) {
         eyeIconContainer.innerHTML = iconSvg(isPassword ? 'eyeOff' : 'eye', 'w-5 h-5 text-slate-400 hover:text-slate-600');
       }

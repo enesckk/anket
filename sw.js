@@ -1,7 +1,7 @@
 // SurveyAdmin Intelligence - Service Worker
 // Versiyon: 1.0.1
 
-const CACHE_NAME = 'sahaanket-v22';
+const CACHE_NAME = 'sahaanket-v23';
 const OFFLINE_URL = '/';
 
 // Cache'e alınacak dosyalar (App Shell)
