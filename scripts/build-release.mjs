@@ -59,4 +59,16 @@ const hostedSw = sw.replaceAll("'/index.html'", "'/app/index.html'")
   .replace('  "/",', '  "/app/",')
   .replace('"/manifest.json"', '"/app/manifest.json"');
 await fs.writeFile(path.join(appFolder, 'sw.js'), hostedSw);
+// Vercel serves this explicit output directory instead of the repository tree.
+const dist = path.join(root, 'dist');
+await fs.rm(dist, { recursive: true, force: true });
+await fs.mkdir(path.join(dist, 'releases', APP_RELEASE), { recursive: true });
+for (const name of [...assets, 'index.html', 'sw.js', 'manifest.json', 'logo_sehitkamil.png', 'logo_saha_anket.png']) {
+  await fs.copyFile(path.join(root, name), path.join(dist, name));
+}
+for (const name of [...assets, 'release.json']) {
+  await fs.copyFile(path.join(folder, name), path.join(dist, 'releases', APP_RELEASE, name));
+}
+await fs.copyFile(path.join(folder, 'release.json'), path.join(dist, 'release.json'));
+await fs.cp(path.join(root, 'icons'), path.join(dist, 'icons'), { recursive: true });
 console.log(`Built release ${APP_RELEASE}: ${assets.length} isolated assets.`);

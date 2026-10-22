@@ -24,6 +24,16 @@ for (const name of ['app.js','components.js','store.js','styles.css']) assert(ht
 assert(!/src="\.\/app\.js"/.test(html));
 assert(sw.includes("fetch(request, { cache: 'no-store' })"));
 assert(sw.includes('caches.open(CACHE_NAME).then(async cache =>'));
+const vercel = JSON.parse(fs.readFileSync(new URL('./vercel.json', import.meta.url)));
+assert.equal(vercel.buildCommand, 'npm run build');
+assert.equal(vercel.outputDirectory, 'dist');
+assert(!vercel.builds && !vercel.headers, 'Use one routing system and the explicit build output');
+assert.equal(fs.readFileSync(new URL('./dist/index.html', import.meta.url), 'utf8'), html);
+for (const [name, hash] of Object.entries(manifest.hashes)) {
+  const bytes = fs.readFileSync(new URL(`./dist${prefix}${name}`, import.meta.url));
+  assert.equal(createHash('sha256').update(bytes).digest('hex'), hash);
+}
+assert(!fs.existsSync(new URL('./dist/backend', import.meta.url)));
 const hostedHtml = fs.readFileSync(new URL('./backend/wwwroot/app/index.html', import.meta.url), 'utf8');
 assert(hostedHtml.includes('window.SAHA_ANKET_API_URL = "/api"'));
 assert(hostedHtml.includes("register('/app/sw.js', { scope: '/app/'"));
