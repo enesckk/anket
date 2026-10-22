@@ -1,3 +1,4 @@
+import { APP_RELEASE } from './release-info.js';
 import { buildSurveyReport, reportQuestions, displayReportAnswer, reportAnswers, REPORT_METHOD } from './survey-report.js';
 // SurveyAdmin Intelligence - Production Quality Modular UI Components
 
@@ -1182,6 +1183,7 @@ export function renderLoginScreen() {
             <button type="submit" class="login-submit">Giriş Yap</button>
           </form>
         </section>
+        <p class="login-release">Sürüm ${APP_RELEASE}</p>
       </div>
     </div>`;
 }
@@ -2421,7 +2423,7 @@ export function renderAdminView() {
                 ${activeTab === 'builder' ? 'Anket Oluştur' : currentNavItem.label}
               </h1>
               <p class="hidden sm:block text-[13px] text-slate-400 font-normal truncate">
-                ${currentDateStr} · ${activeTab === 'builder' ? 'Yeni saha araştırması hazırlama sihirbazı' : currentNavItem.subtitle}
+                ${currentDateStr} · ${activeTab === 'builder' ? 'Yeni saha araştırması hazırlama sihirbazı' : currentNavItem.subtitle} · Sürüm ${APP_RELEASE}
               </p>
             </div>
           </div>
@@ -3355,6 +3357,7 @@ function renderAdminTabContent(tab, state) {
                       <td data-label="Anket Adı" class="py-4 px-5">
                         <div class="font-semibold text-[#01214A] leading-snug">${s.title}</div>
                         <div class="text-[11px] text-slate-400 font-normal line-clamp-1 mt-0.5">${s.description || 'Açıklama belirtilmedi.'}</div>
+                        <button type="button" data-survey-id="${s.id}" class="btn-open-delete-survey survey-delete-action" aria-label="${escapeHtml(s.title)} anketini sil">${iconSvg('trash', 'w-4 h-4')}<span>Anketi Sil</span></button>
                       </td>
                       <td data-label="Kategori & Bölge" class="py-4 px-5 text-slate-600 font-normal">
                         <span class="inline-flex items-center gap-1">
@@ -3405,7 +3408,7 @@ function renderAdminTabContent(tab, state) {
                             </button>
                           `}
 
-                          <button type="button" data-survey-id="${s.id}" class="btn-open-delete-survey h-8 px-3 shrink-0 bg-red-50 border border-red-200 hover:bg-red-100 text-red-700 text-xs font-semibold rounded-lg cursor-pointer" aria-label="${escapeHtml(s.title)} anketini sil">Sil</button>
+
                           <button type="button" data-survey-id="${s.id}" class="btn-admin-clone-survey h-8 px-2 shrink-0 whitespace-nowrap bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 text-xs font-normal rounded-[8px] transition-colors cursor-pointer">
                             Kopyala
                           </button>
@@ -3449,6 +3452,7 @@ function renderAdminTabContent(tab, state) {
                     <div>
                       <span class="px-2 py-0.5 rounded-[4px] bg-slate-100 text-slate-700 font-medium text-[10px] mb-1.5 inline-block">${getSurveyCategoryLabel(s)}</span>
                       <h3 class="font-semibold text-[#01214A] text-base leading-snug">${s.title}</h3>
+                      <button type="button" data-survey-id="${s.id}" class="btn-open-delete-survey survey-delete-action" aria-label="${escapeHtml(s.title)} anketini sil">${iconSvg('trash', 'w-4 h-4')}<span>Anketi Sil</span></button>
                     </div>
                     <div class="shrink-0">
                       ${isArchived ? `<span class="px-2.5 py-1 rounded-[6px] text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">${s.status === 'CLOSED' ? 'Kapalı' : 'Arşivlendi'}</span>` : ''}
@@ -3494,7 +3498,7 @@ function renderAdminTabContent(tab, state) {
                     ` : `
                       <button type="button" data-survey-id="${s.id}" class="btn-open-review-survey-modal h-9 px-3 bg-[#01214A] hover:bg-[#082d5e] text-white font-semibold text-xs rounded-[10px] cursor-pointer">İncele</button>
                     `}
-                    <button type="button" data-survey-id="${s.id}" class="btn-open-delete-survey h-9 px-3 bg-red-50 border border-red-200 hover:bg-red-100 text-red-700 text-xs font-semibold rounded-lg cursor-pointer" aria-label="${escapeHtml(s.title)} anketini sil">Sil</button>
+
                     <button type="button" data-survey-id="${s.id}" class="btn-admin-clone-survey h-9 px-2.5 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 text-xs rounded-[10px] cursor-pointer">Kopyala</button>
                     ${s.status === 'CLOSED' ? `
                       <span class="h-9 px-2.5 inline-flex items-center text-slate-400 text-xs">Kapalı</span>

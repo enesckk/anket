@@ -4,9 +4,9 @@
   "type": "module",
   "description": "SurveyAdmin Intelligence - Saha Anket & Executive Admin Platformu",
   "scripts": {
-    "build": "echo Static site ready",
+    "build": "node scripts/build-release.mjs",
     "start": "node server.js",
-    "test": "node test_security_regression.js && node test_render_all.js && node test_deep_audit.js && node test_survey_report.js && node test_survey_delete_install.js"
+    "test": "node test_security_regression.js && node test_render_all.js && node test_deep_audit.js && node test_survey_report.js && node test_survey_delete_install.js && node test_release_assets.js"
   },
   "keywords": ["pwa", "survey", "dashboard", "field-survey", "data-intelligence"],
   "author": "Antigravity",

@@ -1,23 +1,24 @@
 // SurveyAdmin Intelligence - Service Worker
 // Versiyon: 1.0.1
 
-const CACHE_NAME = 'sahaanket-v23';
+const CACHE_NAME = 'sahaanket-2026.10.22.4';
 const OFFLINE_URL = '/';
 
 // Cache'e alınacak dosyalar (App Shell)
 const APP_SHELL = [
-  '/',
-  '/index.html',
-  '/app.js',
-  '/pwa-policy.js',
-  '/components.js',
-  '/store.js',
-  '/survey-report.js',
-  '/report-xlsx.js',
-  '/styles.css',
-  '/manifest.json',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
+  "/",
+  "/index.html",
+  "/releases/2026.10.22.4/app.js",
+  "/releases/2026.10.22.4/components.js",
+  "/releases/2026.10.22.4/store.js",
+  "/releases/2026.10.22.4/pwa-policy.js",
+  "/releases/2026.10.22.4/survey-report.js",
+  "/releases/2026.10.22.4/report-xlsx.js",
+  "/releases/2026.10.22.4/release-info.js",
+  "/releases/2026.10.22.4/styles.css",
+  "/manifest.json",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png"
 ];
 
 // ─── INSTALL ───────────────────────────────────────────────────────────────
@@ -27,9 +28,8 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       console.log('[SW] Caching App Shell');
-      return cache.addAll(APP_SHELL).catch((err) => {
-        console.warn('[SW] App Shell caching partially failed:', err);
-      });
+      return cache.addAll(APP_SHELL.map(url => new Request(url, { cache: 'reload' })));
+
     })
   );
 });
@@ -41,7 +41,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((name) => name !== CACHE_NAME)
+          .filter((name) => name.startsWith('sahaanket-') && name !== CACHE_NAME)
           .map((name) => {
             console.log('[SW] Deleting old cache:', name);
             return caches.delete(name);
@@ -78,7 +78,7 @@ self.addEventListener('fetch', (event) => {
   // Navigasyon & JS/CSS Script istekleri → Network-first, offline'da cache'den dön
   if (request.mode === 'navigate' || url.pathname.endsWith('.js') || url.pathname.endsWith('.css') || url.pathname.endsWith('.html') || url.pathname === '/') {
     event.respondWith(
-      fetch(request)
+      fetch(request, { cache: 'no-store' })
         .then((response) => {
           if (response && response.status === 200) {
             const cloned = response.clone();
@@ -87,8 +87,9 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          return caches.match(request).then((cached) => {
-            return cached || (request.mode === 'navigate' ? caches.match('/index.html') : null);
+          return caches.open(CACHE_NAME).then(async cache => {
+            const cached = await cache.match(request);
+            return cached || (request.mode === 'navigate' ? await cache.match('/index.html') : null) || new Response('Uygulama dosyası alınamadı. Bağlantınızı kontrol edip sayfayı yenileyin.', { status: 503 });
           });
         })
     );

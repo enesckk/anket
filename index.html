@@ -4,6 +4,7 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>Saha Anket</title>
+  <meta name="app-release" content="2026.10.22.4"/>
   <meta name="description" content="Saha anket yönetimi, PWA anket doldurma, çevrimdışı senkronizasyon ve executive admin data intelligence platformu."/>
   
   <!-- PWA Meta Tags -->
@@ -42,9 +43,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   
   <!-- Critical Module Preloads (Clean Standard Paths) -->
-  <link rel="modulepreload" href="./store.js"/>
-  <link rel="modulepreload" href="./components.js"/>
-  <link rel="modulepreload" href="./app.js"/>
+  <link rel="modulepreload" href="/releases/2026.10.22.4/store.js"/>
+  <link rel="modulepreload" href="/releases/2026.10.22.4/components.js"/>
+  <link rel="modulepreload" href="/releases/2026.10.22.4/app.js"/>
 
   <!-- Google Fonts & Material Symbols (Display Swap for Instant Text Render) -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
@@ -54,7 +55,7 @@
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   
   <!-- Custom Styles -->
-  <link rel="stylesheet" href="./styles.css"/>
+  <link rel="stylesheet" href="/releases/2026.10.22.4/styles.css"/>
 
   <!-- Tailwind Theme Configuration -->
   <script id="tailwind-config">
@@ -97,16 +98,16 @@
   </script>
 </head>
 <body class="bg-background text-on-surface antialiased min-h-screen">
-  <div id="app"></div>
+  <div id="app"><div style="padding:32px;text-align:center;font-family:Arial,sans-serif"><p>Güncel sürüm yükleniyor…</p><small>Sürüm 2026.10.22.4</small></div></div>
 
   <!-- Main Application Script -->
-  <script type="module" src="./app.js"></script>
+  <script type="module" src="/releases/2026.10.22.4/app.js" onerror="document.getElementById('app').innerHTML = '&lt;div style=&quot;padding:32px;text-align:center;font-family:Arial,sans-serif&quot;&gt;&lt;h1&gt;Güncel sürüm yüklenemedi&lt;/h1&gt;&lt;p&gt;Sunucuya bağlantı kurulamadı. İnternet bağlantısını kontrol edip sayfayı yeniden açın.&lt;/p&gt;&lt;button onclick=&quot;location.reload()&quot;&gt;Yeniden dene&lt;/button&gt;&lt;/div&gt;'"></script>
 
   <!-- Service Worker Registration -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+        navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' })
           .then((reg) => {
             console.log('[PWA] Service Worker registered. Scope:', reg.scope);
             reg.update();

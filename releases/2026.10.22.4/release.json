@@ -1,0 +1,13 @@
+{
+  "version": "2026.10.22.4",
+  "hashes": {
+    "app.js": "6d2996f6fc048d58208a720b91faf97fbaed40434b0f214f5578aff88e469ce5",
+    "components.js": "5d10dbacf9e19dfcaccb937ed0ab4fefa44fd67f93eedbd76b74d813e0b4f9b0",
+    "store.js": "2566c45b92d8f4afd49926b9cc583172b37dadf0e60100fdac59de206a6c6e23",
+    "pwa-policy.js": "f700be5f94b0c6a1a1ae9c17fed3a92272602846f2a738ad67a1339298c3415c",
+    "survey-report.js": "f30421cfd3b9fcfb6bdc76266513c362e8ec258777e9382ca51417c6b384be54",
+    "report-xlsx.js": "0af04eb322c8fdc0c15609c47af019dcaf4e5c6e3a9dc9bb068f9e2836b014b4",
+    "release-info.js": "4fc5e5c3035f1be9f24b9ba40f7da5e100c678dfd305f5b347eee459a76ace95",
+    "styles.css": "50a9fb302f0e994c07562e4b5d87a1443701370af6e56dbb58d9c71a3abe8777"
+  }
+}
