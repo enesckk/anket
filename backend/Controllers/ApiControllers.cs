@@ -166,6 +166,15 @@ public class SurveysController : ControllerBase
         if (!ok) return NotFound();
         return NoContent();
     }
+
+    [HttpDelete("{id}/permanent")]
+    [Authorize(Roles = "ADMIN")]
+    public async Task<IActionResult> DeletePermanently(Guid id)
+    {
+        var ok = await _surveyService.DeleteSurveyAsync(id, permanent: true);
+        if (!ok) return NotFound();
+        return Ok(new { deleted = true, surveyId = id });
+    }
 }
 
 [ApiController]

@@ -206,6 +206,22 @@ export function renderCustomModals(state) {
       </div>`;
   }
 
+  if (state.activeModal?.type === 'confirm_delete_survey') {
+    if (state.auth?.user?.role !== 'ADMIN') return '';
+    const survey = state.activeModal.survey;
+    if (!survey?.id) return '';
+    const busy = state.activeModal.deleting;
+    return `<div class="app-modal-overlay fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <section role="dialog" aria-modal="true" aria-labelledby="delete-survey-title" class="bg-white rounded-2xl p-5 sm:p-6 max-w-md w-full shadow-xl space-y-5">
+        <h2 id="delete-survey-title" class="text-lg font-bold text-[#01214A]">Anketi kalıcı olarak sil</h2>
+        <p class="text-sm font-semibold text-[#01214A] break-words">${escapeHtml(survey.title)}</p>
+        <p class="text-sm text-slate-600 leading-relaxed">Bu anket, toplanan tüm yanıtları ve görev atamaları silinecek. Paylaşılan bağlantı artık çalışmayacak. Bu işlem geri alınamaz.</p>
+        <p class="text-xs text-slate-500">Sonuçları saklamak istiyorsanız silmeden önce Excel raporunu indirin.</p>
+        <div class="flex gap-3"><button type="button" id="btn-close-custom-modal" ${busy ? 'disabled' : ''} class="flex-1 min-h-[44px] border border-slate-200 rounded-xl text-sm font-semibold disabled:opacity-50">Vazgeç</button>
+        <button type="button" id="btn-confirm-delete-survey" data-survey-id="${escapeHtml(survey.id)}" ${busy ? 'disabled' : ''} class="flex-1 min-h-[44px] bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-semibold disabled:opacity-50">${busy ? 'Siliniyor…' : 'Evet, kalıcı olarak sil'}</button></div>
+      </section></div>`;
+  }
+
   // 1. FULL ANALYTICAL REPORT DETAIL MODAL (SECTION 14-18)
   if (state.selectedReportDetailId || (state.activeModal && state.activeModal.type === 'view_report_detail')) {
     const reportId = state.selectedReportDetailId || state.activeModal?.reportId;
@@ -3422,6 +3438,7 @@ function renderAdminTabContent(tab, state) {
                             </button>
                           `}
 
+                          <button type="button" data-survey-id="${s.id}" class="btn-open-delete-survey h-8 px-3 shrink-0 bg-red-50 border border-red-200 hover:bg-red-100 text-red-700 text-xs font-semibold rounded-lg cursor-pointer" aria-label="${escapeHtml(s.title)} anketini sil">Sil</button>
                           <button type="button" data-survey-id="${s.id}" class="btn-admin-clone-survey h-8 px-2 shrink-0 whitespace-nowrap bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 text-xs font-normal rounded-[8px] transition-colors cursor-pointer">
                             Kopyala
                           </button>
@@ -3492,7 +3509,7 @@ function renderAdminTabContent(tab, state) {
                     ${iconSvg('poll', 'w-3.5 h-3.5 text-white')}
                     <span>Cevapları Gör</span>
                   </button>
-                  <div class="flex items-center gap-1.5">
+                  <div class="flex flex-wrap items-center gap-1.5">
                     ${s.status === 'ACTIVE' ? `
                       <button type="button" data-survey-id="${s.id}" class="btn-open-assign-survey-modal h-9 px-3 bg-[#2A9D38] hover:bg-[#22822e] text-white font-semibold text-xs rounded-[10px] flex items-center gap-1 cursor-pointer">
                         ${iconSvg('send', 'w-3.5 h-3.5 text-white')}
@@ -3510,6 +3527,7 @@ function renderAdminTabContent(tab, state) {
                     ` : `
                       <button type="button" data-survey-id="${s.id}" class="btn-open-review-survey-modal h-9 px-3 bg-[#01214A] hover:bg-[#082d5e] text-white font-semibold text-xs rounded-[10px] cursor-pointer">İncele</button>
                     `}
+                    <button type="button" data-survey-id="${s.id}" class="btn-open-delete-survey h-9 px-3 bg-red-50 border border-red-200 hover:bg-red-100 text-red-700 text-xs font-semibold rounded-lg cursor-pointer" aria-label="${escapeHtml(s.title)} anketini sil">Sil</button>
                     <button type="button" data-survey-id="${s.id}" class="btn-admin-clone-survey h-9 px-2.5 bg-white border border-[#E9EDF2] hover:bg-slate-50 text-slate-700 text-xs rounded-[10px] cursor-pointer">Kopyala</button>
                     ${s.status === 'CLOSED' ? `
                       <span class="h-9 px-2.5 inline-flex items-center text-slate-400 text-xs">Kapalı</span>

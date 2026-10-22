@@ -17,7 +17,15 @@
   <meta name="msapplication-TileImage" content="/icons/icon-144.png"/>
 
   <!-- PWA Manifest -->
-  <link rel="manifest" href="/manifest.json" crossorigin="use-credentials"/>
+  <script>
+    if (!new URLSearchParams(location.search).has('survey')) {
+      const manifest = document.createElement('link');
+      manifest.rel = 'manifest';
+      manifest.href = '/manifest.json';
+      manifest.crossOrigin = 'use-credentials';
+      document.head.appendChild(manifest);
+    }
+  </script>
 
   <!-- Apple Touch Icons -->
   <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152.png"/>
@@ -94,36 +102,8 @@
   <!-- Main Application Script -->
   <script type="module" src="./app.js"></script>
 
-  <!-- Service Worker Registration + PWA Yükleme Butonu -->
+  <!-- Service Worker Registration -->
   <script>
-    let deferredPrompt = null;
-
-    // PWA yükleme butonunu göster
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      const btn = document.getElementById('pwa-install-btn');
-      if (btn) btn.style.display = 'flex';
-    });
-
-    // Yükleme tamamlandığında butonu gizle
-    window.addEventListener('appinstalled', () => {
-      const btn = document.getElementById('pwa-install-btn');
-      if (btn) btn.style.display = 'none';
-      deferredPrompt = null;
-    });
-
-    // Butona tıklanınca yükleme dialogunu aç
-    function installPWA() {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then(() => {
-        deferredPrompt = null;
-        const btn = document.getElementById('pwa-install-btn');
-        if (btn) btn.style.display = 'none';
-      });
-    }
-
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js', { scope: '/' })
@@ -138,33 +118,5 @@
     }
   </script>
 
-  <!-- PWA Yükleme Butonu (otomatik görünür) -->
-  <button id="pwa-install-btn" onclick="installPWA()" style="
-    display: none;
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%);
-    align-items: center;
-    gap: 10px;
-    background: #01214A;
-    color: white;
-    border: none;
-    padding: 14px 28px;
-    border-radius: 50px;
-    font-family: Inter, sans-serif;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 8px 32px rgba(1,33,74,0.35);
-    z-index: 9999;
-    letter-spacing: 0.01em;
-    transition: transform 0.2s, box-shadow 0.2s;
-  "
-  onmouseover="this.style.transform='translateX(-50%) scale(1.04)';this.style.boxShadow='0 12px 40px rgba(1,33,74,0.45)'"
-  onmouseout="this.style.transform='translateX(-50%) scale(1)';this.style.boxShadow='0 8px 32px rgba(1,33,74,0.35)'">
-    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M12 3v13m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
-    Uygulamayı Masaüstüne Ekle
-  </button>
 </body>
 </html>

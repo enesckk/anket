@@ -1,3 +1,4 @@
+import { isSharedSurveyPage } from './pwa-policy.js';
 import { store, compressImageFile, sanitizeRegionLabel } from './store.js';
 import {
   iconSvg,
@@ -101,6 +102,8 @@ function renderApp() {
     const state = store.getState();
 
     if (state.publicSession?.active) {
+      _pwaInstallPrompt = null;
+      hidePwaInstallBanner();
       root.innerHTML = renderPublicSurvey();
       attachPublicSurveyListeners();
       restoreActiveFocus(focusInfo);
@@ -263,6 +266,20 @@ if (typeof document !== 'undefined') {
   }
 
   document.addEventListener('click', async (e) => {
+    const deleteSurveyBtn = e.target.closest('.btn-open-delete-survey');
+    if (deleteSurveyBtn) {
+      const state = store.getState();
+      const survey = (state.allSurveys || []).find(s => s.id === deleteSurveyBtn.dataset.surveyId);
+      if (state.auth?.user?.role === 'ADMIN' && survey) store.openModal('confirm_delete_survey', { survey });
+      return;
+    }
+    const confirmDeleteSurveyBtn = e.target.closest('#btn-confirm-delete-survey');
+    if (confirmDeleteSurveyBtn) {
+      const modal = store.getState().activeModal;
+      if (modal?.type === 'confirm_delete_survey' && modal.survey?.id === confirmDeleteSurveyBtn.dataset.surveyId) await store.deleteSurvey(modal.survey.id);
+      return;
+    }
+
     const adminTabBtn = e.target.closest('.btn-admin-tab');
     if (adminTabBtn) {
       const tab = adminTabBtn.getAttribute('data-admin-tab');
@@ -2108,6 +2125,11 @@ if (typeof window !== 'undefined') {
   window.addEventListener('beforeinstallprompt', (e) => {
     // Tarayıcının varsayılan mini-banner'ını engelle
     e.preventDefault();
+    if (isSharedSurveyPage(window.location.search)) {
+      _pwaInstallPrompt = null;
+      hidePwaInstallBanner();
+      return;
+    }
     _pwaInstallPrompt = e;
     console.log('[PWA] Install prompt captured. Showing install button...');
     showPwaInstallBanner();
@@ -2117,11 +2139,12 @@ if (typeof window !== 'undefined') {
     console.log('[PWA] App installed successfully!');
     _pwaInstallPrompt = null;
     hidePwaInstallBanner();
-    showPwaInstalledToast();
+    if (!isSharedSurveyPage(window.location.search)) showPwaInstalledToast();
   });
 }
 
 function showPwaInstallBanner() {
+  if (isSharedSurveyPage(window.location.search) || store.getState().publicSession?.active) return;
   // Eğer zaten varsa tekrar ekleme
   if (document.getElementById('pwa-install-banner')) return;
 
@@ -2215,7 +2238,7 @@ function showPwaInstallBanner() {
   document.body.appendChild(banner);
 
   document.getElementById('pwa-install-btn')?.addEventListener('click', async () => {
-    if (!_pwaInstallPrompt) return;
+    if (!_pwaInstallPrompt || isSharedSurveyPage(window.location.search)) return;
     try {
       _pwaInstallPrompt.prompt();
       const { outcome } = await _pwaInstallPrompt.userChoice;

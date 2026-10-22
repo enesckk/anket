@@ -1235,6 +1235,47 @@ class Store {
     this.saveState();
   }
 
+  async deleteSurvey(surveyId) {
+    if (this.state.auth?.user?.role !== 'ADMIN' || this._deletingSurveyId) return false;
+    const survey = (this.state.allSurveys || []).find(s => s.id === surveyId);
+    if (!survey) return false;
+    this._deletingSurveyId = surveyId;
+    if (this.state.activeModal?.type === 'confirm_delete_survey') this.state.activeModal.deleting = true;
+    this.saveState();
+    try {
+      const result = await this.apiFetch(`/surveys/${encodeURIComponent(surveyId)}/permanent`, { method: 'DELETE' });
+      // The dedicated route prevents older servers from merely closing the
+      // survey. Discard local data only after explicit deletion confirmation.
+      if (result?.deleted !== true || result.surveyId !== surveyId) throw new Error('Sunucu kalıcı silmeyi doğrulamadı. Sunucu güncellemesi tamamlandıktan sonra tekrar deneyin.');
+      const removedAssignments = new Set([...(this.state.allAssignments || []), ...(this.state.assignedSurveys || [])].filter(a => a.surveyId === surveyId).map(a => a.id));
+      const removedReports = new Set((this.state.reports || []).filter(r => r.surveyId === surveyId).map(r => r.id));
+      this.state.allSurveys = (this.state.allSurveys || []).filter(s => s.id !== surveyId);
+      this.state.submissions = (this.state.submissions || []).filter(s => s.surveyId !== surveyId);
+      this.state.allAssignments = (this.state.allAssignments || []).filter(a => a.surveyId !== surveyId);
+      this.state.assignedSurveys = (this.state.assignedSurveys || []).filter(a => a.surveyId !== surveyId);
+      this.state.reports = (this.state.reports || []).filter(r => r.surveyId !== surveyId);
+      if (this.state.selectedReportSurveyId === surveyId) this.state.selectedReportSurveyId = null;
+      if (removedReports.has(this.state.selectedReportDetailId)) this.state.selectedReportDetailId = null;
+      if (removedAssignments.has(this.state.selectedTaskId)) {
+        this.state.selectedTaskId = null;
+        this.state.activeFormAnswers = {};
+      }
+      if (this.state.builderSurvey?.id === surveyId) this.state.builderSurvey = JSON.parse(JSON.stringify(defaultState.builderSurvey));
+      this.state.offlineQueueCount = this.state.submissions.filter(s => s.synced === false).length;
+      this.state.activeModal = null;
+      this.saveState();
+      this.setToast(`“${survey.title}” anketi, yanıtları ve atamaları silindi.`, 'success');
+      return true;
+    } catch (error) {
+      if (this.state.activeModal?.type === 'confirm_delete_survey') this.state.activeModal.deleting = false;
+      this.saveState();
+      this.setToast(`Anket silinemedi. ${error.message || 'Bağlantınızı kontrol edip tekrar deneyin.'}`, 'error');
+      return false;
+    } finally {
+      this._deletingSurveyId = null;
+    }
+  }
+
   archiveSurvey(surveyId) {
     const survey = (this.state.allSurveys || []).find(s => s.id === surveyId);
     if (survey) {

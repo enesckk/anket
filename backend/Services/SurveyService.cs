@@ -15,7 +15,7 @@ public interface ISurveyService
     Task<SurveyDto?> CloneSurveyAsync(Guid surveyId, Guid userId);
     Task<SurveyDto?> UpdateSurveyStatusAsync(Guid id, string status);
     Task<SurveyQuestionDto> AddQuestionAsync(Guid surveyId, CreateQuestionRequest request);
-    Task<bool> DeleteSurveyAsync(Guid surveyId);
+    Task<bool> DeleteSurveyAsync(Guid surveyId, bool permanent = false);
 }
 
 public class SurveyService : ISurveyService
@@ -272,19 +272,31 @@ public class SurveyService : ISurveyService
         return MapToQuestionDto(savedQ);
     }
 
-    public async Task<bool> DeleteSurveyAsync(Guid surveyId)
+    public async Task<bool> DeleteSurveyAsync(Guid surveyId, bool permanent = false)
     {
-        var survey = await _db.Surveys.FindAsync(surveyId);
+        var survey = await _db.Surveys
+            .Include(s => s.Submissions).ThenInclude(s => s.Answers)
+            .Include(s => s.Assignments).ThenInclude(a => a.AssignedUsers)
+            .Include(s => s.Questions).ThenInclude(q => q.Options)
+            .Include(s => s.Sections)
+            .FirstOrDefaultAsync(s => s.Id == surveyId);
         if (survey == null) return false;
 
-        // Soft close if submissions exist to prevent data loss
-        var hasSubmissions = await _db.SurveySubmissions.AnyAsync(s => s.SurveyId == surveyId);
-        if (hasSubmissions)
+        // Preserve the previous close behavior for clients that do not explicitly
+        // request permanent deletion. One SaveChanges commits all deletions atomically.
+        if (!permanent && survey.Submissions.Count > 0)
         {
             survey.Status = SurveyStatus.CLOSED;
         }
         else
         {
+            _db.SurveyAnswers.RemoveRange(survey.Submissions.SelectMany(s => s.Answers));
+            _db.SurveySubmissions.RemoveRange(survey.Submissions);
+            _db.SurveyAssignmentUsers.RemoveRange(survey.Assignments.SelectMany(a => a.AssignedUsers));
+            _db.SurveyAssignments.RemoveRange(survey.Assignments);
+            _db.SurveyQuestionOptions.RemoveRange(survey.Questions.SelectMany(q => q.Options));
+            _db.SurveyQuestions.RemoveRange(survey.Questions);
+            _db.SurveySections.RemoveRange(survey.Sections);
             _db.Surveys.Remove(survey);
         }
 
