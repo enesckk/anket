@@ -24,4 +24,20 @@ for (const name of ['app.js','components.js','store.js','styles.css']) assert(ht
 assert(!/src="\.\/app\.js"/.test(html));
 assert(sw.includes("fetch(request, { cache: 'no-store' })"));
 assert(sw.includes('caches.open(CACHE_NAME).then(async cache =>'));
+const hostedHtml = fs.readFileSync(new URL('./backend/wwwroot/app/index.html', import.meta.url), 'utf8');
+assert(hostedHtml.includes('window.SAHA_ANKET_API_URL = "/api"'));
+assert(hostedHtml.includes("register('/app/sw.js', { scope: '/app/'"));
+assert(hostedHtml.includes("manifest.href = '/app/manifest.json'"));
+const hostedManifest = JSON.parse(fs.readFileSync(new URL('./backend/wwwroot/app/manifest.json', import.meta.url)));
+assert.equal(hostedManifest.start_url, '/app/');
+assert.equal(hostedManifest.scope, '/app/');
+const hostedSw = fs.readFileSync(new URL('./backend/wwwroot/app/sw.js', import.meta.url), 'utf8');
+for (const asset of JSON.parse(hostedSw.match(/const APP_SHELL = (\[[\s\S]*?\]);/)[1])) {
+  const file = asset.endsWith('/') ? asset + 'index.html' : asset;
+  assert(fs.existsSync(new URL('./backend/wwwroot' + file, import.meta.url)), `API host shell misses ${asset}`);
+}
+for (const [name, hash] of Object.entries(manifest.hashes)) {
+  const bytes = fs.readFileSync(new URL(`./backend/wwwroot${prefix}${name}`, import.meta.url));
+  assert.equal(createHash('sha256').update(bytes).digest('hex'), hash);
+}
 console.log(`Release ${APP_RELEASE} verified: frozen module graph, matching hashes, versioned entry points and isolated offline cache.`);

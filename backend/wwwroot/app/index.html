@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="tr" class="light">
+<head>
+  <script>window.SAHA_ANKET_API_URL = "/api";</script>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Saha Anket</title>
+  <meta name="app-release" content="2026.10.22.4"/>
+  <meta name="description" content="Saha anket yönetimi, PWA anket doldurma, çevrimdışı senkronizasyon ve executive admin data intelligence platformu."/>
+  
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#01214A"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="Saha Anket"/>
+  <meta name="application-name" content="Saha Anket"/>
+  <meta name="msapplication-TileColor" content="#01214A"/>
+  <meta name="msapplication-TileImage" content="/icons/icon-144.png"/>
+
+  <!-- PWA Manifest -->
+  <script>
+    if (!new URLSearchParams(location.search).has('survey')) {
+      const manifest = document.createElement('link');
+      manifest.rel = 'manifest';
+      manifest.href = '/app/manifest.json';
+      manifest.crossOrigin = 'use-credentials';
+      document.head.appendChild(manifest);
+    }
+  </script>
+
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152.png"/>
+  <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192.png"/>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png"/>
+  <link rel="icon" type="image/png" sizes="96x96" href="/icons/icon-96.png"/>
+
+  <!-- High-Speed Network Preconnections -->
+  <link rel="preconnect" href="https://anket-45so.onrender.com" crossorigin/>
+  <link rel="dns-prefetch" href="https://anket-45so.onrender.com"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  
+  <!-- Critical Module Preloads (Clean Standard Paths) -->
+  <link rel="modulepreload" href="/releases/2026.10.22.4/store.js"/>
+  <link rel="modulepreload" href="/releases/2026.10.22.4/components.js"/>
+  <link rel="modulepreload" href="/releases/2026.10.22.4/app.js"/>
+
+  <!-- Google Fonts & Material Symbols (Display Swap for Instant Text Render) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="/releases/2026.10.22.4/styles.css"/>
+
+  <!-- Tailwind Theme Configuration -->
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "navy": "#01214A",
+            "navy-light": "#0a2f5c",
+            "primary": "#2A9D38",
+            "primary-dark": "#22822e",
+            "accent-blue": "#00A0DF",
+            "accent-blue-light": "#e0f2fe",
+            "background": "#F4F7F9",
+            "surface": "#FFFFFF",
+            "on-surface": "#01214A",
+            "text-secondary": "#64748B",
+            "text-muted": "#94A3B8",
+            "border": "#E2E8F0",
+            "separator": "#F1F5F9"
+          },
+          boxShadow: {
+            "card": "0 4px 20px -2px rgba(1, 33, 74, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02)",
+            "card-hover": "0 10px 25px -3px rgba(1, 33, 74, 0.08), 0 4px 10px -2px rgba(0, 0, 0, 0.03)",
+            "header": "0 2px 10px rgba(1, 33, 74, 0.03)"
+          },
+          fontFamily: {
+            sans: ["Inter", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+            display: ["Inter", "sans-serif"]
+          },
+          borderRadius: {
+            "xl": "0.75rem",
+            "2xl": "1rem",
+            "3xl": "1.25rem"
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-background text-on-surface antialiased min-h-screen">
+  <div id="app"><div style="padding:32px;text-align:center;font-family:Arial,sans-serif"><p>Güncel sürüm yükleniyor…</p><small>Sürüm 2026.10.22.4</small></div></div>
+
+  <!-- Main Application Script -->
+  <script type="module" src="/releases/2026.10.22.4/app.js" onerror="document.getElementById('app').innerHTML = '&lt;div style=&quot;padding:32px;text-align:center;font-family:Arial,sans-serif&quot;&gt;&lt;h1&gt;Güncel sürüm yüklenemedi&lt;/h1&gt;&lt;p&gt;Sunucuya bağlantı kurulamadı. İnternet bağlantısını kontrol edip sayfayı yeniden açın.&lt;/p&gt;&lt;button onclick=&quot;location.reload()&quot;&gt;Yeniden dene&lt;/button&gt;&lt;/div&gt;'"></script>
+
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/app/sw.js', { scope: '/app/', updateViaCache: 'none' })
+          .then((reg) => {
+            console.log('[PWA] Service Worker registered. Scope:', reg.scope);
+            reg.update();
+          })
+          .catch((err) => {
+            console.warn('[PWA] Service Worker registration failed:', err);
+          });
+      });
+    }
+  </script>
+
+</body>
+</html>

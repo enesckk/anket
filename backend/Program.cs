@@ -199,12 +199,33 @@ using (var scope = app.Services.CreateScope())
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = context =>
+    {
+        var requestPath = context.Context.Request.Path.Value ?? "";
+        if (requestPath.StartsWith("/releases/", StringComparison.Ordinal))
+            context.Context.Response.Headers.CacheControl = "public,max-age=31536000,immutable";
+        else if (requestPath.StartsWith("/app/", StringComparison.Ordinal))
+            context.Context.Response.Headers.CacheControl = "no-store";
+    }
+});
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapGet("/app/", async (HttpContext context) =>
+{
+    if (!context.Request.Path.Value!.EndsWith('/'))
+    {
+        context.Response.Redirect("/app/" + context.Request.QueryString);
+        return;
+    }
+    context.Response.Headers.CacheControl = "no-store";
+    context.Response.ContentType = "text/html; charset=utf-8";
+    await context.Response.SendFileAsync(Path.Combine(app.Environment.WebRootPath, "app", "index.html"));
+});
 
 app.MapGet("/health", async (SurveyDbContext db) =>
 {
